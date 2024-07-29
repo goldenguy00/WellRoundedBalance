@@ -4,7 +4,6 @@ namespace WellRoundedBalance.Mechanics.HoldoutZone
 {
     internal class PillarRewards : MechanicBase<PillarRewards>
     {
-        private static float offset = 3f;
         public override string Name => ":: Mechanics :::::: Pillar Rewards";
 
         public override void Hooks()
@@ -22,20 +21,23 @@ namespace WellRoundedBalance.Mechanics.HoldoutZone
             }
 
             int count = Run.instance.participatingPlayerCount;
-            float angle = 360f / count;
+            float angle = 360f / count; 
+            float offset = 3f;
             Vector3 vector = Quaternion.AngleAxis(Random.Range(0, 360), Vector3.up) * (Vector3.up * 40f + Vector3.forward * 5f);
             Quaternion quaternion = Quaternion.AngleAxis(angle, Vector3.up);
 
             for (int i = 0; i < count; i++)
             {
-                GenericPickupController.CreatePickupInfo info = new();
-                info.position = self.transform.position + new Vector3(0, offset, 0);
-                info.prefabOverride = Utils.Paths.GameObject.OptionPickup.Load<GameObject>();
-                info.rotation = Quaternion.identity;
-                info.pickupIndex = PickupCatalog.FindPickupIndex(ItemTier.Lunar);
-                info.pickerOptions = GenerateOptions();
+                GenericPickupController.CreatePickupInfo info = new()
+                {
+                    position = self.transform.position + new Vector3(0, offset, 0),
+                    prefabOverride = Utils.Paths.GameObject.OptionPickup.Load<GameObject>(),
+                    rotation = Quaternion.identity,
+                    pickupIndex = PickupCatalog.FindPickupIndex(ItemTier.Lunar),
+                    pickerOptions = GenerateOptions()
+                };
 
-                PickupDropletController.CreatePickupDroplet(info, self.transform.position + new Vector3(0, offset, 0), vector);
+                PickupDropletController.CreatePickupDroplet(info, vector);
                 vector = quaternion * vector;
             }
         }
@@ -60,7 +62,7 @@ namespace WellRoundedBalance.Mechanics.HoldoutZone
                 pickupIndex = Run.instance.availableTier2DropList[Run.instance.treasureRng.RangeInt(0, Run.instance.availableTier2DropList.Count - 1)]
             };
 
-            return new PickupPickerController.Option[] { lunar, pearl, green };
+            return [lunar, pearl, green];
         }
     }
 }

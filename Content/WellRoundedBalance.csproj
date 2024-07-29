@@ -35,6 +35,10 @@
       <WarningLevel>7</WarningLevel>
       <NoWarn>0414,0649</NoWarn>
     </PropertyGroup>
+
+    <ItemGroup>
+      <Compile Remove="Gamemodes\Eclipse\Utils.cs" />
+    </ItemGroup>
 	
   <ItemGroup>
 	  <PackageReference Include="BepInEx.Analyzers" Version="1.0.*">
@@ -74,6 +78,9 @@
     </Reference>
     <Reference Include="Multitudes">
       <HintPath>libs\Multitudes.dll</HintPath>
+    </Reference>
+    <Reference Include="RiftTitansMod">
+      <HintPath>libs\RiftTitansMod.dll</HintPath>
     </Reference>
     <Reference Include="RiskOfOptions">
       <HintPath>libs/RiskOfOptions.dll</HintPath>

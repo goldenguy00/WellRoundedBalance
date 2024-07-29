@@ -1,5 +1,19 @@
 ﻿using System;
-using Util = WellRoundedBalance.Gamemodes.Eclipse.PredictionUtils;
+using EntityStates.BeetleGuardMonster;
+using EntityStates.Bell.BellWeapon;
+using EntityStates.ClayBoss;
+using EntityStates.ClayBoss.ClayBossWeapon;
+using EntityStates.GravekeeperBoss;
+using EntityStates.GreaterWispMonster;
+using EntityStates.ImpBossMonster;
+using EntityStates.ImpMonster;
+using EntityStates.LemurianBruiserMonster;
+using EntityStates.LemurianMonster;
+using EntityStates.RoboBallBoss.Weapon;
+using EntityStates.ScavMonster;
+using EntityStates.VagrantMonster.Weapon;
+using EntityStates.Vulture.Weapon;
+using HarmonyLib;
 
 namespace WellRoundedBalance.Gamemodes.Eclipse
 {
@@ -7,461 +21,131 @@ namespace WellRoundedBalance.Gamemodes.Eclipse
     {
         public override string Name => ":: Gamemode : Eclipse 2";
 
-        public float basePredictionAngle = 35f;
-
-        public override void Init()
-        {
-            base.Init();
-        }
+        public override void Init() => base.Init();
 
         public override void Hooks()
         {
+            // special cases
+            IL.EntityStates.BeetleGuardMonster.FireSunder.FixedUpdate += (il) => FireSunder_FixedUpdate(new(il));
+            IL.EntityStates.Bell.BellWeapon.ChargeTrioBomb.FixedUpdate += (il) => ChargeTrioBomb_FixedUpdate(new(il));
+
+            // generic type T
+            IL.EntityStates.GenericProjectileBaseState.FireProjectile += (il) => FireProjectile<GenericProjectileBaseState>(new(il));
+            IL.EntityStates.GreaterWispMonster.FireCannons.OnEnter += (il) => FireProjectile<FireCannons>(new(il));
+            IL.EntityStates.RoboBallBoss.Weapon.FireEyeBlast.FixedUpdate += (il) => FireProjectile<FireEyeBlast>(new(il));
+            IL.EntityStates.Vulture.Weapon.FireWindblade.OnEnter += (il) => FireProjectile<FireWindblade>(new(il));
+            IL.EntityStates.GravekeeperBoss.FireHook.OnEnter += (il) => FireProjectile<FireHook>(new(il));
+            IL.EntityStates.LemurianMonster.FireFireball.OnEnter += (il) => FireProjectile<FireFireball>(new(il));
+            IL.EntityStates.LemurianBruiserMonster.FireMegaFireball.FixedUpdate += (il) => FireProjectile<FireMegaFireball>(new(il));
+            IL.EntityStates.ScavMonster.FireEnergyCannon.OnEnter += (il) => FireProjectile<FireEnergyCannon>(new(il));
+            IL.EntityStates.ClayBoss.ClayBossWeapon.FireBombardment.FireGrenade += (il) => FireProjectile<FireBombardment>(new(il));
+            IL.EntityStates.ClayBoss.FireTarball.FireSingleTarball += (il) => FireProjectile<FireTarball>(new(il));
+            IL.EntityStates.ImpMonster.FireSpines.FixedUpdate += (il) => FireProjectile<FireSpines>(new(il));
+
+            //fire many
+            IL.EntityStates.VagrantMonster.Weapon.JellyBarrage.FixedUpdate += (il) => FireProjectileGroup<JellyBarrage>(new(il));
+            IL.EntityStates.ImpBossMonster.FireVoidspikes.FixedUpdate += (il) => FireProjectileGroup<FireVoidspikes>(new(il));
+
+            // original wrb stuff
             IL.RoR2.HoldoutZoneController.FixedUpdate += HoldoutZoneController_FixedUpdate;
-            IL.EntityStates.BeetleGuardMonster.FireSunder.FixedUpdate += FireSunder_FixedUpdate;
-            IL.EntityStates.Bell.BellWeapon.ChargeTrioBomb.FixedUpdate += ChargeTrioBomb_FixedUpdate;
-            IL.EntityStates.ClayBoss.ClayBossWeapon.FireBombardment.FireGrenade += FireBombardment_FireGrenade;
-            On.EntityStates.ClayGrenadier.ThrowBarrel.ModifyProjectileAimRay += ThrowBarrel_ModifyProjectileAimRay;
-            IL.EntityStates.GenericProjectileBaseState.FireProjectile += GenericProjectileBaseState_FireProjectile;
-            IL.EntityStates.GreaterWispMonster.FireCannons.OnEnter += FireCannons_OnEnter;
-            IL.EntityStates.GravekeeperBoss.FireHook.OnEnter += FireHook_OnEnter;
-            IL.EntityStates.LemurianMonster.FireFireball.OnEnter += FireFireball_OnEnter;
-            IL.EntityStates.LemurianBruiserMonster.FireMegaFireball.FixedUpdate += FireMegaFireball_FixedUpdate;
-            IL.EntityStates.GenericProjectileBaseState.FireProjectile += GenericProjectileBaseState_FireProjectile1;
-            IL.EntityStates.GenericProjectileBaseState.FireProjectile += GenericProjectileBaseState_FireProjectile2;
-            IL.EntityStates.RoboBallBoss.Weapon.FireEyeBlast.FixedUpdate += FireEyeBlast_FixedUpdate;
-            IL.EntityStates.ScavMonster.FireEnergyCannon.OnEnter += FireEnergyCannon_OnEnter;
-            IL.EntityStates.VagrantMonster.Weapon.JellyBarrage.FixedUpdate += JellyBarrage_FixedUpdate;
-            On.EntityStates.VoidJailer.Weapon.Fire.ModifyProjectileAimRay += Fire_ModifyProjectileAimRay;
-            IL.EntityStates.Vulture.Weapon.FireWindblade.OnEnter += FireWindblade_OnEnter;
+            //IL.EntityStates.BeetleGuardMonster.FireSunder.FixedUpdate += FireSunder_FixedUpdate;
+            //IL.EntityStates.Bell.BellWeapon.ChargeTrioBomb.FixedUpdate += ChargeTrioBomb_FixedUpdate;
+            //IL.EntityStates.ClayBoss.ClayBossWeapon.FireBombardment.FireGrenade += FireBombardment_FireGrenade;
+            //On.EntityStates.ClayGrenadier.ThrowBarrel.ModifyProjectileAimRay += ThrowBarrel_ModifyProjectileAimRay;
+            //IL.EntityStates.GenericProjectileBaseState.FireProjectile += GenericProjectileBaseState_FireProjectile;
+            //IL.EntityStates.GreaterWispMonster.FireCannons.OnEnter += FireCannons_OnEnter;
+            //IL.EntityStates.GravekeeperBoss.FireHook.OnEnter += FireHook_OnEnter;
+            //IL.EntityStates.LemurianMonster.FireFireball.OnEnter += FireFireball_OnEnter;
+            //IL.EntityStates.LemurianBruiserMonster.FireMegaFireball.FixedUpdate += FireMegaFireball_FixedUpdate;
+            //IL.EntityStates.GenericProjectileBaseState.FireProjectile += GenericProjectileBaseState_FireProjectile1;
+            //IL.EntityStates.GenericProjectileBaseState.FireProjectile += GenericProjectileBaseState_FireProjectile2;
+            //IL.EntityStates.RoboBallBoss.Weapon.FireEyeBlast.FixedUpdate += FireEyeBlast_FixedUpdate;
+            //IL.EntityStates.ScavMonster.FireEnergyCannon.OnEnter += FireEnergyCannon_OnEnter;
+            //IL.EntityStates.VagrantMonster.Weapon.JellyBarrage.FixedUpdate += JellyBarrage_FixedUpdate;
+            //On.EntityStates.VoidJailer.Weapon.Fire.ModifyProjectileAimRay += Fire_ModifyProjectileAimRay;
+            //IL.EntityStates.Vulture.Weapon.FireWindblade.OnEnter += FireWindblade_OnEnter;
         }
 
-        private void FireWindblade_OnEnter(ILContext il)
+        #region Generic Prediction IL
+        /// <summary>
+        /// aimRay must be on the stack before calling this!
+        /// </summary>
+        private static void EmitPredictAimray(ILCursor c, Type type, string prefabName = "projectilePrefab")
         {
-            ILCursor c = new(il);
-            if (c.TryGotoNext(MoveType.After,
-                 x => x.MatchCall<EntityStates.BaseState>("GetAimRay")
-                ))
-            {
-                c.Emit(OpCodes.Ldarg_0);
-                c.EmitDelegate<Func<Ray, EntityStates.Vulture.Weapon.FireWindblade, Ray>>((aimRay, self) =>
-                {
-                    if (Run.instance && self.characterBody && !self.characterBody.isPlayerControlled && self.characterBody.isElite)
-                    {
-                        HurtBox targetHurtbox = Util.GetMasterAITargetHurtbox(self.characterBody.master);
-                        Ray newAimRay = Util.PredictAimrayPS(aimRay, self.GetTeam(), basePredictionAngle, EntityStates.Vulture.Weapon.FireWindblade.projectilePrefab, targetHurtbox);
-                        //Feed it the projectile prefab in case a mod is changing the speed.
-                        return newAimRay;
-                    }
-                    return aimRay;
-                });
-            }
-            else
-            {
-                Logger.LogError("Failed to apply Eclipse 2 Alloy Vulture hook");
-            }
+            //this.characterbody
+            c.Emit(OpCodes.Ldarg_0);
+            c.Emit(OpCodes.Call, AccessTools.PropertyGetter(typeof(EntityState), nameof(EntityState.characterBody)));
+
+            // this.projectilePrefab
+            // - or -
+            // {TYPE}.{PREFAB_NAME}
+            var fieldInfo = AccessTools.Field(type, prefabName);
+            if (!fieldInfo.IsStatic) c.Emit(OpCodes.Ldarg_0);
+            if (!fieldInfo.IsStatic) c.Emit(OpCodes.Ldfld, fieldInfo);
+            else c.Emit(OpCodes.Ldsfld, fieldInfo);
+
+            // Utils.PredictAimRay(aimRay, characterBody, projectilePrefab);
+            c.Emit(OpCodes.Call, AccessTools.Method(typeof(PredictionUtils), nameof(PredictionUtils.PredictAimrayNew)));
         }
 
-        private Ray Fire_ModifyProjectileAimRay(On.EntityStates.VoidJailer.Weapon.Fire.orig_ModifyProjectileAimRay orig, EntityStates.VoidJailer.Weapon.Fire self, Ray aimRay)
+        private static void FireProjectile<T>(ILCursor c, string prefabName)
         {
-            if (Run.instance && self.characterBody && !self.characterBody.isPlayerControlled && self.characterBody.isElite)
-            {
-                HurtBox targetHurtbox = Util.GetMasterAITargetHurtbox(self.characterBody.master);
-                Ray newAimRay = Util.PredictAimrayPS(aimRay, self.GetTeam(), basePredictionAngle, self.projectilePrefab, targetHurtbox);
-                return orig(self, newAimRay);
-            }
-            return orig(self, aimRay);
+            if (c.TryGotoNext(MoveType.After, x => x.MatchCall<BaseState>(nameof(BaseState.GetAimRay))))
+                EmitPredictAimray(c, typeof(T), prefabName);
+            else Logger.LogError("Failed to apply Eclipse 2 Generic BaseState.GetAimRay IL Hook");
         }
 
-        private void JellyBarrage_FixedUpdate(ILContext il)
+        private static void FireProjectile<T>(ILCursor c)
         {
-            bool error = true;
-            ILCursor c = new(il);
-            if (c.TryGotoNext(MoveType.After,
-                 x => x.MatchCall<EntityStates.BaseState>("GetAimRay")
-                ))
-            {
-                c.Emit(OpCodes.Ldarg_0);
-                c.EmitDelegate<Func<Ray, EntityStates.VagrantMonster.Weapon.JellyBarrage, Ray>>((aimRay, self) =>
-                {
-                    if (Run.instance && self.characterBody && !self.characterBody.isPlayerControlled && self.characterBody.isElite)
-                    {
-                        HurtBox targetHurtbox = Util.GetMasterAITargetHurtbox(self.characterBody.master);
-                        Ray newAimRay = Util.PredictAimrayPS(aimRay, self.GetTeam(), basePredictionAngle, EntityStates.VagrantMonster.Weapon.JellyBarrage.projectilePrefab, targetHurtbox);
-                        return newAimRay;
-                    }
-                    return aimRay;
-                });
-                if (c.TryGotoNext(MoveType.After,
-                     x => x.MatchCall<EntityStates.BaseState>("GetAimRay")
-                    ))
-                {
-                    c.Emit(OpCodes.Ldarg_0);
-                    c.EmitDelegate<Func<Ray, EntityStates.VagrantMonster.Weapon.JellyBarrage, Ray>>((aimRay, self) =>
-                    {
-                        if (Run.instance && self.characterBody && !self.characterBody.isPlayerControlled && self.characterBody.isElite)
-                        {
-                            HurtBox targetHurtbox = Util.GetMasterAITargetHurtbox(self.characterBody.master);
-                            Ray newAimRay = Util.PredictAimrayPS(aimRay, self.GetTeam(), basePredictionAngle, EntityStates.VagrantMonster.Weapon.JellyBarrage.projectilePrefab, targetHurtbox);
-                            return newAimRay;
-                        }
-                        return aimRay;
-                    });
-                    error = false;
-                }
-            }
-
-            if (error)
-            {
-                Logger.LogError("Failed to apply Eclipse 2 Wandering Vagrant hook");
-            }
+            if (c.TryGotoNext(MoveType.After, x => x.MatchCall<BaseState>(nameof(BaseState.GetAimRay))))
+                EmitPredictAimray(c, typeof(T));
+            else Logger.LogError("Failed to apply Eclipse 2 Generic BaseState.GetAimRay IL Hook");
         }
 
-        private void FireEnergyCannon_OnEnter(ILContext il)
+        private static void FireProjectileGroup<T>(ILCursor c)
         {
-            ILCursor c = new(il);
-            if (c.TryGotoNext(MoveType.After,
-                 x => x.MatchCall<EntityStates.BaseState>("GetAimRay")
-                ))
-            {
-                c.Emit(OpCodes.Ldarg_0);
-                c.EmitDelegate<Func<Ray, EntityStates.ScavMonster.FireEnergyCannon, Ray>>((aimRay, self) =>
-                {
-                    if (Run.instance && self.characterBody && !self.characterBody.isPlayerControlled && self.characterBody.isElite)
-                    {
-                        HurtBox targetHurtbox = Util.GetMasterAITargetHurtbox(self.characterBody.master);
-                        Ray newAimRay = Util.PredictAimrayPS(aimRay, self.GetTeam(), basePredictionAngle, EntityStates.ScavMonster.FireEnergyCannon.projectilePrefab, targetHurtbox);
-                        return newAimRay;
-                    }
-                    return aimRay;
-                });
-            }
-            else
-            {
-                Logger.LogError("Failed to apply Eclipse 2 Scavenger hook");
-            }
+            while (c.TryGotoNext(MoveType.After, x => x.MatchCall<BaseState>(nameof(BaseState.GetAimRay))))
+                EmitPredictAimray(c, typeof(T));
         }
+        #endregion
 
-        private void FireEyeBlast_FixedUpdate(ILContext il)
+        private static void FireSunder_FixedUpdate(ILCursor c)
         {
-            ILCursor c = new(il);
-            if (c.TryGotoNext(MoveType.After,
-                 x => x.MatchCall<EntityStates.BaseState>("GetAimRay")
-                ))
+            int loc = 0;
+
+            if (c.TryGotoNext(x => x.MatchCall<BaseState>(nameof(BaseState.GetAimRay))) &&
+                c.TryGotoNext(x => x.MatchStloc(out loc)) &&
+                c.TryGotoNext(x => x.MatchCall(AccessTools.PropertyGetter(typeof(ProjectileManager), nameof(ProjectileManager.instance)))))
             {
-                c.Emit(OpCodes.Ldarg_0);
-                c.EmitDelegate<Func<Ray, EntityStates.RoboBallBoss.Weapon.FireEyeBlast, Ray>>((aimRay, self) =>
-                {
-                    if (Run.instance && self.characterBody && !self.characterBody.isPlayerControlled && self.characterBody.isElite)
-                    {
-                        Ray newAimRay;
-                        HurtBox targetHurtbox = Util.GetMasterAITargetHurtbox(self.characterBody.master);
-                        float projectileSpeed = self.projectileSpeed;
-                        if (projectileSpeed > 0f)
-                        {
-                            if (self.GetTeam() != TeamIndex.Player) projectileSpeed = Main.GetProjectileSimpleModifiers(projectileSpeed);
-                            newAimRay = Util.PredictAimray(aimRay, self.GetTeam(), basePredictionAngle, projectileSpeed, targetHurtbox);
-                        }
-                        else
-                        {
-                            newAimRay = Util.PredictAimrayPS(aimRay, self.GetTeam(), basePredictionAngle, self.projectilePrefab, targetHurtbox);
-                        }
-                        return newAimRay;
-                    }
-                    return aimRay;
-                });
+                c.Emit(OpCodes.Ldloc, loc);
+                EmitPredictAimray(c, typeof(FireSunder));
+                c.Emit(OpCodes.Stloc, loc);
             }
-            else
-            {
-                Logger.LogError("Failed to apply Eclipse 2 Solus Control Unit hook");
-            }
+            else Logger.LogError("Failed to apply Eclipse 2 BeetleGuardMonster.FireSunder.FixedUpdate IL Hook");
         }
-
-        private void GenericProjectileBaseState_FireProjectile2(ILContext il)
+        
+        private static void ChargeTrioBomb_FixedUpdate(ILCursor c)
         {
-            ILCursor c = new(il);
-            if (c.TryGotoNext(MoveType.After,
-                 x => x.MatchCall<EntityStates.BaseState>("GetAimRay")
-                ))
-            {
-                c.Emit(OpCodes.Ldarg_0);
-                c.EmitDelegate<Func<Ray, EntityStates.GenericProjectileBaseState, Ray>>((aimRay, self) =>
-                {
-                    if (Run.instance && self.GetType() == typeof(EntityStates.MinorConstruct.Weapon.FireConstructBeam))
-                    {
-                        if (self.characterBody && !self.characterBody.isPlayerControlled && self.characterBody.isElite)
-                        {
-                            HurtBox targetHurtbox = Util.GetMasterAITargetHurtbox(self.characterBody.master);
-                            Ray newAimRay = Util.PredictAimrayPS(aimRay, self.GetTeam(), basePredictionAngle, self.projectilePrefab, targetHurtbox);
-                            return newAimRay;
-                        }
-                    }
-                    return aimRay;
-                });
-            }
-            else
-            {
-                Logger.LogError("Failed to apply Eclipse 2 Alpha Construct hook");
-            }
-        }
+            int rayLoc = 0, transformLoc = 0;
 
-        private void GenericProjectileBaseState_FireProjectile1(ILContext il)
-        {
-            ILCursor c = new(il);
-            if (c.TryGotoNext(MoveType.After,
-                 x => x.MatchCall<EntityStates.BaseState>("GetAimRay")
-                ))
+            if (c.TryGotoNext(x => x.MatchCall<BaseState>(nameof(BaseState.GetAimRay))) &&
+                c.TryGotoNext(x => x.MatchStloc(out rayLoc)) &&
+                c.TryGotoNext(x => x.MatchCall<ChargeTrioBomb>(nameof(ChargeTrioBomb.FindTargetChildTransformFromBombIndex))) &&
+                c.TryGotoNext(x => x.MatchStloc(out transformLoc)) &&
+                c.TryGotoNext(x => x.MatchCall(AccessTools.PropertyGetter(typeof(ProjectileManager), nameof(ProjectileManager.instance)))))
             {
-                c.Emit(OpCodes.Ldarg_0);
-                c.EmitDelegate<Func<Ray, EntityStates.GenericProjectileBaseState, Ray>>((aimRay, self) =>
-                {
-                    if (Run.instance && self.GetType() == typeof(EntityStates.LunarExploderMonster.Weapon.FireExploderShards))
-                    {
-                        if (self.characterBody && !self.characterBody.isPlayerControlled && self.characterBody.isElite)
-                        {
-                            HurtBox targetHurtbox = Util.GetMasterAITargetHurtbox(self.characterBody.master);
-                            Ray newAimRay = Util.PredictAimrayPS(aimRay, self.GetTeam(), basePredictionAngle, self.projectilePrefab, targetHurtbox);
-                            return newAimRay;
-                        }
-                    }
-                    return aimRay;
-                });
-            }
-            else
-            {
-                Logger.LogError("Failed to apply Eclipse 2 Lunar Exploder hook");
-            }
-        }
+                // set origin
+                c.Emit(OpCodes.Ldloc, rayLoc);
+                c.Emit(OpCodes.Ldloc, transformLoc);
+                c.Emit(OpCodes.Callvirt, AccessTools.PropertyGetter(typeof(Transform), nameof(Transform.position)));
+                c.Emit(OpCodes.Call, AccessTools.PropertySetter(typeof(Ray), nameof(Ray.origin)));
 
-        private void FireMegaFireball_FixedUpdate(ILContext il)
-        {
-            ILCursor c = new(il);
-            if (c.TryGotoNext(MoveType.After,
-                 x => x.MatchCall<EntityStates.BaseState>("GetAimRay")
-                ))
-            {
-                c.Emit(OpCodes.Ldarg_0);
-                c.EmitDelegate<Func<Ray, EntityStates.LemurianBruiserMonster.FireMegaFireball, Ray>>((aimRay, self) =>
-                {
-                    if (Run.instance && self.characterBody && !self.characterBody.isPlayerControlled && self.characterBody.isElite)
-                    {
-                        HurtBox targetHurtbox = Util.GetMasterAITargetHurtbox(self.characterBody.master);
-                        Ray newAimRay;
-
-                        float projectileSpeed = EntityStates.LemurianBruiserMonster.FireMegaFireball.projectileSpeed;
-                        if (projectileSpeed > 0f)
-                        {
-                            if (self.GetTeam() != TeamIndex.Player) projectileSpeed = Main.GetProjectileSimpleModifiers(projectileSpeed);
-                            newAimRay = Util.PredictAimray(aimRay, self.GetTeam(), basePredictionAngle, projectileSpeed, targetHurtbox);
-                        }
-                        else
-                        {
-                            newAimRay = Util.PredictAimrayPS(aimRay, self.GetTeam(), basePredictionAngle, EntityStates.LemurianBruiserMonster.FireMegaFireball.projectilePrefab, targetHurtbox);
-                        }
-
-                        return newAimRay;
-                    }
-                    return aimRay;
-                });
+                // call prediction utils
+                c.Emit(OpCodes.Ldloc, rayLoc);
+                EmitPredictAimray(c, typeof(ChargeTrioBomb), "bombProjectilePrefab");
+                c.Emit(OpCodes.Stloc, rayLoc);
             }
-            else
-            {
-                Logger.LogError("Failed to apply Eclipse 2 Elder Lemurian hook");
-            }
-        }
-
-        private void FireFireball_OnEnter(ILContext il)
-        {
-            ILCursor c = new(il);
-            if (c.TryGotoNext(MoveType.After,
-                 x => x.MatchCall<EntityStates.BaseState>("GetAimRay")
-                ))
-            {
-                c.Emit(OpCodes.Ldarg_0);
-                c.EmitDelegate<Func<Ray, EntityStates.LemurianMonster.FireFireball, Ray>>((aimRay, self) =>
-                {
-                    if (Run.instance && self.characterBody && !self.characterBody.isPlayerControlled && self.characterBody.isElite)
-                    {
-                        HurtBox targetHurtbox = Util.GetMasterAITargetHurtbox(self.characterBody.master);
-                        Ray newAimRay = Util.PredictAimrayPS(aimRay, self.GetTeam(), basePredictionAngle, EntityStates.LemurianMonster.FireFireball.projectilePrefab, targetHurtbox);
-                        return newAimRay;
-                    }
-                    return aimRay;
-                });
-            }
-            else
-            {
-                Logger.LogError("Failed to apply Eclipse 2 Lemurian hook");
-            }
-        }
-
-        private void FireHook_OnEnter(ILContext il)
-        {
-            ILCursor c = new(il);
-            if (c.TryGotoNext(MoveType.After,
-                 x => x.MatchCall<EntityStates.BaseState>("GetAimRay")
-                ))
-            {
-                c.Emit(OpCodes.Ldarg_0);
-                c.EmitDelegate<Func<Ray, EntityStates.GravekeeperBoss.FireHook, Ray>>((aimRay, self) =>
-                {
-                    if (Run.instance && self.characterBody && !self.characterBody.isPlayerControlled && self.characterBody.isElite)
-                    {
-                        HurtBox targetHurtbox = Util.GetMasterAITargetHurtbox(self.characterBody.master);
-                        Ray newAimRay = Util.PredictAimrayPS(aimRay, self.GetTeam(), basePredictionAngle, EntityStates.GravekeeperBoss.FireHook.projectilePrefab, targetHurtbox);
-                        return newAimRay;
-                    }
-                    return aimRay;
-                });
-            }
-            else
-            {
-                Logger.LogError("Failed to apply Eclipse 2 Grovetender hook");
-            }
-        }
-
-        private void FireCannons_OnEnter(ILContext il)
-        {
-            ILCursor c = new(il);
-            if (c.TryGotoNext(MoveType.After,
-                 x => x.MatchCall<EntityStates.BaseState>("GetAimRay")
-                ))
-            {
-                c.Emit(OpCodes.Ldarg_0);
-                c.EmitDelegate<Func<Ray, EntityStates.GreaterWispMonster.FireCannons, Ray>>((aimRay, self) =>
-                {
-                    if (Run.instance && self.characterBody && !self.characterBody.isPlayerControlled && self.characterBody.isElite)
-                    {
-                        HurtBox targetHurtbox = Util.GetMasterAITargetHurtbox(self.characterBody.master);
-                        Ray newAimRay = Util.PredictAimrayPS(aimRay, self.GetTeam(), basePredictionAngle, self.projectilePrefab, targetHurtbox);
-                        return newAimRay;
-                    }
-                    return aimRay;
-                });
-            }
-            else
-            {
-                Logger.LogError("Failed to apply Eclipse 2 Greater Wisp hook");
-            }
-        }
-
-        private void GenericProjectileBaseState_FireProjectile(ILContext il)
-        {
-            ILCursor c = new(il);
-            if (c.TryGotoNext(MoveType.After,
-                 x => x.MatchCall<EntityStates.BaseState>("GetAimRay")
-                ))
-            {
-                c.Emit(OpCodes.Ldarg_0);
-                c.EmitDelegate<Func<Ray, EntityStates.GenericProjectileBaseState, Ray>>((aimRay, self) =>
-                {
-                    if (self.GetType() == typeof(EntityStates.FlyingVermin.Weapon.Spit))
-                    {
-                        if (Run.instance && self.characterBody && !self.characterBody.isPlayerControlled && self.characterBody.isElite)
-                        {
-                            HurtBox targetHurtbox = Util.GetMasterAITargetHurtbox(self.characterBody.master);
-                            Ray newAimRay = Util.PredictAimrayPS(aimRay, self.GetTeam(), basePredictionAngle, self.projectilePrefab, targetHurtbox);
-                            return newAimRay;
-                        }
-                    }
-                    return aimRay;
-                });
-            }
-            else
-            {
-                Logger.LogError("Failed to apply Eclipse 2 Blind Pest hook");
-            }
-        }
-
-        private Ray ThrowBarrel_ModifyProjectileAimRay(On.EntityStates.ClayGrenadier.ThrowBarrel.orig_ModifyProjectileAimRay orig, EntityStates.ClayGrenadier.ThrowBarrel self, Ray aimRay)
-        {
-            if (Run.instance && self.characterBody && self.characterBody.isElite)
-            {
-                HurtBox targetHurtbox = Util.GetMasterAITargetHurtbox(self.characterBody.master);
-                Ray newAimRay = Util.PredictAimrayPS(aimRay, self.GetTeam(), basePredictionAngle, self.projectilePrefab, targetHurtbox);
-                return orig(self, newAimRay);
-            }
-            return orig(self, aimRay);
-        }
-
-        private void FireBombardment_FireGrenade(ILContext il)
-        {
-            ILCursor c = new(il);
-            if (c.TryGotoNext(MoveType.After,
-                 x => x.MatchCall<EntityStates.BaseState>("GetAimRay")
-                ))
-            {
-                c.Emit(OpCodes.Ldarg_0);
-                c.EmitDelegate<Func<Ray, EntityStates.LemurianMonster.FireFireball, Ray>>((aimRay, self) =>
-                {
-                    if (Run.instance && self.characterBody && !self.characterBody.isPlayerControlled && self.characterBody.isElite)
-                    {
-                        HurtBox targetHurtbox = Util.GetMasterAITargetHurtbox(self.characterBody.master);
-                        Ray newAimRay = Util.PredictAimrayPS(aimRay, self.GetTeam(), basePredictionAngle, EntityStates.ClayBoss.ClayBossWeapon.FireBombardment.projectilePrefab, targetHurtbox);
-                        return newAimRay;
-                    }
-                    return aimRay;
-                });
-            }
-            else
-            {
-                Logger.LogError("Failed to apply Eclipse 2 Clay Dunestrider hook");
-            }
-        }
-
-        private void ChargeTrioBomb_FixedUpdate(ILContext il)
-        {
-            ILCursor c = new(il);
-            if (c.TryGotoNext(MoveType.After,
-                 x => x.MatchCall<EntityStates.BaseState>("GetAimRay")
-                ))
-            {
-                c.Emit(OpCodes.Ldarg_0);
-                c.EmitDelegate<Func<Ray, EntityStates.Bell.BellWeapon.ChargeTrioBomb, Ray>>((aimRay, self) =>
-                {
-                    if (Run.instance && self.characterBody && !self.characterBody.isPlayerControlled && self.characterBody.isElite)
-                    {
-                        //Uncomment this to improve accuracy further.
-                        /*Transform t = self.FindTargetChildTransformFromBombIndex();
-                        if (t)
-                        {
-                            aimRay.origin = t.position;
-                        }*/
-                        HurtBox targetHurtbox = Util.GetMasterAITargetHurtbox(self.characterBody.master);
-                        Ray newAimRay = Util.PredictAimrayPS(aimRay, self.GetTeam(), basePredictionAngle, EntityStates.Bell.BellWeapon.ChargeTrioBomb.bombProjectilePrefab, targetHurtbox);
-                        return newAimRay;
-                    }
-                    return aimRay;
-                });
-            }
-            else
-            {
-                Logger.LogError("Failed to apply Eclipse 2 Brass Contraption hook");
-            }
-        }
-
-        private void FireSunder_FixedUpdate(ILContext il)
-        {
-            ILCursor c = new(il);
-            if (c.TryGotoNext(MoveType.After,
-                     x => x.MatchCall<EntityStates.BaseState>("GetAimRay")))
-            {
-                c.Emit(OpCodes.Ldarg_0);
-                c.EmitDelegate<Func<Ray, EntityStates.BeetleGuardMonster.FireSunder, Ray>>((aimRay, self) =>
-                {
-                    if (Run.instance && self.characterBody && !self.characterBody.isPlayerControlled && self.characterBody.isElite)
-                    {
-                        aimRay.origin = self.handRTransform.position;//Called in Vanilla method, but  call here beforehand before calculating the new aimray.
-                        var targetHurtbox = Util.GetMasterAITargetHurtbox(self.characterBody.master);
-                        var newAimRay = Util.PredictAimrayPCC(aimRay, self.GetTeam(), basePredictionAngle, EntityStates.BeetleGuardMonster.FireSunder.projectilePrefab, targetHurtbox);
-                        return newAimRay;
-                    }
-                    return aimRay;
-                });
-            }
-            else
-            {
-                Logger.LogError("Failed to apply Eclipse 2 Beetle Guard hook");
-            }
+            else Logger.LogError("AccurateEnemies: EntityStates.Bell.BellWeapon.ChargeTrioBomb.FixedUpdate IL Hook failed");
         }
 
         private void HoldoutZoneController_FixedUpdate(ILContext il)

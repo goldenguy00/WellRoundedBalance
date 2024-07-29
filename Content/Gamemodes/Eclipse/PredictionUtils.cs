@@ -2,151 +2,105 @@
 {
     internal class PredictionUtils
     {
-        public static Ray PredictAimray(Ray aimRay, TeamIndex attackerTeam, float maxTargetAngle, float projectileSpeed, HurtBox targetHurtBox)
+
+        private static bool ShouldPredict(CharacterBody body)
         {
-            bool skip = false;
-            if (Run.instance)
+            return body && body.master && body.teamComponent.teamIndex != TeamIndex.Player && 
+                Run.instance && Run.instance.selectedDifficulty >= DifficultyIndex.Eclipse2 &&
+                (Run.instance.selectedDifficulty >= DifficultyIndex.Eclipse5 || body.isElite);
+        }
+
+        public static Ray PredictAimrayNew(Ray aimRay, CharacterBody body, GameObject projectilePrefab)
+        {
+            if (!ShouldPredict(body) || !projectilePrefab)
+                return aimRay;
+
+            // lil bit of wiggle room cuz floats are fun
+            float zero = 0.1f * Time.fixedDeltaTime;
+            float projectileSpeed = 0f;
+            if (projectilePrefab.TryGetComponent<ProjectileSimple>(out var ps))
             {
-                if (Run.instance.selectedDifficulty <= DifficultyIndex.Eclipse2)
-                    skip = true;
+                if (body.teamComponent.teamIndex != TeamIndex.Player && ps.rigidbody && !ps.rigidbody.useGravity)
+                    projectileSpeed = Main.GetProjectileSimpleModifiers(ps.desiredForwardSpeed);
+                else
+                    projectileSpeed = ps.desiredForwardSpeed;
             }
 
-            bool hasHurtbox = false;
-            if (!skip)
+            if (projectilePrefab.TryGetComponent<ProjectileCharacterController>(out var pcc))
+                projectileSpeed = Mathf.Max(projectileSpeed, pcc.velocity);
+
+            if (projectileSpeed <= zero)
+                Main.WRBLogger.LogWarning($"Projectile speed is {projectileSpeed}? you fucked up man. ");
+
+            if (projectileSpeed > zero && GetTargetHurtbox(body, out var targetBody))
             {
-                if (targetHurtBox == null)
+                //Velocity shows up as 0 for clients due to not having authority over the CharacterMotor
+                //Less accurate, but it works online.
+                var targetVelocity = (targetBody.transform.position - targetBody.previousPosition) / Time.fixedDeltaTime;
+                var motor = targetBody.characterMotor;
+                
+                // compare the two options since big number = better number of course
+                if (motor && targetVelocity.sqrMagnitude < motor.velocity.sqrMagnitude)
+                    targetVelocity = motor.velocity;
+
+                if (targetVelocity.sqrMagnitude > zero * zero) //Dont bother predicting stationary targets
                 {
-                    targetHurtBox = AcquireTarget(aimRay, attackerTeam, maxTargetAngle);
-                }
-                hasHurtbox = targetHurtBox && targetHurtBox.healthComponent && targetHurtBox.healthComponent.body && targetHurtBox.healthComponent.body.characterMotor;
-            }
-
-            if (!skip && hasHurtbox && projectileSpeed > 0f)
-            {
-                CharacterBody targetBody = targetHurtBox.healthComponent.body;
-                Vector3 targetPosition = targetHurtBox.transform.position;
-                Vector3 targetVelocity = targetBody.characterMotor.velocity;
-
-                if (targetVelocity.sqrMagnitude > 0f && !(targetBody && targetBody.hasCloakBuff))   //Dont bother predicting stationary targets
-                {
-                    //A very simplified way of estimating, won't be 100% accurate.
-                    Vector3 currentDistance = targetPosition - aimRay.origin;
-                    float timeToImpact = currentDistance.magnitude / projectileSpeed;
-
-                    //Vertical movenent isn't predicted well by this, so just use the target's current Y
-                    Vector3 lateralVelocity = new Vector3(targetVelocity.x, 0f, targetVelocity.z);
-                    Vector3 futurePosition = targetPosition + lateralVelocity * timeToImpact;
-
-                    //Only attempt prediction if player is jumping upwards.
-                    //Predicting downwards movement leads to groundshots.
-                    if (targetBody.characterMotor && !targetBody.characterMotor.isGrounded && targetVelocity.y > 0f)
-                    {
-                        //point + vt + 0.5at^2
-                        float futureY = targetPosition.y + targetVelocity.y * timeToImpact;
-                        futureY += 0.5f * Physics.gravity.y * timeToImpact * timeToImpact;
-                        futurePosition.y = futureY;
-                    }
-
-                    Ray newAimray = new Ray
-                    {
-                        origin = aimRay.origin,
-                        direction = (futurePosition - aimRay.origin).normalized
-                    };
-
-                    float angleBetweenVectors = Vector3.Angle(aimRay.direction, newAimray.direction);
-                    if (angleBetweenVectors <= maxTargetAngle)
-                    {
-                        return newAimray;
-                    }
+                    return GetRay(aimRay, projectileSpeed, targetBody.transform.position, targetVelocity);
                 }
             }
 
             return aimRay;
         }
 
-        public static Ray PredictAimrayPS(Ray aimRay, TeamIndex attackerTeam, float maxTargetAngle, GameObject projectilePrefab, HurtBox targetHurtBox)
+        private static Ray GetRay(Ray aimRay, float v, Vector3 y, Vector3 dy)
         {
-            float speed = -1f;
-            if (projectilePrefab)
-            {
-                ProjectileSimple ps = projectilePrefab.GetComponent<ProjectileSimple>();
-                if (ps)
-                {
-                    speed = ps.desiredForwardSpeed;
+            // dont question it man im so bad at math
+            // but its really fucking fast and really fucking accurate
+            // might want to integrate acceleration at some point to
+            // cut down on overshooting decelerating targets
+            // edit: never fuckign mind i hate math im not gonna solve a fucking quartic equation what the hell
+            // https://gamedev.stackexchange.com/questions/77749/predicted-target-location
+            //https://gamedev.stackexchange.com/questions/149327/projectile-aim-prediction-with-acceleration
+            var yx = y - aimRay.origin;
 
-                    if (attackerTeam != TeamIndex.Player)
+            var a = (v * v) - Vector3.Dot(dy, dy);
+            var b = -2 * Vector3.Dot(dy, yx);
+            var c = -1 * Vector3.Dot(yx, yx);
+
+            var d = (b * b) - (4 * a * c);
+            if (d > 0)
+            {
+                d = Mathf.Sqrt(d);
+                var t1 = (-b + d) / (2 * a);
+                var t2 = (-b - d) / (2 * a);
+                var t = Mathf.Max(t1, t2);
+                if (t > 0)
+                {
+                    var newA = (dy * t + yx) / t;
+                    aimRay = new Ray(aimRay.origin, newA.normalized);
+                }
+            }
+            return aimRay;
+        }
+
+        private static bool GetTargetHurtbox(CharacterBody body, out CharacterBody target)
+        {
+            var aiComponents = body.master.aiComponents;
+            for (int i = 0; i < aiComponents.Length; i++)
+            {
+                var ai = aiComponents[i];
+                if (ai && ai.hasAimTarget)
+                {
+                    var aimTarget = ai.skillDriverEvaluation.aimTarget;
+                    if (aimTarget.characterBody && aimTarget.healthComponent)
                     {
-                        if (ps.rigidbody && !ps.rigidbody.useGravity)
-                        {
-                            speed = Main.GetProjectileSimpleModifiers(speed);
-                        }
+                        target = aimTarget.characterBody;
+                        return true;
                     }
                 }
             }
-
-            if (speed <= 0f)
-            {
-                Main.WRBLogger.LogError("Could not get speed of ProjectileSimple");
-                return aimRay;
-            }
-
-            return speed > 0f ? PredictAimray(aimRay, attackerTeam, maxTargetAngle, speed, targetHurtBox) : aimRay;
-        }
-
-        public static Ray PredictAimrayPCC(Ray aimRay, TeamIndex attackerTeam, float maxTargetAngle, GameObject projectilePrefab, HurtBox targetHurtBox)
-        {
-            float speed = -1f;
-            if (projectilePrefab)
-            {
-                ProjectileCharacterController pcc = projectilePrefab.GetComponent<ProjectileCharacterController>();
-                if (pcc)
-                {
-                    speed = pcc.velocity;
-                }
-            }
-
-            if (speed <= 0f)
-            {
-                Main.WRBLogger.LogError("Could not get speed of ProjectileCharacterController");
-                return aimRay;
-            }
-
-            return PredictAimray(aimRay, attackerTeam, maxTargetAngle, speed, targetHurtBox);
-        }
-
-        public static HurtBox AcquireTarget(Ray aimRay, TeamIndex attackerTeam, float maxTargetAngle)
-        {
-            BullseyeSearch search = new BullseyeSearch();
-
-            search.teamMaskFilter = TeamMask.allButNeutral;
-            search.teamMaskFilter.RemoveTeam(attackerTeam);
-
-            search.filterByLoS = true;
-            search.searchOrigin = aimRay.origin;
-            search.sortMode = BullseyeSearch.SortMode.Angle;
-            search.maxDistanceFilter = 200f;
-            search.maxAngleFilter = maxTargetAngle;
-            search.searchDirection = aimRay.direction;
-            search.RefreshCandidates();
-
-            HurtBox targetHurtBox = search.GetResults().FirstOrDefault();
-
-            return targetHurtBox;
-        }
-
-        public static HurtBox GetMasterAITargetHurtbox(CharacterMaster cm)
-        {
-            if (cm && cm.aiComponents.Length > 0)
-            {
-                foreach (BaseAI ai in cm.aiComponents)
-                {
-                    if (ai.currentEnemy != null && ai.currentEnemy.bestHurtBox != null)
-                    {
-                        return ai.currentEnemy.bestHurtBox;
-                    }
-                }
-            }
-            return null;
+            target = null;
+            return false;
         }
     }
 }
