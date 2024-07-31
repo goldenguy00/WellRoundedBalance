@@ -21,7 +21,6 @@ namespace WellRoundedBalance
     [BepInDependency("dev.wildbook.multitudes", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("com.TPDespair.ZetArtifacts", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("com.phreel.TitansOfTheRiftSOTV", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency("com.TeamMoonstorm.MoonstormSharedUtils", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(LanguageAPI.PluginGUID)]
     [BepInDependency(RecalculateStatsAPI.PluginGUID)]
     [BepInDependency(DirectorAPI.PluginGUID)]
@@ -80,7 +79,6 @@ namespace WellRoundedBalance
         public static bool InfernoLoaded = false;
         public static bool RiskyArtifactsLoaded = false;
         public static bool PieceOfShitLoaded = false;
-        public static bool PieceOfShitLoadedElectricBoogaloo = false;
         public static bool ZetArtifactsLoaded = false;
         public static bool WildbookMultitudesLoaded = false;
         public static bool LeagueOfLiteralGaysLoadeded = false;
@@ -157,7 +155,6 @@ namespace WellRoundedBalance
             InfernoLoaded = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("HIFU.Inferno");
             RiskyArtifactsLoaded = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("com.Moffein.RiskyArtifacts");
             PieceOfShitLoaded = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("com.Wolfo.WolfoQualityOfLife");
-            PieceOfShitLoadedElectricBoogaloo = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("com.TeamMoonstorm.MoonstormSharedUtils");
             ZetArtifactsLoaded = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("com.TPDespair.ZetArtifacts");
             WildbookMultitudesLoaded = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("dev.wildbook.multitudes"); 
             LeagueOfLiteralGaysLoadeded = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("com.phreel.TitansOfTheRiftSOTV");
@@ -186,7 +183,7 @@ namespace WellRoundedBalance
             }
 
             InfernoCompat();
-            Misc.HarmonyHooks.Init();
+            //Misc.HarmonyHooks.Init();
         }
 
         private void PickupPickerController_OnDisplayBegin(On.RoR2.PickupPickerController.orig_OnDisplayBegin orig, PickupPickerController self, NetworkUIPromptController networkUIPromptController, LocalUser localUser, CameraRigController cameraRigController)
