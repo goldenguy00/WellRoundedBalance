@@ -1,4 +1,5 @@
-﻿using RoR2.Skills;
+﻿using Inferno.Stat_AI;
+using RoR2.Skills;
 using System;
 using UnityEngine;
 
@@ -28,23 +29,24 @@ namespace WellRoundedBalance.Enemies.Minibosses
         private void GupSpikesState_FixedUpdate(On.EntityStates.Gup.GupSpikesState.orig_FixedUpdate orig, EntityStates.Gup.GupSpikesState self)
         {
             orig(self);
-            GupSpikesController controller = null;
-            if (controller == null) controller = self.GetComponent<GupSpikesController>();
-            if (!Main.IsInfernoDef() && !controller.hasFired)
+            var controller = self.GetComponent<GupSpikesController>();
+
+            if (!Main.IsInfernoDef() && controller && !controller.hasFired)
             {
-                int spikeCount = self.outer.gameObject.name switch
+                var spikeCount = self.outer.gameObject.name switch
                 {
                     "GupBody(Clone)" => 12,
                     "GeepBody(Clone)" => 8,
                     "GipBody(Clone)" => 5,
                     _ => 0
                 };
+
                 if (self.isAuthority && self.animator?.GetFloat(self.initialHitboxActiveParameter) > 0.5f)
                 {
                     var slices = 360f / spikeCount;
                     var projectedNormal = Vector3.ProjectOnPlane(UnityEngine.Random.onUnitSphere, Vector3.up).normalized;
                     var corePosition = self.characterBody.corePosition;
-                    for (int i = 0; i < spikeCount; i++)
+                    for (var i = 0; i < spikeCount; i++)
                     {
                         var vector = Quaternion.AngleAxis(slices * i, Vector3.up) * projectedNormal;
                         ProjectileManager.instance.FireProjectile(Projectiles.GupSpike.prefab, corePosition, Util.QuaternionSafeLookRotation(vector), self.gameObject, self.characterBody.damage * 2f, -2000f, Util.CheckRoll(self.characterBody.crit, self.characterBody.master), DamageColorIndex.Default, null, -1f);
@@ -56,19 +58,20 @@ namespace WellRoundedBalance.Enemies.Minibosses
 
         private void CharacterBody_onBodyStartGlobal(CharacterBody body)
         {
-            if (Main.IsInfernoDef())
+            if (body.name is "GupBody(Clone)" && !Main.IsInfernoDef())
             {
-                return;
+                body.baseMoveSpeed = 19f;
+                if (!body.GetComponent<GupSpikesController>())
+                    body.gameObject.AddComponent<GupSpikesController>();
             }
-            switch (body.name)
+        }
+
+        private void CharacterMaster_onStartGlobal(CharacterMaster master)
+        {
+            if (master.name is "GupMaster(Clone)" && !Main.IsInfernoDef())
             {
-                case "GupBody(Clone)":
-                    body.baseMoveSpeed = 19f;
-                    if (body.GetComponent<GupSpikesController>() == null)
-                    {
-                        body.gameObject.AddComponent<GupSpikesController>();
-                    }
-                    break;
+                var spike = master.GetComponents<AISkillDriver>().First(ai => ai.customName == "Spike");
+                spike.maxDistance = 45f;
             }
         }
 
@@ -83,23 +86,6 @@ namespace WellRoundedBalance.Enemies.Minibosses
             }
 
             orig(self);
-        }
-
-        private void CharacterMaster_onStartGlobal(CharacterMaster master)
-        {
-            if (Main.IsInfernoDef())
-            {
-                return;
-            }
-            switch (master.name)
-            {
-                case "GupMaster(Clone)":
-                    AISkillDriver spike = (from x in master.GetComponents<AISkillDriver>()
-                                           where x.customName == "Spike"
-                                           select x).First();
-                    spike.maxDistance = 45f;
-                    break;
-            }
         }
 
         private void Changes()

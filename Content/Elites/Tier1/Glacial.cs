@@ -238,28 +238,24 @@ namespace WellRoundedBalance.Elites.Tier1
             RecalculateStatsAPI.GetStatCoefficients += RecalculateStatsAPI_GetStatCoefficients;
             IL.RoR2.CharacterModel.UpdateOverlays += CharacterModel_UpdateOverlays;
             // CharacterBody.onBodyInventoryChangedGlobal += CharacterBody_onBodyInventoryChangedGlobal;
-            // On.RoR2.CharacterBody.AddBuff_BuffIndex += CharacterBody_AddBuff_BuffIndex;
-            // On.RoR2.CharacterBody.RemoveBuff_BuffIndex += CharacterBody_RemoveBuff_BuffIndex;
+
+            //DelegateStuff.addBuff += CharacterBody_AddBuff;
+            //DelegateStuff.removeBuff += CharacterBody_RemoveBuff;
         }
 
-        private void CharacterBody_RemoveBuff_BuffIndex(On.RoR2.CharacterBody.orig_RemoveBuff_BuffIndex orig, CharacterBody self, BuffIndex buffType)
+        private void CharacterBody_RemoveBuff(CharacterBody self, BuffIndex buffType)
         {
-            orig(self, buffType);
             if (buffType == RoR2Content.Buffs.AffixWhite.buffIndex)
             {
                 self.gameObject.RemoveComponent<GlacialController>();
             }
         }
 
-        private void CharacterBody_AddBuff_BuffIndex(On.RoR2.CharacterBody.orig_AddBuff_BuffIndex orig, CharacterBody self, BuffIndex buffType)
+        private void CharacterBody_AddBuff(CharacterBody self, BuffIndex buffType)
         {
-            orig(self, buffType);
-            if (buffType == RoR2Content.Buffs.AffixWhite.buffIndex)
+            if (buffType == RoR2Content.Buffs.AffixWhite.buffIndex && !self.GetComponent<GlacialController>())
             {
-                if (self.GetComponent<GlacialController>() == null)
-                {
-                    self.gameObject.AddComponent<GlacialController>();
-                }
+                self.gameObject.AddComponent<GlacialController>();
             }
         }
 
@@ -274,7 +270,7 @@ namespace WellRoundedBalance.Elites.Tier1
                     if (attackerBody.HasBuff(RoR2Content.Buffs.AffixWhite))
                     {
                         var procType = (ProcType)1258907;
-                        GameObject visual = attackerBody.isPlayerControlled ? null : iceExplosionPrefab;
+                        var visual = attackerBody.isPlayerControlled ? null : iceExplosionPrefab;
                         if (!damageInfo.procChainMask.HasProc(procType) && Util.CheckRoll(100f * damageInfo.procCoefficient))
                         {
                             ProcChainMask mask = new();
@@ -304,22 +300,6 @@ namespace WellRoundedBalance.Elites.Tier1
             else
             {
                 Logger.LogError("Failed to apply Glacial Elite Overlay hook");
-            }
-        }
-
-        private void CharacterBody_onBodyInventoryChangedGlobal(CharacterBody characterBody)
-        {
-            var sfp = characterBody.GetComponent<GlacialController>();
-            if (characterBody.HasBuff(RoR2Content.Buffs.AffixWhite))
-            {
-                if (sfp == null)
-                {
-                    characterBody.gameObject.AddComponent<GlacialController>();
-                }
-            }
-            else if (sfp != null)
-            {
-                characterBody.gameObject.RemoveComponent<GlacialController>();
             }
         }
 
@@ -362,12 +342,12 @@ namespace WellRoundedBalance.Elites.Tier1
                     scale = radius
                 }, true);
             }
-            float radiusHalfwaySqr = radius * radius * 0.25f;
-            List<HealthComponent> healthComponentList = new();
-            Collider[] colliders = Physics.OverlapSphere(position, radius, LayerIndex.entityPrecise.mask);
-            for (int i = 0; i < colliders.Length; i++)
+            var radiusHalfwaySqr = radius * radius * 0.25f;
+            List<HealthComponent> healthComponentList = [];
+            var colliders = Physics.OverlapSphere(position, radius, LayerIndex.entityPrecise.mask);
+            for (var i = 0; i < colliders.Length; i++)
             {
-                HurtBox hurtBox = colliders[i].GetComponent<HurtBox>();
+                var hurtBox = colliders[i].GetComponent<HurtBox>();
                 if (hurtBox)
                 {
                     var healthComponent = hurtBox.healthComponent;
@@ -379,16 +359,16 @@ namespace WellRoundedBalance.Elites.Tier1
                         {
                             if (ignoreImmunity || !healthComponent.body.HasBuff(RoR2Content.Buffs.Immune) && !healthComponent.body.HasBuff(RoR2Content.Buffs.HiddenInvincibility))
                             {
-                                float effectiveness = 1f;
+                                var effectiveness = 1f;
                                 if (falloff)
                                 {
-                                    float distSqr = (position - hurtBox.collider.ClosestPoint(position)).sqrMagnitude;
+                                    var distSqr = (position - hurtBox.collider.ClosestPoint(position)).sqrMagnitude;
                                     if (distSqr > radiusHalfwaySqr)  //Reduce effectiveness when over half the radius away
                                     {
                                         effectiveness *= 0.5f;  //0.25 is vanilla sweetspot
                                     }
                                 }
-                                bool alreadyHasBuff = healthComponent.body.HasBuff(buff);
+                                var alreadyHasBuff = healthComponent.body.HasBuff(buff);
                                 healthComponent.body.AddTimedBuff(buff, effectiveness * debuffDuration);
                                 if (!alreadyHasBuff)
                                 {

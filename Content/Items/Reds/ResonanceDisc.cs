@@ -49,21 +49,21 @@
 
             var explosion = PrefabAPI.InstantiateClone(Utils.Paths.GameObject.LaserTurbineBombExplosion.Load<GameObject>(), "Resonance Disc Explosion", false);
             var transform = explosion.transform;
-            for (int i = 0; i < transform.childCount; i++)
+            for (var i = 0; i < transform.childCount; i++)
             {
                 var index = transform.GetChild(i);
                 index.transform.localScale *= 2f;
             }
 
             var sparklers = transform.GetChild(3);
-            for (int j = 0; j < sparklers.transform.childCount; j++)
+            for (var j = 0; j < sparklers.transform.childCount; j++)
             {
                 var index = sparklers.transform.GetChild(j);
                 index.transform.localScale *= 2f;
             }
 
             var evis = transform.GetChild(5);
-            for (int k = 0; k < evis.transform.childCount; k++)
+            for (var k = 0; k < evis.transform.childCount; k++)
             {
                 var index = evis.transform.GetChild(k);
                 index.transform.localScale *= 2f;

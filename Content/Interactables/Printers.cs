@@ -76,7 +76,7 @@ namespace WellRoundedBalance.Interactables
             yPrinter.AddComponent<PrinterUseCounter>();
             yPrinter.AddComponent<PrinterHologram>();
 
-            uses = new();
+            uses = [];
 
             Stage.onServerStageComplete += stage => uses.Clear();
 

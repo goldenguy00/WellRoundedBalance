@@ -12,7 +12,7 @@ namespace WellRoundedBalance.Items.Greens
 
         public static GameObject glow = null;
 
-        public static List<GameObject> printers = new();
+        public static List<GameObject> printers = [];
 
         public override void Init()
         {
@@ -33,7 +33,7 @@ namespace WellRoundedBalance.Items.Greens
             if (AnyoneHasRegenScrapStage())
             {
                 var printerList = Object.FindObjectsOfType(typeof(PrinterUseCounter)) as PrinterUseCounter[];
-                foreach (PrinterUseCounter puc in printerList)
+                foreach (var puc in printerList)
                 {
                     var trans = puc.transform;
                     var glow = trans.Find("Glow");
@@ -58,7 +58,7 @@ namespace WellRoundedBalance.Items.Greens
 
             if (AnyoneHasRegenScrapRuntime())
             {
-                foreach (GameObject gameObject in printers)
+                foreach (var gameObject in printers)
                 {
                     if (gameObject && gameObject.transform)
                     {
@@ -74,7 +74,7 @@ namespace WellRoundedBalance.Items.Greens
             }
             else
             {
-                foreach (GameObject gameObject in printers)
+                foreach (var gameObject in printers)
                 {
                     if (gameObject && gameObject.transform)
                     {
@@ -92,8 +92,8 @@ namespace WellRoundedBalance.Items.Greens
 
         private bool AnyoneHasRegenScrapStage()
         {
-            bool anyRealers = false;
-            foreach (CharacterMaster master in CharacterMaster.instancesList)
+            var anyRealers = false;
+            foreach (var master in CharacterMaster.instancesList)
             {
                 if (master.inventory)
                 {
@@ -110,8 +110,8 @@ namespace WellRoundedBalance.Items.Greens
 
         private bool AnyoneHasRegenScrapRuntime()
         {
-            bool anyRealers = false;
-            foreach (CharacterMaster master in CharacterMaster.instancesList)
+            var anyRealers = false;
+            foreach (var master in CharacterMaster.instancesList)
             {
                 if (master.inventory)
                 {

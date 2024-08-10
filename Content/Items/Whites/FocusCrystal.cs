@@ -36,9 +36,9 @@ namespace WellRoundedBalance.Items.Whites
         public static void HealthCompoment_TakeDamage(ILContext il)
         {
             ILCursor c = new(il);
-            int dmg = -1;
+            var dmg = -1;
             c.TryGotoNext(x => x.MatchLdfld<DamageInfo>(nameof(DamageInfo.damage)), x => x.MatchStloc(out dmg));
-            int idx = GetItemLoc(c, nameof(RoR2Content.Items.NearbyDamageBonus));
+            var idx = GetItemLoc(c, nameof(RoR2Content.Items.NearbyDamageBonus));
             if (idx != -1 && c.TryGotoNext(x => x.MatchStloc(dmg)))
             {
                 c.Emit(OpCodes.Pop);

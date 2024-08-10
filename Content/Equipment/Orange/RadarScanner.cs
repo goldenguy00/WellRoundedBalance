@@ -33,7 +33,7 @@
 
         private void Changes()
         {
-            var scanner = Utils.Paths.GameObject.ChestScanner.Load<GameObject>().GetComponent<ChestRevealer>();
+            var scanner = Utils.Paths.GameObject.ChestScanner.LoadComponent<ChestRevealer>();
             scanner.radius = range;
             scanner.pulseTravelSpeed = range / 4f;
             scanner.revealDuration = duration;

@@ -36,7 +36,7 @@ namespace WellRoundedBalance.Items.Greens
         {
             if (sender.inventory && sender.isSprinting)
             {
-                int stack = sender.inventory.GetItemCount(InternalPickup);
+                var stack = sender.inventory.GetItemCount(InternalPickup);
                 args.armorAdd += StackAmount(armor, armorStack, stack, armorIsHyperbolic) - (30 * stack);
             }
         }

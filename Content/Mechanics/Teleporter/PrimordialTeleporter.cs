@@ -1,8 +1,4 @@
-﻿using Rewired.Utils.Classes.Data;
-using System;
-using System.Linq;
-using UnityEngine.Networking.NetworkSystem;
-using UnityEngine.SceneManagement;
+﻿using System;
 
 namespace WellRoundedBalance.Mechanics.VoidFields
 {
@@ -16,7 +12,7 @@ namespace WellRoundedBalance.Mechanics.VoidFields
         [ConfigField("Enable spawning every stage when looping?", "", true)]
         public static bool everyStageWhenLoop;
 
-        public static readonly string[] blacklistedStages = { "PromoRailGunner", "PromoVoidSurvivor", "ai_test", "arena", "artifactworld", "bazaar", "crystalworld", "eclipseworld", "goldshores", "infinitetowerworld", "intro", "itancientloft", "itdampcave", "itfrozenwall", "itgolemplains", "itgoolake", "itmoon", "itskymeadow", "limbo", "loadingbasic", "lobby", "logbook", "moon", "moon2", "mysteryspace", "outro", "satellitescene", "splash", "testscene", "title", "voidoutro", "voidstage", "voidraid", "forgottenhaven" };
+        public static readonly string[] blacklistedStages = ["PromoRailGunner", "PromoVoidSurvivor", "ai_test", "arena", "artifactworld", "bazaar", "crystalworld", "eclipseworld", "goldshores", "infinitetowerworld", "intro", "itancientloft", "itdampcave", "itfrozenwall", "itgolemplains", "itgoolake", "itmoon", "itskymeadow", "limbo", "loadingbasic", "lobby", "logbook", "moon", "moon2", "mysteryspace", "outro", "satellitescene", "splash", "testscene", "title", "voidoutro", "voidstage", "voidraid", "forgottenhaven"];
 
         public override void Init()
         {

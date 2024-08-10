@@ -11,7 +11,7 @@ namespace WellRoundedBalance.Difficulties
 
         public static event Action onTokenRegister;
 
-        public static List<string> difficultyList = new();
+        public static List<string> difficultyList = [];
 
         public override void Init()
         {
@@ -27,7 +27,7 @@ namespace WellRoundedBalance.Difficulties
         public void SetToken()
         {
             if (InternalDiff == DifficultyIndex.Invalid) return;
-            DifficultyDef def = DifficultyCatalog.GetDifficultyDef(InternalDiff);
+            var def = DifficultyCatalog.GetDifficultyDef(InternalDiff);
             def.descriptionToken += "_WRB";
             if (def != null) LanguageAPI.Add(def.descriptionToken, DescText);
         }

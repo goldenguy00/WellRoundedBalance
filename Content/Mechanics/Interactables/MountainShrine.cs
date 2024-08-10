@@ -36,7 +36,7 @@
             var teleporter = TeleporterInteraction.instance;
             if (teleporter != null && teleporter.isCharging)
             {
-                for (int i = 0; i < teleporter.shrineBonusStacks; i++)
+                for (var i = 0; i < teleporter.shrineBonusStacks; i++)
                 {
                     if (body.teamComponent.teamIndex != TeamIndex.Player) body.AddBuff(mountainShrineBuff);
                 }
@@ -58,7 +58,7 @@
             var teleporter = TeleporterInteraction.instance;
             if (teleporter != null)
             {
-                for (int i = 0; i < teleporter.shrineBonusStacks; i++)
+                for (var i = 0; i < teleporter.shrineBonusStacks; i++)
                 {
                     self.creditMultiplier *= Director.CombatDirector.creditMultiplierForEachMountainShrine * Mathf.Pow(Run.instance.participatingPlayerCount, 0.05f);
                     self.expRewardCoefficient *= Director.CombatDirector.goldAndExperienceMultiplierForEachMountainShrine;

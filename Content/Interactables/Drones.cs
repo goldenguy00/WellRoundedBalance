@@ -44,7 +44,7 @@
             var drone3 = Utils.Paths.InteractableSpawnCard.iscBrokenEmergencyDrone.Load<InteractableSpawnCard>();
             drone3.maxSpawnsPerStage = emergencyDroneMaxSpawnsPerStage;
 
-            var drone3purchaseInteraction = Utils.Paths.GameObject.EmergencyDroneBroken.Load<GameObject>().GetComponent<PurchaseInteraction>();
+            var drone3purchaseInteraction = Utils.Paths.GameObject.EmergencyDroneBroken.LoadComponent<PurchaseInteraction>();
             drone3purchaseInteraction.cost = emergencyDroneCost;
 
             var drone4 = Utils.Paths.InteractableSpawnCard.iscBrokenEquipmentDrone.Load<InteractableSpawnCard>();
@@ -54,13 +54,13 @@
             var drone5 = Utils.Paths.InteractableSpawnCard.iscBrokenFlameDrone.Load<InteractableSpawnCard>();
             drone5.maxSpawnsPerStage = maxSpawnsPerStage;
 
-            var drone5purchaseInteraction = Utils.Paths.GameObject.FlameDroneBroken.Load<GameObject>().GetComponent<PurchaseInteraction>();
+            var drone5purchaseInteraction = Utils.Paths.GameObject.FlameDroneBroken.LoadComponent<PurchaseInteraction>();
             drone5purchaseInteraction.cost = incineratorDroneCost;
 
             var drone6 = Utils.Paths.InteractableSpawnCard.iscBrokenMegaDrone.Load<InteractableSpawnCard>();
             drone6.maxSpawnsPerStage = TC280PrototypeMaxSpawnsPerStage;
 
-            var drone6purchaseInteraction = Utils.Paths.GameObject.MegaDroneBroken.Load<GameObject>().GetComponent<PurchaseInteraction>();
+            var drone6purchaseInteraction = Utils.Paths.GameObject.MegaDroneBroken.LoadComponent<PurchaseInteraction>();
             drone6purchaseInteraction.cost = TC280PrototypeCost;
 
             var drone7 = Utils.Paths.InteractableSpawnCard.iscBrokenMissileDrone.Load<InteractableSpawnCard>();

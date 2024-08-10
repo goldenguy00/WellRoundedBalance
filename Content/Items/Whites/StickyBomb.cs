@@ -65,12 +65,12 @@ namespace WellRoundedBalance.Items.Whites
         public static void GlobalEventManager_OnHitEnemy(ILContext il)
         {
             ILCursor c = new(il);
-            int info = -1;
-            int attacker = -1;
+            var info = -1;
+            var attacker = -1;
             c.TryGotoNext(x => x.MatchLdarg(out info), x => x.MatchLdfld<DamageInfo>(nameof(DamageInfo.attacker)));
             c.TryGotoNext(x => x.MatchStloc(attacker));
             if (info == -1 || attacker == -1) return;
-            int stack = GetItemLoc(c, nameof(RoR2Content.Items.StickyBomb));
+            var stack = GetItemLoc(c, nameof(RoR2Content.Items.StickyBomb));
             if (stack != -1 && c.TryGotoNext(x => x.MatchCallOrCallvirt(typeof(Util), nameof(Util.CheckRoll))))
             {
                 c.Emit(OpCodes.Pop);
@@ -87,7 +87,7 @@ namespace WellRoundedBalance.Items.Whites
                 c.Emit(OpCodes.Ldloc, stack);
                 c.EmitDelegate<Func<DamageInfo, CharacterBody, int, float>>((info, body, stack) =>
                 {
-                    float ret = StackAmount(damage, damageStack, stack, damageIsHyperbolic);
+                    var ret = StackAmount(damage, damageStack, stack, damageIsHyperbolic);
                     if (damageIsTotal) ret = Util.OnHitProcDamage(info.damage, body.damage, ret);
                     return ret * 100;
                 });
@@ -97,7 +97,7 @@ namespace WellRoundedBalance.Items.Whites
 
         public static void Changes()
         {
-            var StickyBombImpact = Utils.Paths.GameObject.StickyBomb1.Load<GameObject>().GetComponent<ProjectileImpactExplosion>();
+            var StickyBombImpact = Utils.Paths.GameObject.StickyBomb1.LoadComponent<ProjectileImpactExplosion>();
             StickyBombImpact.lifetime = lifetime;
             StickyBombImpact.falloffModel = changeFalloff;
             StickyBombImpact.blastProcCoefficient = procCoefficient;

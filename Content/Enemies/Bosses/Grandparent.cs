@@ -12,7 +12,6 @@
         public override void Hooks()
         {
             On.RoR2.GrandParentSunController.Start += GrandParentSunController_Start;
-            RoR2.CharacterMaster.onStartGlobal += CharacterMaster_onStartGlobal;
             Changes();
         }
 
@@ -22,28 +21,17 @@
             orig(self);
         }
 
-        private void CharacterMaster_onStartGlobal(CharacterMaster master)
-        {
-            if (Main.IsInfernoDef())
-            {
-                return;
-            }
-            switch (master.name)
-            {
-                case "GrandparentMaster(Clone)":
-                    AISkillDriver Sun = (from x in master.GetComponents<AISkillDriver>()
-                                         where x.customName == "ChannelSun"
-                                         select x).First();
-                    Sun.noRepeat = true;
-                    break;
-            }
-        }
-
         private void Changes()
         {
-            var sun = Utils.Paths.GameObject.GrandParentSun.Load<GameObject>();
-            var sunController = sun.GetComponent<GrandParentSunController>();
-            sunController.burnDuration = 0.4f;
+            Utils.Paths.GameObject.GrandParentSun.LoadComponent<GrandParentSunController>().burnDuration = 0.4f;
+
+            var master = Utils.Paths.GameObject.GrandparentMaster.Load<GameObject>();
+
+            foreach (var skill in master.GetComponents<AISkillDriver>())
+            {
+                if (skill.customName is "ChannelSun")
+                    skill.noRepeat = true;
+            }
         }
     }
 }

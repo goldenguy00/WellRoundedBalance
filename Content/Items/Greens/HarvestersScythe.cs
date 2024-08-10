@@ -114,9 +114,9 @@ namespace WellRoundedBalance.Items.Greens
             if (sender && sender.inventory)
             {
                 var stack = sender.inventory.GetItemCount(RoR2Content.Items.HealOnCrit);
-                if (sender.HasBuff(scytheCrit))
+                if (stack > 0 && sender.HasBuff(scytheCrit))
                 {
-                    args.critAdd += baseCritGain + critGainPerStack * (stack - 1);
+                    args.critAdd += StackAmount(baseCritGain, critGainPerStack, stack);
                 }
             }
         }
@@ -169,127 +169,75 @@ namespace WellRoundedBalance.Items.Greens
 
     public class HarvestersScytheController : CharacterBody.ItemBehavior
     {
-        public SkillLocator skillLocator;
-        public float damage = 2f;
-        public float cooldown = 2f;
-        public float buffDur = 0;
-        public float critGain = 0;
-
-        // public BoxCollider boxCollider;
         public OverlapAttack overlapAttack;
-
-        public ModelLocator modelLocator;
-        public Transform modelTransform;
         public GameObject scytheObject;
         public HitBoxGroup hitBoxGroup;
-        public HitBox hitBox;
 
         public void Start()
         {
-            modelLocator = GetComponent<ModelLocator>();
-            modelTransform = modelLocator?.modelTransform;
-            if (modelTransform && scytheObject == null)
+            var model = body.modelLocator?.modelTransform;
+            if (model && scytheObject == null)
             {
                 scytheObject = new("WRB Scythe mf")
                 {
-                    layer = LayerIndex.defaultLayer.intVal
+                    layer = LayerIndex.defaultLayer.intVal,
                 };
-
+                scytheObject.transform.parent = model.transform;
                 scytheObject.transform.localScale = new Vector3(20f, 10f, 20f);
 
-                hitBox = scytheObject.AddComponent<HitBox>();
                 hitBoxGroup = scytheObject.AddComponent<HitBoxGroup>();
                 hitBoxGroup.groupName = "WRBScythe";
-                hitBoxGroup.hitBoxes = new HitBox[] { hitBox };
+                hitBoxGroup.hitBoxes = [scytheObject.AddComponent<HitBox>()];
             }
-            damage = HarvestersScythe.baseDamage + HarvestersScythe.damagePerStack * (stack - 1);
-            cooldown = HarvestersScythe.cooldown;
-            critGain = HarvestersScythe.baseCritGain + HarvestersScythe.critGainPerStack * (stack - 1);
-            buffDur = HarvestersScythe.baseBuffDuration + HarvestersScythe.buffDurationPerStack * (stack - 1);
-            skillLocator = GetComponent<SkillLocator>();
             body.onSkillActivatedServer += Body_onSkillActivatedServer;
         }
 
         private void Body_onSkillActivatedServer(GenericSkill skill)
         {
-            var body = skill.GetComponent<CharacterBody>();
-            if (!body)
+            if (body && body.skillLocator && skill == body.skillLocator.secondary && !body.HasBuff(HarvestersScythe.scytheCooldown))
             {
-                return;
+                StartCoroutine(FireProjectile());
             }
-            if (skill != skillLocator.secondary)
-            {
-                return;
-            }
-
-            var hasCooldownCleaner = AboutEqual(HarvestersScythe.cooldown, buffDur) ? body.HasBuff(HarvestersScythe.scytheCooldown) || body.HasBuff(HarvestersScythe.scytheCrit) : body.HasBuff(HarvestersScythe.scytheCooldown);
-
-            if (hasCooldownCleaner)
-            {
-                return;
-            }
-
-            StartCoroutine(FireProjectile());
         }
 
         public IEnumerator FireProjectile()
         {
-            overlapAttack = new()
-            {
-                attacker = gameObject,
-                inflictor = gameObject,
-                teamIndex = TeamComponent.GetObjectTeam(gameObject),
-                damage = body.damage * damage,
-                forceVector = Vector3.zero,
-                pushAwayForce = 0,
-                attackerFiltering = AttackerFiltering.NeverHitSelf,
-                impactSound = HarvestersScythe.scytheSound.index,
-                procCoefficient = 0f,
-                isCrit = body.RollCrit()
-            };
+            yield return null;
 
             if (scytheObject && body.inputBank)
             {
                 scytheObject.transform.forward = body.inputBank.aimDirection;
-                scytheObject.transform.position = modelTransform.position;
-                overlapAttack.hitBoxGroup = scytheObject.GetComponent<HitBoxGroup>();
+
+                overlapAttack = new()
+                {
+                    attacker = gameObject,
+                    inflictor = gameObject,
+                    teamIndex = base.body.teamComponent.teamIndex,//TeamComponent.GetObjectTeam(gameObject),
+                    damage = body.damage * SharedBase.StackAmount(HarvestersScythe.baseDamage, HarvestersScythe.damagePerStack, stack),
+                    forceVector = Vector3.zero,
+                    pushAwayForce = 0,
+                    attackerFiltering = AttackerFiltering.NeverHitSelf,
+                    impactSound = HarvestersScythe.scytheSound.index,
+                    procCoefficient = 0f,
+                    isCrit = body.RollCrit(),
+                    hitBoxGroup = hitBoxGroup
+                };
 
                 Util.PlaySound("Play_bandit2_m2_slash", gameObject);
 
                 EffectData data = new() { scale = 1.66f, origin = body.corePosition, rotation = Util.QuaternionSafeLookRotation(new Vector3(body.inputBank.aimDirection.x, 0f, body.inputBank.aimDirection.z)) };
                 EffectManager.SpawnEffect(HarvestersScythe.effect, data, true);
 
-                var hasCooldownCleaner = AboutEqual(HarvestersScythe.cooldown, buffDur);
-
                 if (overlapAttack.Fire())
-                {
-                    if (hasCooldownCleaner)
-                    {
-                        body.AddTimedBuffAuthority(HarvestersScythe.scytheCrit.buffIndex, buffDur);
-                    }
-                    else
-                    {
-                        body.AddTimedBuffAuthority(HarvestersScythe.scytheCooldown.buffIndex, HarvestersScythe.cooldown);
-                        body.AddTimedBuffAuthority(HarvestersScythe.scytheCrit.buffIndex, buffDur);
-                    }
-                }
-                else
-                    body.AddTimedBuffAuthority(HarvestersScythe.scytheCooldown.buffIndex, HarvestersScythe.cooldown);
+                    body.AddTimedBuffAuthority(HarvestersScythe.scytheCrit.buffIndex, SharedBase.StackAmount(HarvestersScythe.baseBuffDuration, HarvestersScythe.buffDurationPerStack, stack));
+                
+                body.AddTimedBuffAuthority(HarvestersScythe.scytheCooldown.buffIndex, HarvestersScythe.cooldown);
             }
-
-            yield return null;
         }
 
         public void OnDestroy()
         {
             body.onSkillActivatedServer -= Body_onSkillActivatedServer;
-        }
-
-        public bool AboutEqual(float a, float b)
-        {
-            if (Mathf.Abs(a - b) < 0.05f)
-                return true;
-            return false;
         }
     }
 }

@@ -86,8 +86,8 @@ namespace WellRoundedBalance.Items.Greens
         private void GlobalEventManager_OnHitEnemy(ILContext il)
         {
             ILCursor c = new(il);
-            int stack = GetItemLoc(c, nameof(RoR2Content.Items.SlowOnHit));
-            int body = -1;
+            var stack = GetItemLoc(c, nameof(RoR2Content.Items.SlowOnHit));
+            var body = -1;
             if (c.TryGotoNext(MoveType.After, x => x.MatchLdloc(out body), x => x.MatchLdsfld(typeof(RoR2Content.Buffs), nameof(RoR2Content.Buffs.Slow60))))
             {
                 c.Emit(OpCodes.Pop);
@@ -100,7 +100,7 @@ namespace WellRoundedBalance.Items.Greens
                 c.Emit(OpCodes.Ldloc, stack);
                 c.EmitDelegate<Action<CharacterBody, int>>((body, stack) =>
                 {
-                    float time = StackAmount(duration, durationStack, stack, durationIsHyperbolic);
+                    var time = StackAmount(duration, durationStack, stack, durationIsHyperbolic);
                     body.ClearTimedBuffs(slow50);
                     for (var i = 0; i < stack; i++) body.AddTimedBuff(slow50, time, stack);
                 });

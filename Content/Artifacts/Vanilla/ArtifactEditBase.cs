@@ -5,7 +5,7 @@ namespace WellRoundedBalance.Artifacts.Vanilla
     public abstract class ArtifactEditBase : SharedBase
     {
         public override ConfigFile Config => Main.WRBArtifactEditConfig;
-        public static List<string> artifactEditList = new();
+        public static List<string> artifactEditList = [];
 
         public override void Init()
         {

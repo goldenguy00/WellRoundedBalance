@@ -40,8 +40,8 @@ namespace WellRoundedBalance.Items.Greens
             ILCursor c = new(il);
 
             //int bodyLoc = 17;
-            int countLoc = 43;
-            int capLoc = 63;
+            var countLoc = 43;
+            var capLoc = 63;
 
             c.GotoNext(MoveType.After,
                 x => x.MatchLdsfld("RoR2.RoR2Content/Items", "Infusion"),
@@ -60,7 +60,7 @@ namespace WellRoundedBalance.Items.Greens
 
                 if (body != null)
                 {
-                    float levelBonus = 1 + levelBonusMultiplier * (body.level - 1);
+                    var levelBonus = 1 + levelBonusMultiplier * (body.level - 1);
 
                     newInfusionCap = baseMaximumHealthCap * levelBonus * infusionCount;
                 }

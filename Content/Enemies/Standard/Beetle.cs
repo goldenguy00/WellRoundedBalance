@@ -31,11 +31,9 @@ namespace WellRoundedBalance.Enemies.Standard
             {
                 return;
             }
-            switch (body.name)
+            if (body.name is "BeetleBody(Clone)")
             {
-                case "BeetleBody(Clone)":
-                    body.baseMoveSpeed = 9.5f;
-                    break;
+                body.baseMoveSpeed = 9.5f;
             }
         }
 
@@ -45,16 +43,12 @@ namespace WellRoundedBalance.Enemies.Standard
             {
                 return;
             }
-            switch (master.name)
+            if (master.name is "BeetleMaster(Clone)")
             {
-                case "BeetleMaster(Clone)":
-                    AISkillDriver BeetleHeadbutt = (from x in master.GetComponents<AISkillDriver>()
-                                                    where x.customName == "HeadbuttOffNodegraph"
-                                                    select x).First();
-                    BeetleHeadbutt.maxDistance = 10f;
-                    BeetleHeadbutt.selectionRequiresOnGround = true;
-                    BeetleHeadbutt.activationRequiresAimTargetLoS = true;
-                    break;
+                var BeetleHeadbutt = master.GetComponents<AISkillDriver>().First(s => s.customName == "HeadbuttOffNodegraph");
+                BeetleHeadbutt.maxDistance = 10f;
+                BeetleHeadbutt.selectionRequiresOnGround = true;
+                BeetleHeadbutt.activationRequiresAimTargetLoS = true;
             }
         }
 

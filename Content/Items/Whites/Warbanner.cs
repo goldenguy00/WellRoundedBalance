@@ -70,7 +70,7 @@ namespace WellRoundedBalance.Items.Whites
 
         private void SpawnWarbanner()
         {
-            foreach (CharacterBody body in CharacterBody.readOnlyInstancesList)
+            foreach (var body in CharacterBody.readOnlyInstancesList)
             {
                 if (body.isPlayerControlled && body.inventory)
                 {
@@ -92,7 +92,7 @@ namespace WellRoundedBalance.Items.Whites
             {
                 if (sender.HasBuff(RoR2Content.Buffs.Warbanner.buffIndex))
                 {
-                    float ret = StackAmount(attackSpeedAndMovementSpeed, attackSpeedAndMovementSpeedStack, globalStack, attackSpeedAndMovementSpeedIsHyperbolic);
+                    var ret = StackAmount(attackSpeedAndMovementSpeed, attackSpeedAndMovementSpeedStack, globalStack, attackSpeedAndMovementSpeedIsHyperbolic);
 
                     if (enableAttackSpeed) args.baseAttackSpeedAdd += ret - 0.3f;
                     if (enableMovementSpeed) args.moveSpeedMultAdd += ret - 0.3f;
@@ -103,7 +103,7 @@ namespace WellRoundedBalance.Items.Whites
         public static void Change(ILContext il)
         {
             ILCursor c = new(il);
-            int stack = GetItemLoc(c, nameof(RoR2Content.Items.WardOnLevel));
+            var stack = GetItemLoc(c, nameof(RoR2Content.Items.WardOnLevel));
             if (stack != -1 && c.TryGotoNext(x => x.MatchCallOrCallvirt<BuffWard>("set_" + nameof(BuffWard.Networkradius))))
             {
                 c.Emit(OpCodes.Pop);

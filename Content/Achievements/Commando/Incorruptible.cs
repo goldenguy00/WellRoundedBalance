@@ -1,6 +1,4 @@
-﻿using MonoMod.Cil;
-
-namespace WellRoundedBalance.Achievements.Commando
+﻿namespace WellRoundedBalance.Achievements.Commando
 {
     internal class Incorruptible : AchievementBase<Incorruptible>
     {
@@ -12,28 +10,12 @@ namespace WellRoundedBalance.Achievements.Commando
 
         public override void Hooks()
         {
-            On.RoR2.Achievements.Commando.CommandoNonLunarEnduranceAchievement.OnStatsChanged += CommandoNonLunarEnduranceAchievement_OnStatsChanged;
+            RoR2.AchievementManager.availability.CallWhenAvailable(OnAvailable);
         }
 
-        private void CommandoNonLunarEnduranceAchievement_OnStatsChanged(On.RoR2.Achievements.Commando.CommandoNonLunarEnduranceAchievement.orig_OnStatsChanged orig, RoR2.Achievements.Commando.CommandoNonLunarEnduranceAchievement self)
+        private void OnAvailable()
         {
-            RoR2.Achievements.Commando.CommandoNonLunarEnduranceAchievement.requirement = 11;
-            orig(self);
-        }
-
-        private void RailgunnerDealMassiveDamageAchievement_onClientDamageNotified(ILContext il)
-        {
-            ILCursor c = new(il);
-
-            if (c.TryGotoNext(MoveType.Before,
-                x => x.MatchLdcR4(1000000f)))
-            {
-                c.Next.Operand = 100000f;
-            }
-            else
-            {
-                Logger.LogError("Failed to apply Railgunner: Annihilator Damage hook");
-            }
+            RoR2.Achievements.Commando.CommandoNonLunarEnduranceAchievement.requirement = 11ul;
         }
     }
 }

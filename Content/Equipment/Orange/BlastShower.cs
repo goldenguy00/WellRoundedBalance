@@ -39,7 +39,7 @@ namespace WellRoundedBalance.Equipment.Orange
         // this code is awful help
         private void CharacterBody_onBodyInventoryChangedGlobal(CharacterBody body)
         {
-            for (int i = 0; i < CharacterBody.readOnlyInstancesList.Count; i++)
+            for (var i = 0; i < CharacterBody.readOnlyInstancesList.Count; i++)
             {
                 var index = CharacterBody.readOnlyInstancesList[i];
                 if (index.teamComponent.teamIndex == TeamIndex.Player)

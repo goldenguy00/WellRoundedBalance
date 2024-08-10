@@ -29,11 +29,11 @@ namespace WellRoundedBalance.Items.VoidGreens
             IL.RoR2.CharacterBody.RecalculateStats += CharacterBody_RecalculateStats;
             IL.RoR2.GlobalEventManager.OnHitEnemy += GlobalEventManager_OnHitEnemy;
             GlobalEventManager.onServerDamageDealt += GlobalEventManager_onServerDamageDealt;
-            On.RoR2.Inventory.GiveItem_ItemIndex_int += Inventory_GiveItem_ItemIndex_int;
+            RoR2.Inventory.onServerItemGiven += Inventory_onServerItemGiven;
             Changes();
         }
 
-        private void Inventory_GiveItem_ItemIndex_int(On.RoR2.Inventory.orig_GiveItem_ItemIndex_int orig, Inventory self, ItemIndex itemIndex, int count)
+        private void Inventory_onServerItemGiven(Inventory self, ItemIndex itemIndex, int count)
         {
             if (NetworkServer.active)
             {
@@ -50,8 +50,6 @@ namespace WellRoundedBalance.Items.VoidGreens
                     }
                 }
             }
-
-            orig(self, itemIndex, count);
         }
 
         private void GlobalEventManager_onServerDamageDealt(DamageReport report)

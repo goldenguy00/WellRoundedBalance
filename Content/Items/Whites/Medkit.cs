@@ -46,11 +46,11 @@ namespace WellRoundedBalance.Items.Whites
         private void CharacterBody_RemoveBuff_BuffIndex(ILContext il)
         {
             ILCursor c = new(il);
-            int bufftype = -1;
+            var bufftype = -1;
             c.TryGotoNext(x => x.MatchLdarg(out bufftype), x => x.MatchLdcI4(-1), x => x.MatchBneUn(out _));
-            int count = GetItemLoc(c, nameof(RoR2Content.Items.Medkit));
+            var count = GetItemLoc(c, nameof(RoR2Content.Items.Medkit));
             if (bufftype == -1 || count == -1) return;
-            int cmp = -1;
+            var cmp = -1;
             if (c.TryGotoNext(x => x.MatchCallOrCallvirt<CharacterBody>("get_" + nameof(CharacterBody.maxHealth))) && c.TryGotoNext(x => x.MatchStloc(out _)))
             {
                 c.Emit(OpCodes.Pop);

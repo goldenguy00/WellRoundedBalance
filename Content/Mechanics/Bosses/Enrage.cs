@@ -22,10 +22,8 @@ namespace WellRoundedBalance.Mechanics.Bosses
 
         public override void Hooks()
         {
-            if (Gamemodes.Eclipse.Eclipse6.instance == null) {
-                return;
-            }
-            RecalculateStatsAPI.GetStatCoefficients += RecalculateStatsAPI_GetStatCoefficients;
+            if (Eclipse6.instance != null)
+                RecalculateStatsAPI.GetStatCoefficients += RecalculateStatsAPI_GetStatCoefficients;
         }
 
         private void RecalculateStatsAPI_GetStatCoefficients(CharacterBody sender, RecalculateStatsAPI.StatHookEventArgs args)

@@ -30,9 +30,9 @@
             {
                 if (self.modelAnimator && self.modelAnimator.GetFloat("Bite.hitBoxActive") > 0.1f)
                 {
-                    Vector3 direction = self.GetAimRay().direction;
-                    Vector3 a = direction.normalized * 1.5f * self.moveSpeedStat;
-                    Vector3 b = new Vector3(direction.x, 0f, direction.z).normalized * 1.5f;
+                    var direction = self.GetAimRay().direction;
+                    var a = direction.normalized * 1.5f * self.moveSpeedStat;
+                    var b = new Vector3(direction.x, 0f, direction.z).normalized * 1.5f;
                     self.characterMotor.Motor.ForceUnground();
                     self.characterMotor.velocity = a + b;
                 }
@@ -59,10 +59,9 @@
 
         private void Changes()
         {
-            var fireball = Utils.Paths.GameObject.Fireball.Load<GameObject>();
-            var projectileSimple = fireball.GetComponent<ProjectileSimple>();
-            projectileSimple.lifetime = 7f;
-            projectileSimple.desiredForwardSpeed = 75f;
+            var fireball = Utils.Paths.GameObject.Fireball.LoadComponent<ProjectileSimple>();
+            fireball.lifetime = 7f;
+            fireball.desiredForwardSpeed = 75f;
         }
     }
 }

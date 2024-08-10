@@ -1,12 +1,8 @@
-using R2API.Utils;
-using WellRoundedBalance.Items.Reds;
-
 namespace WellRoundedBalance.Mechanics.Bosses
 {
     public class OnKill : MechanicBase<OnKill>
     {
         public override string Name => ":: Mechanics ::::: Boss On Kill Thresholds";
-        private List<BodyIndex> acceptableBodies;
 
         public override void Init()
         {
@@ -15,99 +11,68 @@ namespace WellRoundedBalance.Mechanics.Bosses
 
         public override void Hooks()
         {
-            On.RoR2.CharacterBody.Start += MarkOnSpawn;
-            On.RoR2.BodyCatalog.Init += PopulateAcceptableBodies;
+            RoR2.BodyCatalog.availability.CallWhenAvailable(PopulateAcceptableBodies);
         }
 
-        private void MarkOnSpawn(On.RoR2.CharacterBody.orig_Start orig, CharacterBody self)
+        private void PopulateAcceptableBodies()
         {
-            orig(self);
-            if (!NetworkServer.active)
-            {
-                return;
-            }
+            Utils.Paths.GameObject.BrotherBody.Load<GameObject>().AddComponent<OnKillThresholdManager>();
+            Utils.Paths.GameObject.BrotherHauntBody.Load<GameObject>().AddComponent<OnKillThresholdManager>();
 
-            if (acceptableBodies.Contains(self.bodyIndex))
-            {
-                self.gameObject.AddComponent<OnKillThresholdManager>();
-            }
-        }
+            Utils.Paths.GameObject.VoidRaidCrabBody.Load<GameObject>().AddComponent<OnKillThresholdManager>();
 
-        private void PopulateAcceptableBodies(On.RoR2.BodyCatalog.orig_Init orig)
-        {
-            orig();
+            Utils.Paths.GameObject.MiniVoidRaidCrabBodyBase.Load<GameObject>().AddComponent<OnKillThresholdManager>();
+            Utils.Paths.GameObject.MiniVoidRaidCrabBodyPhase1.Load<GameObject>().AddComponent<OnKillThresholdManager>();
+            Utils.Paths.GameObject.MiniVoidRaidCrabBodyPhase2.Load<GameObject>().AddComponent<OnKillThresholdManager>();
+            Utils.Paths.GameObject.MiniVoidRaidCrabBodyPhase3.Load<GameObject>().AddComponent<OnKillThresholdManager>();
 
-            BodyIndex mithrix = BodyCatalog.FindBodyIndex(Utils.Paths.GameObject.BrotherBody.Load<GameObject>());
-            BodyIndex mithrix2 = BodyCatalog.FindBodyIndex(Utils.Paths.GameObject.BrotherHauntBody.Load<GameObject>());
-            BodyIndex voidling1 = BodyCatalog.FindBodyIndex(Utils.Paths.GameObject.VoidRaidCrabBody.Load<GameObject>());
-            BodyIndex voidling2 = BodyCatalog.FindBodyIndex(Utils.Paths.GameObject.MiniVoidRaidCrabBodyBase.Load<GameObject>());
-            BodyIndex voidling3 = BodyCatalog.FindBodyIndex(Utils.Paths.GameObject.MiniVoidRaidCrabBodyPhase1.Load<GameObject>());
-            BodyIndex voidling4 = BodyCatalog.FindBodyIndex(Utils.Paths.GameObject.MiniVoidRaidCrabBodyPhase2.Load<GameObject>());
-            BodyIndex voidling5 = BodyCatalog.FindBodyIndex(Utils.Paths.GameObject.MiniVoidRaidCrabBodyPhase3.Load<GameObject>());
-            BodyIndex twisted1 = BodyCatalog.FindBodyIndex(Utils.Paths.GameObject.ScavLunar1Body.Load<GameObject>());
-            BodyIndex twisted2 = BodyCatalog.FindBodyIndex(Utils.Paths.GameObject.ScavLunar2Body.Load<GameObject>());
-            BodyIndex twisted3 = BodyCatalog.FindBodyIndex(Utils.Paths.GameObject.ScavLunar3Body.Load<GameObject>());
-            BodyIndex twisted4 = BodyCatalog.FindBodyIndex(Utils.Paths.GameObject.ScavLunar4Body.Load<GameObject>());
-
-            acceptableBodies = new() {
-                mithrix,
-                mithrix2,
-                voidling1,
-                voidling2,
-                voidling3,
-                voidling4,
-                voidling5,
-                twisted1,
-                twisted2,
-                twisted3,
-                twisted4
-            };
+            Utils.Paths.GameObject.ScavLunar1Body.Load<GameObject>().AddComponent<OnKillThresholdManager>();
+            Utils.Paths.GameObject.ScavLunar2Body.Load<GameObject>().AddComponent<OnKillThresholdManager>();
+            Utils.Paths.GameObject.ScavLunar3Body.Load<GameObject>().AddComponent<OnKillThresholdManager>();
+            Utils.Paths.GameObject.ScavLunar4Body.Load<GameObject>().AddComponent<OnKillThresholdManager>();
         }
 
         private class OnKillThresholdManager : MonoBehaviour, IOnTakeDamageServerReceiver
         {
-            private HealthComponent hc => base.GetComponent<HealthComponent>();
-            private CharacterBody cb => base.GetComponent<CharacterBody>();
+            private HealthComponent healthComponent;
+            private CharacterBody characterBody;
 
-            private struct Threshold
-            {
-                public float fraction;
-            }
-
-            private List<Threshold> activeThresholds;
+            private List<float> activeThresholds;
 
             private void Start()
             {
-                activeThresholds = new()
-                {
-                    new Threshold { fraction = 80 },
-                    new Threshold { fraction = 65 },
-                    new Threshold { fraction = 50 },
-                    new Threshold { fraction = 35 },
-                    new Threshold { fraction = 20 },
-                    new Threshold { fraction = 5 }
-                };
+                healthComponent = base.GetComponent<HealthComponent>();
+                characterBody = base.GetComponent<CharacterBody>();
+
+                activeThresholds =
+                [
+                    0.8f,
+                    0.65f,
+                    0.5f,
+                    0.35f,
+                    0.2f,
+                    0.05f
+                ];
+
                 // reset this since it only checks on hc awake
-                hc.onTakeDamageReceivers = base.GetComponents<IOnTakeDamageServerReceiver>();
+                healthComponent.onTakeDamageReceivers = base.GetComponents<IOnTakeDamageServerReceiver>();
             }
 
             public void OnTakeDamageServer(DamageReport report)
             {
-                if (report.victimBody == cb && report.attackerBody)
+                if (report.victimBody == characterBody && report.attackerBody)
                 {
-                    CharacterBody attacker = report.attackerBody;
-                    List<Threshold> completed = new();
+                    List<float> completed = [];
 
-                    foreach (Threshold threshold in activeThresholds)
+                    foreach (var threshold in activeThresholds)
                     {
-                        float value = threshold.fraction * 0.01f;
-                        if (hc.health < (hc.fullCombinedHealth * value))
+                        if (healthComponent.health < (healthComponent.fullCombinedHealth * threshold))
                         {
                             completed.Add(threshold);
                         }
                     }
 
-                    foreach (Threshold threshold in completed)
+                    foreach (var threshold in completed)
                     {
                         activeThresholds.Remove(threshold);
                         TriggerKill(report);
@@ -117,12 +82,10 @@ namespace WellRoundedBalance.Mechanics.Bosses
 
             private void TriggerKill(DamageReport report)
             {
-                if (!NetworkServer.active)
+                if (!NetworkServer.active || !GlobalEventManager.instance)
                 {
                     return;
                 }
-
-                ProcType noHappiestMask = (ProcType)12096721;
 
                 DamageInfo info = new()
                 {
@@ -130,14 +93,15 @@ namespace WellRoundedBalance.Mechanics.Bosses
                     crit = report.damageInfo.crit,
                     damage = report.damageDealt,
                     damageType = report.damageInfo.damageType,
-                    position = cb.corePosition,
+                    position = characterBody.corePosition,
                     damageColorIndex = report.damageInfo.damageColorIndex,
                     procCoefficient = report.damageInfo.procCoefficient,
                 };
 
-                info.procChainMask.AddProc(noHappiestMask);
+                // no happiest mask
+                info.procChainMask.AddProc((ProcType)12096721);
 
-                GlobalEventManager.instance?.OnCharacterDeath(new(info, hc, info.damage, hc.combinedHealth));
+                GlobalEventManager.instance.OnCharacterDeath(new(info, healthComponent, info.damage, healthComponent.combinedHealth));
             }
         }
     }

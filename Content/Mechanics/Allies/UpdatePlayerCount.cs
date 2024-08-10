@@ -2,6 +2,7 @@
 using R2API.Utils;
 using System.Runtime.CompilerServices;
 using System;
+using HarmonyLib;
 
 namespace WellRoundedBalance.Mechanics.Allies
 {
@@ -16,33 +17,19 @@ namespace WellRoundedBalance.Mechanics.Allies
 
         public override void Hooks()
         {
-            var getParticipatingPlayerCount = new Hook(typeof(Run).GetMethodCached("get_participatingPlayerCount"),
-                typeof(UpdatePlayerCount).GetMethodCached(nameof(GetParticipatingPlayerCountHook)));
+            new Hook(AccessTools.PropertyGetter(typeof(Run), nameof(Run.participatingPlayerCount)), 
+                typeof(UpdatePlayerCount).GetMethodCached(nameof(Run_participatingPlayerCount)));
         }
 
-        private static int GetParticipatingPlayerCountHook(Run self)
+        private static int Run_participatingPlayerCount(Run _)
         {
-            return GetConnectedPlayers();
-        }
+            int players = PlayerCharacterMasterController.instances.Count(pc => pc.isConnected);
 
-        private static int GetConnectedPlayers()
-        {
-            int players = 0;
-            foreach (PlayerCharacterMasterController pc in PlayerCharacterMasterController.instances)
-            {
-                if (pc.isConnected)
-                {
-                    players++;
-                }
-            }
             if (Main.WildbookMultitudesLoaded)
-            {
                 players = ApplyMultitudes(players);
-            }
+
             if (Main.ZetArtifactsLoaded)
-            {
                 players = ApplyZetMultitudesArtifact(players);
-            }
 
             return players;
         }
@@ -56,7 +43,7 @@ namespace WellRoundedBalance.Mechanics.Allies
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         private static int ApplyZetMultitudesArtifact(int origPlayerCount)
         {
-            if (TPDespair.ZetArtifacts.ZetMultifact.Enabled && RunArtifactManager.instance.IsArtifactEnabled(TPDespair.ZetArtifacts.ZetArtifactsContent.Artifacts.ZetMultifact))
+            if (RunArtifactManager.instance && RunArtifactManager.instance.IsArtifactEnabled(TPDespair.ZetArtifacts.ZetArtifactsContent.Artifacts.ZetMultifact) && TPDespair.ZetArtifacts.ZetMultifact.Enabled)
             {
                 return origPlayerCount * Math.Max(2, TPDespair.ZetArtifacts.ZetArtifactsPlugin.MultifactMultiplier.Value); //GetMultiplier is private so I copypasted the code.
             }

@@ -53,7 +53,7 @@
             {
                 if (Run.instance is InfiniteTowerRun run)
                 {
-                    if (self.gameObject.name == "OptionPickup(Clone)" || self.gameObject.name == "CommandCube(Clone)")
+                    if (self.gameObject.name is "OptionPickup(Clone)" or "CommandCube(Clone)")
                     {
                         run.waveController.OnTimerExpire();
                     }

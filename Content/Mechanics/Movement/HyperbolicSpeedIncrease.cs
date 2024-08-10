@@ -29,11 +29,7 @@ namespace WellRoundedBalance.Mechanics.Movement
                 x => x.MatchLdarg(0),
                 x => x.MatchCallOrCallvirt<CharacterBody>("get_moveSpeed")))
             {
-                c.EmitDelegate<Func<float, float>>((orig) =>
-                {
-                    orig = Math.Min(orig, GetHyperbolic(orig, maxValue, orig));
-                    return orig;
-                });
+                c.EmitDelegate<Func<float, float>>((orig) => Math.Min(orig, GetHyperbolic(orig, maxValue, orig)));
             }
             else
             {

@@ -23,7 +23,7 @@ namespace WellRoundedBalance.Items.Lunars
         {
             On.RoR2.HoldoutZoneController.FocusConvergenceController.Awake += Changes;
             IL.RoR2.HoldoutZoneController.FocusConvergenceController.ApplyRadius += FocusConvergenceController_ApplyRadius;
-            On.RoR2.Inventory.GiveItem_ItemIndex_int += Inventory_GiveItem_ItemIndex_int;
+            Inventory.onServerItemGiven += Inventory_onServerItemGiven;
             On.RoR2.Inventory.RemoveItem_ItemIndex_int += Inventory_RemoveItem_ItemIndex_int;
             On.RoR2.Stage.Start += Stage_Start;
         }
@@ -37,7 +37,7 @@ namespace WellRoundedBalance.Items.Lunars
                 var tp = TeleporterInteraction.instance;
                 if (tp)
                 {
-                    for (int i = 0; i < stack * mountainShrineCount; i++)
+                    for (var i = 0; i < stack * mountainShrineCount; i++)
                     {
                         tp.AddShrineStack();
                     }
@@ -54,7 +54,7 @@ namespace WellRoundedBalance.Items.Lunars
                 if (tp)
                 {
                     if (tp.shrineBonusStacks - mountainShrineCount >= 0)
-                        for (int i = 0; i < mountainShrineCount; i++)
+                        for (var i = 0; i < mountainShrineCount; i++)
                         {
                             tp.shrineBonusStacks--;
                         }
@@ -62,15 +62,14 @@ namespace WellRoundedBalance.Items.Lunars
             }
         }
 
-        private void Inventory_GiveItem_ItemIndex_int(On.RoR2.Inventory.orig_GiveItem_ItemIndex_int orig, Inventory self, ItemIndex itemIndex, int count)
+        private void Inventory_onServerItemGiven(Inventory self, ItemIndex itemIndex, int count)
         {
-            orig(self, itemIndex, count);
             if (NetworkServer.active && itemIndex == RoR2Content.Items.FocusConvergence.itemIndex)
             {
                 var tp = TeleporterInteraction.instance;
                 if (tp)
                 {
-                    for (int i = 0; i < mountainShrineCount; i++)
+                    for (var i = 0; i < mountainShrineCount; i++)
                     {
                         tp.AddShrineStack();
                     }

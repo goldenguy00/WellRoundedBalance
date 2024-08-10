@@ -29,7 +29,7 @@
 
         private void Changes()
         {
-            var hereticBody = Utils.Paths.GameObject.HereticBody.Load<GameObject>().GetComponent<CharacterBody>();
+            var hereticBody = Utils.Paths.GameObject.HereticBody.LoadComponent<CharacterBody>();
             hereticBody.baseDamage = baseDamage;
             hereticBody.levelDamage = baseDamage * 0.2f;
             hereticBody.baseMaxHealth = baseMaxHealth;

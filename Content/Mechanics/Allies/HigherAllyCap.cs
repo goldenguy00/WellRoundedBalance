@@ -19,7 +19,7 @@
 
         private void Changes()
         {
-            TeamDef def = TeamCatalog.teamDefs.FirstOrDefault(x => TeamCatalog.GetTeamDef(TeamIndex.Player) == x);
+            var def = TeamCatalog.teamDefs.FirstOrDefault(x => TeamCatalog.GetTeamDef(TeamIndex.Player) == x);
             def.softCharacterLimit = cap;
         }
     }

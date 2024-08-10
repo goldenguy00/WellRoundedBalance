@@ -43,21 +43,24 @@ namespace WellRoundedBalance.Mechanics.Bazaar
                 var lunarShop = GameObject.Find("HOLDER: Store").transform.GetChild(0);
                 var table = lunarShop.GetChild(2);
                 table.gameObject.AddComponent<NetworkIdentity>();
+
                 if (enableLunarPods)
                 {
-                    List<PurchaseInteraction> interactions = GameObject.FindObjectsOfType<PurchaseInteraction>().Where(x => x.gameObject.name.Contains("LunarShopTerminal")).ToList();
-                    for (int i = 0; i < 5; i++)
+                    var interactions = GameObject.FindObjectsOfType<PurchaseInteraction>().Where(x => x.gameObject.name.Contains("LunarShopTerminal")).ToList();
+                    for (var i = 0; i < 5; i++)
                     {
-                        if (i == 1 || i == 5)
+                        var interaction = interactions[i];
+                        if (i is 1 or 5)
                         {
-                            GameObject.Destroy(interactions[i].gameObject);
-                            continue;
+                            GameObject.Destroy(interaction.gameObject);
                         }
-
-                        Vector3 position = interactions[i].transform.position;
-                        GameObject.Destroy(interactions[i].gameObject);
-                        var lunarPodServer = Object.Instantiate(lunarPod, position, Quaternion.identity);
-                        NetworkServer.Spawn(lunarPodServer);
+                        else
+                        {
+                            var position = interaction.transform.position;
+                            GameObject.Destroy(interaction.gameObject);
+                            var lunarPodServer = Object.Instantiate(lunarPod, position, Quaternion.identity);
+                            NetworkServer.Spawn(lunarPodServer);
+                        }
                     }
                 }
 
@@ -67,6 +70,7 @@ namespace WellRoundedBalance.Mechanics.Bazaar
                     table2Server.transform.localPosition = new Vector3(11f, -7.5f, 9f);
                     table2Server.transform.eulerAngles = new Vector3(270f, 250f, 0f);
                     NetworkServer.Spawn(table2Server.gameObject);
+
                     var heresyItemServer = Object.Instantiate(heresyStation, table2Server);
                     heresyItemServer.transform.localPosition = new Vector3(1.695f, -1.307f, 1.196f);
                     heresyItemServer.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
@@ -77,12 +81,14 @@ namespace WellRoundedBalance.Mechanics.Bazaar
                     heresyItemServer2.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
                     NetworkServer.Spawn(heresyItemServer2);
                 }
+
                 if (!enableLunarReroller)
                 {
                     var slab = lunarShop.GetChild(3).gameObject;
                     slab.SetActive(false);
                 }
             }
+
             orig(self);
         }
     }

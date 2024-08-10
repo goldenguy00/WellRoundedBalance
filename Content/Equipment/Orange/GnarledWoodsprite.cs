@@ -53,7 +53,7 @@ namespace WellRoundedBalance.Equipment.Orange
 
         private void Changes()
         {
-            var wood = Utils.Paths.GameObject.HealingFollower.Load<GameObject>().GetComponent<HealingFollowerController>();
+            var wood = Utils.Paths.GameObject.HealingFollower.LoadComponent<HealingFollowerController>();
             wood.fractionHealthBurst = activationPercentHealing;
             wood.fractionHealthHealing = passivePercentHealing;
             wood.healingInterval = passiveHealingInterval;

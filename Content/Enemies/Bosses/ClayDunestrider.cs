@@ -15,7 +15,7 @@ namespace WellRoundedBalance.Enemies.Bosses
         {
             IL.EntityStates.ClayBoss.Recover.FireTethers += Recover_FireTethers;
             IL.RoR2.TarTetherController.DoDamageTick += TarTetherController_DoDamageTick;
-            RoR2.CharacterMaster.onStartGlobal += CharacterMaster_onStartGlobal;
+            TweakMaster();
         }
 
         private void TarTetherController_DoDamageTick(ILContext il)
@@ -79,25 +79,14 @@ namespace WellRoundedBalance.Enemies.Bosses
             }
         }
 
-        private void CharacterMaster_onStartGlobal(CharacterMaster master)
+        private void TweakMaster()
         {
-            if (Main.IsInfernoDef())
-            {
-                return;
-            }
-            switch (master.name)
-            {
-                case "ClayBossMaster(Clone)":
-                    AISkillDriver Suck1 = (from x in master.GetComponents<AISkillDriver>()
-                                           where x.customName == "SukFriends"
-                                           select x).First();
-                    Suck1.noRepeat = true;
+            var master = Utils.Paths.GameObject.ClayBossMaster.Load<GameObject>();
 
-                    AISkillDriver Suck2 = (from x in master.GetComponents<AISkillDriver>()
-                                           where x.customName == "SukEnemies"
-                                           select x).First();
-                    Suck2.noRepeat = true;
-                    break;
+            foreach (var skill in master.GetComponents<AISkillDriver>())
+            {
+                if (skill.customName is "SukFriends" or "SukEnemies")
+                    skill.noRepeat = true;
             }
         }
     }

@@ -1,5 +1,6 @@
 ﻿using System;
 
+// god i hate this so fucking much good lord this is bad fucking practice fuck this fuck this holy shit donty do this ever again please for the love of god just make a new file what the fuck
 namespace WellRoundedBalance.Misc
 {
     public class DestroyStuckObject : MonoBehaviour
@@ -13,7 +14,7 @@ namespace WellRoundedBalance.Misc
         private void Awake()
         {
             //For good measure, set the previous locations
-            for (int i = 0; i < previousLocations.Length; i++)
+            for (var i = 0; i < previousLocations.Length; i++)
             {
                 previousLocations[i] = Vector3.zero;
             }
@@ -22,7 +23,7 @@ namespace WellRoundedBalance.Misc
         private void FixedUpdate()
         {
             timer += Time.fixedDeltaTime;
-            for (int i = 0; i < previousLocations.Length - 1; i++)
+            for (var i = 0; i < previousLocations.Length - 1; i++)
             {
                 previousLocations[i] = previousLocations[i + 1];
             }
@@ -33,7 +34,7 @@ namespace WellRoundedBalance.Misc
                 //Check the distances between the points in your previous locations
                 //If for the past several updates, there are no movements smaller than the threshold,
                 //you can most likely assume that the object is not moving
-                for (int i = 0; i < previousLocations.Length - 1; i++)
+                for (var i = 0; i < previousLocations.Length - 1; i++)
                 {
                     if (Vector3.Distance(previousLocations[i], previousLocations[i + 1]) >= noMovementThreshold)
                     {

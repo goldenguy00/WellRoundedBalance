@@ -25,36 +25,20 @@ namespace WellRoundedBalance.Enemies.Standard
 
         private void CharacterMaster_onStartGlobal(CharacterMaster master)
         {
-            if (Main.IsInfernoDef())
+            if (master.name is "GipMaster(Clone)" && !Main.IsInfernoDef())
             {
-                return;
-            }
-            switch (master.name)
-            {
-                case "GipMaster(Clone)":
-                    AISkillDriver spike = (from x in master.GetComponents<AISkillDriver>()
-                                           where x.customName == "Spike"
-                                           select x).First();
-                    spike.maxDistance = 45f;
-                    break;
+                var spike = master.GetComponents<AISkillDriver>().First(ai => ai.customName == "Spike");
+                spike.maxDistance = 45f;
             }
         }
 
         private void CharacterBody_onBodyStartGlobal(CharacterBody body)
         {
-            if (Main.IsInfernoDef())
+            if (body.name is "GipBody(Clone)" && !Main.IsInfernoDef())
             {
-                return;
-            }
-            switch (body.name)
-            {
-                case "GipBody(Clone)":
-                    body.baseMoveSpeed = 29f;
-                    if (body.GetComponent<GupSpikesController>() == null)
-                    {
-                        body.gameObject.AddComponent<GupSpikesController>();
-                    }
-                    break;
+                body.baseMoveSpeed = 29f;
+                if (!body.GetComponent<GupSpikesController>())
+                    body.gameObject.AddComponent<GupSpikesController>();
             }
         }
 

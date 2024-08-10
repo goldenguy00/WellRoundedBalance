@@ -1,15 +1,19 @@
-using System;
-using RiskOfOptions.Components.AssetResolution;
+using Inferno.Stat_AI;
 using WellRoundedBalance.Buffs;
+using WellRoundedBalance.Elites.Tier1;
 
-namespace WellRoundedBalance.Elites {
-    public class Voidtouched : EliteBase<Voidtouched> {
+namespace WellRoundedBalance.Elites
+{
+    public class Voidtouched : EliteBase<Voidtouched>
+    {
         public override string Name => ":: Elites :: Voidtouched";
-        
+
         public static GameObject MortarSmallPrefab;
         public static GameObject MortarDeathPrefab;
         public static GameObject MortarGhost;
         public static GameObject LaserPrefab;
+        public static GameObject CrabRave;
+        public static GameObject HitEffect;
 
         [ConfigField("Minimum Mortar Count (Skill)", 3)]
         public static int MinMortarCountSkill;
@@ -20,8 +24,20 @@ namespace WellRoundedBalance.Elites {
         [ConfigField("Maximum Mortar Count (Death)", 12)]
         public static int MaxMortarCountDeath;
 
-        public override void Init() {
+        public override void Init()
+        {
             base.Init();
+            CrabRave = Utils.Paths.GameObject.VoidRaidCrabSpinBeamVFX.Load<GameObject>().InstantiateClone("Voidtouched Crab Rave Vfx");
+            CrabRave.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
+            CrabRave.transform.localScale *= 0.2f;
+
+            foreach (var light in CrabRave.GetComponentsInChildren<Light>())
+            {
+                light.range *= 0.5f;
+                light.intensity *= 0.5f;
+            }
+
+            HitEffect = Utils.Paths.GameObject.VoidRaidCrabMultiBeamDotZoneImpact.Load<GameObject>();
 
             LaserPrefab = PrefabAPI.InstantiateClone(new("Voidtouched Beam"), "Voidtouched Laser");
 
@@ -33,19 +49,22 @@ namespace WellRoundedBalance.Elites {
 
             MortarGhost = PrefabAPI.InstantiateClone(Utils.Paths.GameObject.ClayPotProjectileGhost.Load<GameObject>(), "Voidtouched Mortar Ghost", false);
 
-            Material mat1 = Utils.Paths.Material.matVoidBarnacleBulletOverlay.Load<Material>();
-            Material mat2 = Utils.Paths.Material.matVoidBarnacleBullet.Load<Material>();
-            Material mat3 = Utils.Paths.Material.matVoidSurvivorCorruptOverlay.Load<Material>();
+            var mat1 = Utils.Paths.Material.matVoidBarnacleBulletOverlay.Load<Material>();
+            var mat2 = Utils.Paths.Material.matVoidBarnacleBullet.Load<Material>();
+            var mat3 = Utils.Paths.Material.matVoidSurvivorCorruptOverlay.Load<Material>();
 
-            ReplaceMaterials(MortarGhost, mat1, mat2, mat3);
+            foreach (Renderer renderer in MortarGhost.GetComponentsInChildren<MeshRenderer>())
+            {
+                renderer.sharedMaterials = [mat1, mat2, mat3];
+            }
 
-            Mesh spiky = Utils.Paths.GameObject.mdlArtifactSpikyBall.Load<GameObject>().GetComponentInChildren<MeshFilter>().mesh;
+            var spiky = Utils.Paths.GameObject.mdlArtifactSpikyBall.Load<GameObject>().GetComponentInChildren<MeshFilter>().mesh;
 
             MortarGhost.GetComponentInChildren<MeshFilter>().mesh = spiky;
 
             MortarSmallPrefab = PrefabAPI.InstantiateClone(Utils.Paths.GameObject.ClayPotProjectile.Load<GameObject>(), "Voidtouched Mortar Small");
 
-            ProjectileSimple simple = MortarSmallPrefab.GetComponent<ProjectileSimple>();
+            var simple = MortarSmallPrefab.GetComponent<ProjectileSimple>();
             simple.desiredForwardSpeed = 90f;
             simple.lifetime = 25f;
 
@@ -53,24 +72,24 @@ namespace WellRoundedBalance.Elites {
             MortarSmallPrefab.GetComponent<SphereCollider>().material = Utils.Paths.PhysicMaterial.physmatVoidSurvivorCrabCannon.Load<PhysicMaterial>();
             MortarSmallPrefab.RemoveComponent<ApplyTorqueOnStart>();
 
-            ProjectileController controller = MortarSmallPrefab.GetComponent<ProjectileController>();
+            var controller = MortarSmallPrefab.GetComponent<ProjectileController>();
             controller.allowPrediction = false;
             controller.ghostPrefab = MortarGhost;
 
-            ProjectileImpactExplosion impact = MortarSmallPrefab.GetComponent<ProjectileImpactExplosion>();
+            var impact = MortarSmallPrefab.GetComponent<ProjectileImpactExplosion>();
             impact.blastDamageCoefficient = 1f;
             impact.blastRadius = 0.5f;
             impact.lifetime = 25f;
             impact.impactEffect = Utils.Paths.GameObject.VoidSurvivorMegaBlasterExplosionCorrupted.Load<GameObject>();
 
-            ProjectileDamage damage = MortarSmallPrefab.GetComponent<ProjectileDamage>();
+            var damage = MortarSmallPrefab.GetComponent<ProjectileDamage>();
             damage.damageType = DamageType.Nullify;
 
             MortarDeathPrefab = PrefabAPI.InstantiateClone(MortarSmallPrefab, "Voidtouched Mortar Death");
             MortarDeathPrefab.transform.localScale *= 2f;
             MortarDeathPrefab.layer = LayerIndex.debris.intVal;
 
-            ProjectileImpactExplosion impactDeath = MortarDeathPrefab.GetComponent<ProjectileImpactExplosion>();
+            var impactDeath = MortarDeathPrefab.GetComponent<ProjectileImpactExplosion>();
             impactDeath.childrenCount = 1;
             impactDeath.childrenProjectilePrefab = LaserPrefab;
             impactDeath.childrenDamageCoefficient = 1f;
@@ -88,17 +107,14 @@ namespace WellRoundedBalance.Elites {
             ContentAddition.AddProjectile(LaserPrefab);
         }
 
-        public void ReplaceMaterials(GameObject obj, params Material[] mat) {
-            foreach (Renderer renderer in obj.GetComponentsInChildren<MeshRenderer>()) {
-                renderer.sharedMaterials = mat;
-            }
-        }
-
-        public override void Hooks() {
-            On.RoR2.GenericSkill.OnExecute += GenericSkill_OnExecute;
+        public override void Hooks()
+        {
             On.RoR2.GlobalEventManager.OnCharacterDeath += GlobalEventManager_OnCharacterDeath;
             IL.RoR2.GlobalEventManager.OnHitEnemy += GlobalEventManager_OnHitEnemy;
-        }
+
+            DelegateStuff.addBuff += CharacterBody_AddBuff;
+            DelegateStuff.removeBuff += CharacterBody_RemoveBuff;
+    }
 
         private void GlobalEventManager_OnHitEnemy(ILContext il)
         {
@@ -120,61 +136,73 @@ namespace WellRoundedBalance.Elites {
         {
             orig(self, damageReport);
 
-            CharacterBody body = damageReport.victimBody;
+            var body = damageReport.victimBody;
 
             if (body && body.HasBuff(DLC1Content.Buffs.EliteVoid))
             {
-                int count = Mathf.RoundToInt(Util.Remap(body.baseMaxHealth, 1f, 2500f, MinMortarCountDeath, MaxMortarCountDeath));
+                var count = Mathf.RoundToInt(Util.Remap(body.baseMaxHealth, 1f, 2500f, MinMortarCountDeath, MaxMortarCountDeath));
 
-                for (int i = 0; i < count; i++)
+                for (var i = 0; i < count; i++)
                 {
-                    float rad = 2 * Mathf.PI / count * i;
-                    Vector3 direction = new Vector3(Mathf.Cos(rad), 0, Mathf.Sin(rad)) + Vector3.up;
+                    var rad = 2 * Mathf.PI / count * i;
+                    var direction = new Vector3(Mathf.Cos(rad), 0, Mathf.Sin(rad)) + Vector3.up;
 
-                    FireProjectileInfo info = new();
-                    info.owner = body.gameObject;
-                    info.projectilePrefab = MortarDeathPrefab;
-                    info.position = body.corePosition;
-                    info.rotation = Util.QuaternionSafeLookRotation(direction);
-                    info.damage = body.damage;
-                    info.damageColorIndex = DamageColorIndex.Void;
-
-                    ProjectileManager.instance.FireProjectile(info);
+                    ProjectileManager.instance.FireProjectile(new FireProjectileInfo()
+                    {
+                        owner = body.gameObject,
+                        projectilePrefab = MortarDeathPrefab,
+                        position = body.corePosition,
+                        rotation = Util.QuaternionSafeLookRotation(direction),
+                        damage = body.damage,
+                        damageColorIndex = DamageColorIndex.Void
+                    });
                 }
             }
         }
 
-        private void GenericSkill_OnExecute(On.RoR2.GenericSkill.orig_OnExecute orig, GenericSkill self)
+
+        private void CharacterBody_AddBuff(CharacterBody self, BuffIndex buffType)
         {
-            orig(self);
-
-            CharacterBody body = self.characterBody;
-
-            if (body && body.HasBuff(DLC1Content.Buffs.EliteVoid))
+            if (buffType == DLC1Content.Buffs.EliteVoid.buffIndex)
             {
-                int count = Mathf.RoundToInt(Util.Remap(self.skillDef.baseRechargeInterval, 2f, 14f, MinMortarCountSkill, MaxMortarCountSkill));
+                self.onSkillActivatedAuthority += Self_onSkillActivatedAuthority;
+            }
+        }
 
-                if (self.skillDef.baseRechargeInterval == 0f || self.skillDef.stockToConsume == 0) {
-                    count = Util.CheckRoll(35f) ? count : 0;
-                }
+        private void CharacterBody_RemoveBuff(CharacterBody self, BuffIndex buffType)
+        {
+            if (buffType == DLC1Content.Buffs.EliteVoid.buffIndex)
+            {
+                self.onSkillActivatedAuthority -= Self_onSkillActivatedAuthority;
+            }
+        }
 
-                for (int i = 0; i < count; i++)
+        private void Self_onSkillActivatedAuthority(GenericSkill skill)
+        {
+            if ((skill.baseRechargeInterval == 0f || skill.skillDef.stockToConsume == 0) && Util.CheckRoll(35f))
+            {
+                var count = Mathf.RoundToInt(Util.Remap(skill.baseRechargeInterval, 2f, 14f, MinMortarCountSkill, MaxMortarCountSkill));
+                var body = skill.characterBody;
+
+                for (var i = 0; i < count; i++)
                 {
-                    FireProjectileInfo info = new();
-                    info.owner = body.gameObject;
-                    info.projectilePrefab = MortarSmallPrefab;
-                    info.position = body.corePosition;
-                    info.rotation = Util.QuaternionSafeLookRotation(Util.ApplySpread(body.inputBank.aimDirection, -25f, 25f, 1f, 1f));
-                    info.damage = body.damage;
-                    info.damageColorIndex = DamageColorIndex.Void;
-                    info.speedOverride = 90f * UnityEngine.Random.Range(0.5f, 1.5f);
-
-                    ProjectileManager.instance.FireProjectile(info);
+                    var rotation = Util.ApplySpread(body.inputBank.aimDirection, -25f, 25f, 1f, 1f);
+                    ProjectileManager.instance.FireProjectile(new FireProjectileInfo()
+                    {
+                        owner = body.gameObject,
+                        projectilePrefab = MortarSmallPrefab,
+                        position = body.corePosition,
+                        rotation = Util.QuaternionSafeLookRotation(rotation),
+                        damage = body.damage,
+                        damageColorIndex = DamageColorIndex.Void,
+                        speedOverride = 90f * UnityEngine.Random.Range(0.5f, 1.5f)
+                    });
                 }
             }
         }
 
-        public class VoidtouchedLaserBehaviour : MonoBehaviour {
+        public class VoidtouchedLaserBehaviour : MonoBehaviour
+        {
             public ProjectileController controller;
             public ProjectileDamage damage;
             public float stopwatch;
@@ -188,70 +216,75 @@ namespace WellRoundedBalance.Elites {
             public float scale2SubtrPerSec;
             public float y;
 
-            public void Start() {
+            public void Start()
+            {
                 controller = GetComponent<ProjectileController>();
                 damage = GetComponent<ProjectileDamage>();
 
-                laserInstance = GameObject.Instantiate(Utils.Paths.GameObject.VoidRaidCrabSpinBeamVFX.Load<GameObject>(), transform.position - new Vector3(0, 5f, 0), Quaternion.identity);
-                laserInstance.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
-                laserInstance.transform.localScale *= 0.2f;
+                laserInstance = GameObject.Instantiate(CrabRave, transform.position - new Vector3(0, 5f, 0), Quaternion.identity);
                 scale = laserInstance.transform.localScale;
                 y = scale.z;
                 scale2SubtrPerSec = 2f;
                 scaleSubtrPerSec = scale;
-
-                foreach (Light light in laserInstance.GetComponentsInChildren<Light>()) {
-                    light.range *= 0.5f;
-                    light.intensity *= 0.5f;
-                }
             }
 
-            public void FixedUpdate() {
+            public void FixedUpdate()
+            {
                 stopwatch += Time.fixedDeltaTime;
                 damageStopwatch += Time.fixedDeltaTime;
 
-                if (destructionStopwatch >= 0f) {
+                if (destructionStopwatch >= 0f)
+                {
                     destructionStopwatch -= Time.fixedDeltaTime;
                     scale -= scaleSubtrPerSec * Time.fixedDeltaTime;
                     bulletScale -= scale2SubtrPerSec * Time.fixedDeltaTime;
                     laserInstance.transform.localScale = new(scale.x, scale.y, y);
                 }
 
-                if (destructionStopwatch <= 0f && markedForDestruction) {
+                if (destructionStopwatch <= 0f && markedForDestruction)
+                {
                     Destroy(laserInstance);
                     Destroy(this.gameObject);
                 }
 
-                if (stopwatch >= 3f && !markedForDestruction) {
+                if (stopwatch >= 3f && !markedForDestruction)
+                {
                     destructionStopwatch = 1f;
                     markedForDestruction = true;
                     return;
                 }
 
-                if (damageStopwatch >= 0.2f) {
+                if (damageStopwatch >= 0.2f)
+                {
                     damageStopwatch = 0f;
 
-                    BulletAttack bulletAttack = new();
-                    bulletAttack.owner = controller.owner;
-                    bulletAttack.weapon = gameObject;
-                    bulletAttack.origin = transform.position + new Vector3(0, 200f, 0);
-                    bulletAttack.aimVector = Vector3.down;
-                    bulletAttack.minSpread = 0f;
-                    bulletAttack.maxSpread = 0f;
-                    bulletAttack.damage = damage.damage * 5f * 0.2f;
-                    bulletAttack.force = 0f;
-                    bulletAttack.hitEffectPrefab = Utils.Paths.GameObject.VoidRaidCrabMultiBeamDotZoneImpact.Load<GameObject>();
-                    bulletAttack.isCrit = false;
-                    bulletAttack.procChainMask = default;
-                    bulletAttack.procCoefficient = 0f;
-                    bulletAttack.maxDistance = 200f;
-                    bulletAttack.damageType = DamageType.Generic;
-                    bulletAttack.falloffModel = BulletAttack.FalloffModel.None;
-                    bulletAttack.stopperMask = LayerIndex.world.mask;
-                    bulletAttack.radius = bulletScale;
-
-                    bulletAttack.Fire();
+                    new BulletAttack()
+                    {
+                        owner = controller.owner,
+                        weapon = gameObject,
+                        origin = transform.position + new Vector3(0, 200f, 0),
+                        aimVector = Vector3.down,
+                        minSpread = 0f,
+                        maxSpread = 0f,
+                        damage = damage.damage * 5f * 0.2f,
+                        force = 0f,
+                        hitEffectPrefab = HitEffect,
+                        isCrit = false,
+                        procChainMask = default,
+                        procCoefficient = 0f,
+                        maxDistance = 200f,
+                        damageType = DamageType.Generic,
+                        falloffModel = BulletAttack.FalloffModel.None,
+                        stopperMask = LayerIndex.world.mask,
+                        radius = bulletScale
+                    }.Fire();
                 }
+            }
+
+            public void OnDestroy()
+            {
+                if (laserInstance)
+                    Destroy(laserInstance);
             }
         }
     }

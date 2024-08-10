@@ -56,7 +56,7 @@ namespace WellRoundedBalance.Items.Whites
         public static void HealthComponent_TakeDamage(ILContext il)
         {
             ILCursor c = new(il);
-            int dmg = -1;
+            var dmg = -1;
             c.TryGotoNext(x => x.MatchLdfld<DamageInfo>(nameof(DamageInfo.damage)), x => x.MatchStloc(out dmg));
             if (c.TryGotoNext(x => x.MatchLdfld<HealthComponent.ItemCounts>(nameof(HealthComponent.ItemCounts.armorPlate))) && c.TryGotoNext(x => x.MatchStloc(dmg)))
             {
@@ -65,9 +65,9 @@ namespace WellRoundedBalance.Items.Whites
                 c.Emit(OpCodes.Ldarg_0);
                 c.EmitDelegate<Func<float, HealthComponent, float>>((orig, self) =>
                 {
-                    float minFlat = StackAmount(minimumDamage, minimumDamageStack, self.itemCounts.armorPlate, minimumDamageIsHyperbolic);
-                    float minPercent = self.fullHealth * StackAmount(minimumPercentDamage, minimumPercentDamageStack, self.itemCounts.armorPlate, minimumPercentDamageIsHyperbolic);
-                    float reduction = StackAmount(flatDamageReduction, flatDamageReductionStack, self.itemCounts.armorPlate, flatDamageReductionIsHyperbolic);
+                    var minFlat = StackAmount(minimumDamage, minimumDamageStack, self.itemCounts.armorPlate, minimumDamageIsHyperbolic);
+                    var minPercent = self.fullHealth * StackAmount(minimumPercentDamage, minimumPercentDamageStack, self.itemCounts.armorPlate, minimumPercentDamageIsHyperbolic);
+                    var reduction = StackAmount(flatDamageReduction, flatDamageReductionStack, self.itemCounts.armorPlate, flatDamageReductionIsHyperbolic);
                     return Mathf.Max(minFlat, minPercent, orig - reduction);
                 });
             }

@@ -24,10 +24,10 @@ namespace WellRoundedBalance.Items.Reds
 
         public override void Hooks()
         {
-            IL.RoR2.GlobalEventManager.OnCharacterDeath += DisableVanilla;
-            GlobalEventManager.onCharacterDeathGlobal += Killed;
-            On.RoR2.HealthComponent.TakeDamage += ReduceDamage;
-            On.RoR2.Inventory.RemoveItem_ItemIndex_int += Inventory_RemoveItem_ItemIndex_int;
+            //IL.RoR2.GlobalEventManager.OnCharacterDeath += DisableVanilla;
+            //GlobalEventManager.onCharacterDeathGlobal += Killed;
+            //On.RoR2.HealthComponent.TakeDamage += ReduceDamage;
+            //On.RoR2.Inventory.RemoveItem_ItemIndex_int += Inventory_RemoveItem_ItemIndex_int;
         }
 
         private void Inventory_RemoveItem_ItemIndex_int(On.RoR2.Inventory.orig_RemoveItem_ItemIndex_int orig, Inventory self, ItemIndex itemIndex, int count)
@@ -41,7 +41,7 @@ namespace WellRoundedBalance.Items.Reds
                     var body = master.GetBody();
                     if (body)
                     {
-                        for (int i = 0; i < body.activeBuffsList.Length; i++)
+                        for (var i = 0; i < body.activeBuffsList.Length; i++)
                         {
                             var buff = body.activeBuffsList[i];
                             if (BuffCatalog.eliteBuffIndices.Contains(buff))
@@ -60,45 +60,50 @@ namespace WellRoundedBalance.Items.Reds
         {
             if (NetworkServer.active)
             {
-                if (damage.attacker && damage.attacker.GetComponent<CharacterBody>())
+                if (self.body && damage.attacker)
                 {
-                    CharacterBody attacker = damage.attacker.GetComponent<CharacterBody>();
-                    if (attacker.isElite && self.body.inventory && self.body.inventory.GetItemCount(RoR2Content.Items.HeadHunter) > 0)
+                    var inventory = self.body.inventory;
+                    var attacker = damage.attacker.GetComponent<CharacterBody>();
+                    if (attacker && attacker.isElite && inventory)
                     {
-                        List<BuffIndex> currentEliteBuffs = new();
-                        foreach (BuffIndex buff in attacker.activeBuffsList)
+                        var stacks = inventory.GetItemCount(RoR2Content.Items.HeadHunter);
+                        if (stacks > 0)
                         {
-                            if (BuffCatalog.eliteBuffIndices.Contains(buff))
+                            List<BuffIndex> currentEliteBuffs = [];
+                            foreach (var buff in attacker.activeBuffsList)
                             {
-                                currentEliteBuffs.Add(buff);
+                                if (BuffCatalog.eliteBuffIndices.Contains(buff))
+                                {
+                                    currentEliteBuffs.Add(buff);
+                                }
                             }
-                        }
 
-                        List<BuffIndex> currentEliteBuffsVictim = new();
-                        foreach (BuffIndex buff in self.body.activeBuffsList)
-                        {
-                            if (BuffCatalog.eliteBuffIndices.Contains(buff))
+                            List<BuffIndex> currentEliteBuffsVictim = [];
+                            foreach (var buff in self.body.activeBuffsList)
                             {
-                                currentEliteBuffsVictim.Add(buff);
+                                if (BuffCatalog.eliteBuffIndices.Contains(buff))
+                                {
+                                    currentEliteBuffsVictim.Add(buff);
+                                }
                             }
-                        }
 
-                        bool hasAtLeastOne = false;
+                            var hasAtLeastOne = false;
 
-                        foreach (BuffIndex index in currentEliteBuffsVictim)
-                        {
-                            if (currentEliteBuffs.Contains(index))
+                            foreach (var index in currentEliteBuffsVictim)
                             {
-                                hasAtLeastOne = true;
-                                break;
+                                if (currentEliteBuffs.Contains(index))
+                                {
+                                    hasAtLeastOne = true;
+                                    break;
+                                }
                             }
-                        }
 
-                        float mult = Mathf.Pow((1 - damageReduction), self.body.inventory.GetItemCount(RoR2Content.Items.HeadHunter));
-                        // Debug.Log(mult);
-                        if (hasAtLeastOne)
-                        {
-                            damage.damage *= mult;
+                            var mult = Mathf.Pow(1 - damageReduction, stacks);
+                            // Debug.Log(mult);
+                            if (hasAtLeastOne)
+                            {
+                                damage.damage *= mult;
+                            }
                         }
                     }
                 }
@@ -129,11 +134,11 @@ namespace WellRoundedBalance.Items.Reds
                 if (report.victimIsElite && report.attackerBody)
                 {
                     // Debug.Log("killed elite");
-                    int stack = report.attackerBody.inventory.GetItemCount(RoR2Content.Items.HeadHunter);
+                    var stack = report.attackerBody.inventory.GetItemCount(RoR2Content.Items.HeadHunter);
                     if (stack > 0)
                     {
-                        List<BuffIndex> currentEliteBuffs = new();
-                        foreach (BuffIndex buff in report.attackerBody.activeBuffsList)
+                        List<BuffIndex> currentEliteBuffs = [];
+                        foreach (var buff in report.attackerBody.activeBuffsList)
                         {
                             if (BuffCatalog.eliteBuffIndices.Contains(buff))
                             {
@@ -142,7 +147,7 @@ namespace WellRoundedBalance.Items.Reds
                         }
 
                         BuffIndex eliteIndex = 0;
-                        foreach (BuffIndex buff in report.victimBody.activeBuffsList)
+                        foreach (var buff in report.victimBody.activeBuffsList)
                         {
                             if (BuffCatalog.eliteBuffIndices.Contains(buff) && !currentEliteBuffs.Contains(buff))
                             {
@@ -160,7 +165,7 @@ namespace WellRoundedBalance.Items.Reds
                         if (currentEliteBuffs.Count > stack)
                         {
                             // Debug.Log("has too many elite buffs");
-                            for (int i = 0; i < currentEliteBuffs.Count - stack; i++)
+                            for (var i = 0; i < currentEliteBuffs.Count - stack; i++)
                             {
                                 report.attackerBody.RemoveBuff(currentEliteBuffs[i]);
                                 // Debug.Log("removing buff");

@@ -79,8 +79,8 @@ namespace WellRoundedBalance.Elites.Tier1
 
             Gradient greenGradient = new();
             greenGradient.SetKeys(
-                new GradientColorKey[] { new GradientColorKey(new Color32(170, 255, 158, 255), 0f), new GradientColorKey(new Color32(36, 233, 0, 255), 0.424f), new GradientColorKey(Color.black, 1f) },
-                new GradientAlphaKey[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0f, 1f) });
+                [new GradientColorKey(new Color32(170, 255, 158, 255), 0f), new GradientColorKey(new Color32(36, 233, 0, 255), 0.424f), new GradientColorKey(Color.black, 1f)],
+                [new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0f, 1f)]);
 
             flamesParticleSystem.color = greenGradient;
 
@@ -181,7 +181,7 @@ namespace WellRoundedBalance.Elites.Tier1
         {
             if (sender.HasBuff(regenBoost))
             {
-                bool e3 = Run.instance && Run.instance.selectedDifficulty >= DifficultyIndex.Eclipse3 && Eclipse3.instance.isEnabled;
+                var e3 = Run.instance && Run.instance.selectedDifficulty >= DifficultyIndex.Eclipse3 && Eclipse3.instance.isEnabled;
                 var regenStack = e3 ? onHitHealingTargetRegenBoost : onHitHealingTargetRegenBoostE3;
                 args.baseRegenAdd += regenStack + 0.2f * regenStack * (sender.level - 1);
             }
@@ -194,9 +194,8 @@ namespace WellRoundedBalance.Elites.Tier1
 
         private static void Overwrite(On.RoR2.AffixEarthBehavior.orig_Start orig, AffixEarthBehavior self)
         {
-            if (self.gameObject.GetComponent<MendingController>() == null)
-                self.body.gameObject.AddComponent<MendingController>();
-            return;
+            if (!self.GetComponent<MendingController>())
+                self.gameObject.AddComponent<MendingController>();
         }
 
         public class MendingController : MonoBehaviour
@@ -205,7 +204,7 @@ namespace WellRoundedBalance.Elites.Tier1
             public CharacterBody healerBody;
             public HealthComponent healerHc;
             public static readonly SphereSearch healSphereSearch = new();
-            public static readonly List<HurtBox> healHurtBoxBuffer = new();
+            public static readonly List<HurtBox> healHurtBoxBuffer = [];
             public bool healed = false;
 
             private TetherVfxOrigin vfxOrigin;
@@ -213,7 +212,7 @@ namespace WellRoundedBalance.Elites.Tier1
             public float stopwatch = 0f;
             public float delay = 1f;
             public TeamIndex team;
-            public static List<MendingController> mendingControllers = new();
+            public static List<MendingController> mendingControllers = [];
 
             public void Start()
             {
@@ -242,7 +241,7 @@ namespace WellRoundedBalance.Elites.Tier1
 
                     if (target)
                     {
-                        vfxOrigin.SetTetheredTransforms(new() { target.transform });
+                        vfxOrigin.SetTetheredTransforms([target.transform]);
                     }
                     else
                     {
@@ -288,7 +287,7 @@ namespace WellRoundedBalance.Elites.Tier1
                 {
                     return false;
                 }
-                foreach (MendingController controller in mendingControllers)
+                foreach (var controller in mendingControllers)
                 {
                     if (controller != this && controller.target == com)
                     {
@@ -315,7 +314,7 @@ namespace WellRoundedBalance.Elites.Tier1
                     return;
                 }
 
-                Vector3 corePosition = healerBody.corePosition;
+                var corePosition = healerBody.corePosition;
                 healSphereSearch.origin = corePosition;
                 healSphereSearch.mask = LayerIndex.entityPrecise.mask;
                 healSphereSearch.radius = radius;
@@ -325,7 +324,7 @@ namespace WellRoundedBalance.Elites.Tier1
                 healSphereSearch.GetHurtBoxes(healHurtBoxBuffer);
                 healSphereSearch.ClearCandidates();
 
-                for (int i = 0; i < healHurtBoxBuffer.Count; i++)
+                for (var i = 0; i < healHurtBoxBuffer.Count; i++)
                 {
                     var hurtBox = healHurtBoxBuffer[i];
                     if (hurtBox.healthComponent)

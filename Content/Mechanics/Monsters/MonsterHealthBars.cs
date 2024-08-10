@@ -27,6 +27,7 @@
                 var totalObservedHealth = self.currentBossGroup.totalObservedHealth;
                 var totalMaxObservedMaxHealth = self.currentBossGroup.totalMaxObservedMaxHealth;
                 var percentHealth = ((totalMaxObservedMaxHealth == 0f) ? 0f : Mathf.Clamp01(totalObservedHealth / totalMaxObservedMaxHealth));
+
                 self.delayedTotalHealthFraction = Mathf.Clamp(Mathf.SmoothDamp(self.delayedTotalHealthFraction, percentHealth, ref self.healthFractionVelocity, 0.1f, float.PositiveInfinity, Time.deltaTime), percentHealth, 1f);
                 self.fillRectImage.fillAmount = percentHealth;
                 self.delayRectImage.fillAmount = self.delayedTotalHealthFraction;

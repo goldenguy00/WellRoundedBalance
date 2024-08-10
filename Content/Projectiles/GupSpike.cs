@@ -10,9 +10,9 @@ namespace WellRoundedBalance.Projectiles
         {
             prefab = PrefabAPI.InstantiateClone(Utils.Paths.GameObject.Fireball.Load<GameObject>(), "Gxp Spike", true);
 
-            foreach (Component component in prefab.GetComponents<Component>())
+            foreach (var component in prefab.GetComponents<Component>())
             {
-                if (component is AkEvent || component is AkTriggerDisable)
+                if (component is AkEvent or AkTriggerDisable)
                 {
                     Object.Destroy(component);
                 }

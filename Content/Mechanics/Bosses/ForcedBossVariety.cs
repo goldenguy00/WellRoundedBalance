@@ -10,7 +10,7 @@ namespace WellRoundedBalance.Mechanics.Bosses
 
         public static int maxStages = 2;	//Set to 2 so that theres always 1 boss left (since most stages have 3 boss choices)
 
-        public static List<GameObject> previousCards = new();
+        public static List<GameObject> previousCards = [];
 
         public override void Init()
         {
@@ -25,7 +25,7 @@ namespace WellRoundedBalance.Mechanics.Bosses
 
         private void CombatDirector_SetNextSpawnAsBoss(ILContext il)
         {
-            bool error = true;
+            var error = true;
 
             //Mark already-used cards as unavailable.
             ILCursor c = new(il);

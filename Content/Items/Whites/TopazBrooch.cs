@@ -57,7 +57,7 @@ namespace WellRoundedBalance.Items.Whites
         private void GlobalEventManager_OnCharacterDeath(ILContext il)
         {
             ILCursor c = new(il);
-            int stack = GetItemLoc(c, nameof(RoR2Content.Items.BarrierOnKill));
+            var stack = GetItemLoc(c, nameof(RoR2Content.Items.BarrierOnKill));
             if (c.TryGotoNext(x => x.MatchLdloc(stack)) && c.TryGotoNext(x => x.MatchCallOrCallvirt<HealthComponent>(nameof(HealthComponent.AddBarrier))))
             {
                 c.Emit(OpCodes.Pop);

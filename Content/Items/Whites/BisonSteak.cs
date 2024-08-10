@@ -30,58 +30,18 @@
         public override void Hooks()
         {
             RecalculateStatsAPI.GetStatCoefficients += RecalculateStatsAPI_GetStatCoefficients;
-            On.RoR2.Inventory.GiveItem_ItemIndex_int += Inventory_GiveItem_ItemIndex_int;
-            On.RoR2.Inventory.RemoveItem_ItemIndex_int += Inventory_RemoveItem_ItemIndex_int;
-        }
-
-        private void Inventory_RemoveItem_ItemIndex_int(On.RoR2.Inventory.orig_RemoveItem_ItemIndex_int orig, Inventory self, ItemIndex itemIndex, int count)
-        {
-            if (NetworkServer.active)
-            {
-                if (itemIndex == RoR2Content.Items.FlatHealth.itemIndex)
-                {
-                    var master = self.GetComponent<CharacterMaster>();
-                    if (master)
-                    {
-                        var body = master.GetBody();
-                        if (body)
-                        {
-                            body.levelMaxHealth -= levelHealthGain;
-                            body.statsDirty = true;
-                        }
-                    }
-                }
-            }
-            orig(self, itemIndex, count);
-        }
-
-        private void Inventory_GiveItem_ItemIndex_int(On.RoR2.Inventory.orig_GiveItem_ItemIndex_int orig, Inventory self, ItemIndex itemIndex, int count)
-        {
-            if (NetworkServer.active)
-            {
-                if (itemIndex == RoR2Content.Items.FlatHealth.itemIndex)
-                {
-                    var master = self.GetComponent<CharacterMaster>();
-                    if (master)
-                    {
-                        var body = master.GetBody();
-                        if (body)
-                        {
-                            body.levelMaxHealth += levelHealthGain;
-                            body.statsDirty = true;
-                        }
-                    }
-                }
-            }
-            orig(self, itemIndex, count);
         }
 
         private void RecalculateStatsAPI_GetStatCoefficients(CharacterBody sender, RecalculateStatsAPI.StatHookEventArgs args)
         {
             if (sender.inventory)
             {
-                args.baseHealthAdd += StackAmount(maximumHealthGain - 25, maximumHealthGainStack - 25,
-                    sender.inventory.GetItemCount(InternalPickup), maximumHealthGainIsHyperbolic);
+                var count = sender.inventory.GetItemCount(InternalPickup);
+                if (count > 0)
+                {
+                    args.baseHealthAdd += StackAmount(maximumHealthGain, maximumHealthGainStack, count, maximumHealthGainIsHyperbolic);
+                    args.baseHealthAdd += StackAmount(levelHealthGain, levelHealthGain, sender.level);
+                }
             }
         }
     }

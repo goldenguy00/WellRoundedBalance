@@ -37,32 +37,7 @@ namespace WellRoundedBalance.Elites.Special
             IL.RoR2.CharacterBody.UpdateAffixLunar += CharacterBody_UpdateAffixLunar;
             IL.RoR2.HealthComponent.TakeDamage += HealthComponent_TakeDamage;
 
-            // CharacterBody.onBodyInventoryChangedGlobal += CharacterBody_onBodyInventoryChangedGlobal;
-            // in favor of the bottom
-            On.RoR2.CharacterBody.AddBuff_BuffIndex += CharacterBody_AddBuff_BuffIndex;
-            On.RoR2.CharacterBody.RemoveBuff_BuffIndex += CharacterBody_RemoveBuff_BuffIndex;
             Changes();
-        }
-
-        private void CharacterBody_RemoveBuff_BuffIndex(On.RoR2.CharacterBody.orig_RemoveBuff_BuffIndex orig, CharacterBody self, BuffIndex buffType)
-        {
-            orig(self, buffType);
-            if (buffType == RoR2Content.Buffs.AffixLunar.buffIndex)
-            {
-                self.gameObject.RemoveComponent<PerfectedController>();
-            }
-        }
-
-        private void CharacterBody_AddBuff_BuffIndex(On.RoR2.CharacterBody.orig_AddBuff_BuffIndex orig, CharacterBody self, BuffIndex buffType)
-        {
-            orig(self, buffType);
-            if (buffType == RoR2Content.Buffs.AffixLunar.buffIndex)
-            {
-                if (self.GetComponent<PerfectedController>() == null)
-                {
-                    self.gameObject.AddComponent<PerfectedController>();
-                }
-            }
         }
 
         [SystemInitializer(typeof(EliteCatalog))]
@@ -72,22 +47,6 @@ namespace WellRoundedBalance.Elites.Special
             {
                 var perfectedEliteTierDef = EliteAPI.VanillaEliteTiers.Where(x => x.eliteTypes.Contains(RoR2Content.Elites.Lunar)).First();
                 perfectedEliteTierDef.isAvailable = (rules) => Run.instance.loopClearCount > 0 && (rules == SpawnCard.EliteRules.Default || rules == SpawnCard.EliteRules.Lunar);
-            }
-        }
-
-        private void CharacterBody_onBodyInventoryChangedGlobal(CharacterBody characterBody)
-        {
-            var sfp = characterBody.GetComponent<PerfectedController>();
-            if (characterBody.HasBuff(RoR2Content.Buffs.AffixLunar))
-            {
-                if (sfp == null)
-                {
-                    characterBody.gameObject.AddComponent<PerfectedController>();
-                }
-            }
-            else if (sfp != null)
-            {
-                characterBody.gameObject.RemoveComponent<PerfectedController>();
             }
         }
 
@@ -154,39 +113,6 @@ namespace WellRoundedBalance.Elites.Special
             projectileSimple.enableVelocityOverLifetime = true;
             projectileSimple.velocityOverLifetime = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.1f, 0f), new Keyframe(0.1f + Mathf.Epsilon, 1f), new Keyframe(1f, 1f));
             projectileSimple.desiredForwardSpeed = 120f;
-        }
-    }
-
-    public class PerfectedController : MonoBehaviour
-    {
-        public CharacterBody body;
-        public HealthComponent hc;
-        public float timer;
-        public float interval = 0.5f;
-
-        public void Start()
-        {
-            body = GetComponent<CharacterBody>();
-            hc = body.healthComponent;
-        }
-
-        public void FixedUpdate()
-        {
-            timer += Time.fixedDeltaTime;
-            if (timer >= interval)
-            {
-                if (!hc.alive)
-                {
-                    Destroy(this);
-                }
-                timer = 0f;
-            }
-        }
-
-        public void OnDestroy()
-        {
-            if (Util.CheckRoll(Perfected.lunarCoinDropChance))
-                PickupDropletController.CreatePickupDroplet(PickupCatalog.FindPickupIndex(RoR2Content.MiscPickups.LunarCoin.miscPickupIndex), body.corePosition, Vector3.up * 2f * body.radius);
         }
     }
 }

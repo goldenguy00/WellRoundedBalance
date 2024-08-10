@@ -1,10 +1,9 @@
-using System;
-using EntityStates.BrotherMonster;
-using IL.RoR2.Achievements.Treebot;
-using RoR2.Skills;
-using static RoR2.MasterCatalog;
+using System.Reflection;
+using HarmonyLib;
+using WellRoundedBalance.Enemies.Bosses.Vagrant;
 
-namespace WellRoundedBalance.Enemies.Bosses {
+namespace WellRoundedBalance.Enemies.Bosses
+{
     public class WanderingVagrant : EnemyBase<WanderingVagrant>
     {
         public override string Name => "::: Bosses ::: Wandering Vagrant";
@@ -13,113 +12,131 @@ namespace WellRoundedBalance.Enemies.Bosses {
         [ConfigField("Nova Rework", "Reworks the Vagrant Nova to trigger once when the vagrant would normally die, granting it invincibility for the duration", true)]
         public static bool NovaTweak;
         [ConfigField("Change Vagrant Stats and Scale", "Tweaks the Wandering Vagrant to be much smaller and much more agile, highly recommended to leave on", true)]
-        public static bool VagrantChanges;
+        public static bool StatChanges;
         [ConfigField("Vagrant Chain Dash", "Gives Wandering Vagrant a chain dash which spews seeking orbs", true)]
         public static bool EnableChainDash;
-
-        // lazy init bc i dont want to subscribe to mastercat init just for 1 index
-        public MasterIndex VagrantIndex {
-            get {
-                if (_VagrantIndex == MasterIndex.none) {
-                    _VagrantIndex = MasterCatalog.FindMasterIndex("VagrantMaster");
-                }
-
-                return _VagrantIndex;
-            }
-        }
-
-        public BodyIndex VagrantBody {
-            get {
-                if (_VagrantBody == BodyIndex.None) {
-                    _VagrantBody = BodyCatalog.FindBodyIndex("VagrantBody");
-                }
-
-                return _VagrantBody;
-            }
-        }
-
-        private MasterIndex _VagrantIndex = MasterIndex.none;
-        private BodyIndex _VagrantBody = BodyIndex.None;
 
         public static GameObject VagrantSeekerOrb;
 
         public override void Hooks()
         {
-            On.EntityStates.VagrantMonster.Weapon.JellyBarrage.OnEnter += ReplacePrimaryHook;
-            On.EntityStates.VagrantMonster.ChargeMegaNova.OnEnter += GrantInvuln;
-            On.EntityStates.VagrantMonster.FireMegaNova.Detonate += LowTierGod;
-            On.RoR2.HealthComponent.TakeDamage += LTGMK2;
-
             TweakVagrantPrefab();
         }
 
-        private void LTGMK2(On.RoR2.HealthComponent.orig_TakeDamage orig, HealthComponent self, DamageInfo damageInfo)
+        public void TweakVagrantPrefab()
         {
-            if (self.body.bodyIndex == VagrantBody && NovaTweak) {
-                if (damageInfo.damage >= self.combinedHealth + self.barrier && damageInfo.damageType != DamageType.BypassOneShotProtection) {
-                    EntityStateMachine machine = EntityStateMachine.FindByCustomName(self.gameObject, "Body");
-                    machine.SetNextState(new EntityStates.VagrantMonster.ChargeMegaNova());
-                    return;
+            var prefab = Utils.Paths.GameObject.VagrantBody15.Load<GameObject>();
+
+            var body = prefab.GetComponent<CharacterBody>();
+            var modelLoc = body.GetComponent<ModelLocator>();
+
+            if (StatChanges)
+            {
+                body.baseMoveSpeed = 16f;
+                body.bodyFlags |= CharacterBody.BodyFlags.IgnoreFallDamage;
+                body.GetComponent<RigidbodyMotor>().canTakeImpactDamage = false;
+
+                modelLoc.modelBaseTransform.localScale = new(4f, 4f, 4f);
+            }
+
+            if (EnableChainDash)
+            {
+                ApplySkillDef(prefab);
+                TweakMaster();
+
+                foreach (var p in body.GetComponents<QuaternionPID>())
+                {
+                    p.gain = 20;
                 }
             }
 
-            orig(self, damageInfo);
+            if (ReplacePrimary)
+            {
+                var skill = Utils.Paths.SkillDef.VagrantBodyJellyBarrage.Load<SkillDef>();
+                skill.activationState = new(typeof(JellyShotgun));
+                skill.beginSkillCooldownOnSkillEnd = true;
+                skill.baseRechargeInterval = 4.75f;
+
+                JellyShotgun.ModifyBase();
+            }
+
+
+            VagrantSeekerOrb = PrefabAPI.InstantiateClone(Utils.Paths.GameObject.VagrantCannon.Load<GameObject>(), "VagrantSeekerBolt");
+            var ghost = PrefabAPI.InstantiateClone(Utils.Paths.GameObject.VagrantCannonGhost.Load<GameObject>(), "VagrantSeekerBolt");
+            ghost.AddComponent<VagrantSeekerGhostController>();
+
+            VagrantSeekerOrb.GetComponent<ProjectileController>().ghostPrefab = ghost;
+            VagrantSeekerOrb.AddComponent<ProjectileTargetComponent>();
+            VagrantSeekerOrb.AddComponent<VagrantSeekerController>();
+
+            var renderer = ghost.AddComponent<LineRenderer>();
+            renderer.startWidth = 0.5f;
+            renderer.endWidth = 0.5f;
+            renderer.material = Utils.Paths.Material.matCaptainTracerTrail.Load<Material>();
+
+            var finder = VagrantSeekerOrb.AddComponent<ProjectileSphereTargetFinder>();
+            finder.allowTargetLoss = false;
+            finder.lookRange = 650f;
+            finder.testLoS = false;
+            finder.searchTimer = 0.1f;
+
+            var simple = VagrantSeekerOrb.GetComponent<ProjectileSimple>();
+            simple.updateAfterFiring = true;
+            simple.enableVelocityOverLifetime = false;
+
+
+            var expl = VagrantSeekerOrb.GetComponent<ProjectileImpactExplosion>();
+            expl.blastRadius = 1.5f;
+            expl.blastDamageCoefficient = 1f;
+
+            ContentAddition.AddProjectile(VagrantSeekerOrb);
         }
 
-        public void TweakMaster() {
-            GameObject master = Utils.Paths.GameObject.VagrantMaster.Load<GameObject>();
+        public void TweakMaster()
+        {
+            var master = Utils.Paths.GameObject.VagrantMaster.Load<GameObject>();
 
-            AISkillDriver driver = master.AddComponent<AISkillDriver>();
+            var driver = master.AddComponent<AISkillDriver>();
             driver.aimType = AISkillDriver.AimType.AtCurrentEnemy;
             driver.activationRequiresAimConfirmation = false;
             driver.activationRequiresAimTargetLoS = false;
             driver.activationRequiresTargetLoS = false;
             driver.movementType = AISkillDriver.MovementType.StrafeMovetarget;
             driver.customName = "DashAtEnemy";
-            driver.maxDistance = 140f;
-            driver.minDistance = 30f;
+            driver.maxDistance = 500f;
+            driver.minDistance = 100f;
             driver.skillSlot = SkillSlot.Utility;
             driver.requireSkillReady = true;
-            driver.noRepeat = true;
+            driver.noRepeat = false;
             driver.aimType = AISkillDriver.AimType.MoveDirection;
             driver.moveInputScale = 2f;
-
-            On.RoR2.CharacterAI.BaseAI.Awake += (orig, self) => {
-                orig(self);
-
-                if (self.master.masterIndex == VagrantIndex) {
-                    List<AISkillDriver> drivers = self.skillDrivers.ToList();
-                    AISkillDriver last = drivers[drivers.Count - 1];
-                    drivers.RemoveAt(drivers.Count - 1);
-                    drivers.Insert(0, last);
-                    drivers.RemoveAll(x => x.skillSlot == SkillSlot.Special);
-                    self.skillDrivers = drivers.ToArray();
-                }
-            };
-        }
-
-        public void ApplySkillDef(SkillLocator loc) {
-            GenericSkill slot = loc.gameObject.AddComponent<GenericSkill>();
-            slot.skillName = "WR-B";
             
-            SkillFamily family = ScriptableObject.CreateInstance<SkillFamily>();
-            (family as ScriptableObject).name = "VagrantChainDash";
-            family.variants = new SkillFamily.Variant[] {
-                new SkillFamily.Variant() {
-                    skillDef = SetupDashSkillDef(),
-                    unlockableName = null,
-                    viewableNode = new("j", false, null)
+            // correct way of reording components. fuck off with all the stupid fucking spawn hooks.
+            // no wonder modded ror2 runs like shit. stop hooking dumb shit. jesus.
+            var components = master.GetComponents<AISkillDriver>().ToArray();
+            for (var i = 0; i < components.Length; i++)
+            {
+                var c = components[i];
+                if (c.customName != "DashAtEnemy")
+                {
+                    if (c.nextHighPriorityOverride != null)
+                        Logger.LogError("PRIORITY OVERRIDE MIGHT FUCK SHIT UP " + c.customName + " -> " +c.nextHighPriorityOverride.customName);
+                    if (c.skillSlot != SkillSlot.Special)
+                        master.AddComponentCopy(c);
+                    Component.DestroyImmediate(c);
                 }
-            };
-
-            ContentAddition.AddSkillFamily(family);
-
-            slot._skillFamily = family;
-            loc.utility = slot;
+            }
         }
 
-        public SkillDef SetupDashSkillDef() {
-            SkillDef def = ScriptableObject.CreateInstance<SkillDef>();
+        public void ApplySkillDef(GameObject prefab)
+        {
+            var slot = prefab.AddComponent<GenericSkill>();
+            slot.skillName = "WR-B";
+
+            var family = ScriptableObject.CreateInstance<SkillFamily>();
+            (family as ScriptableObject).name = "VagrantChainDash";
+
+            var def = ScriptableObject.CreateInstance<SkillDef>();
             def.activationStateMachineName = "Body";
             def.baseMaxStock = 1;
             def.beginSkillCooldownOnSkillEnd = true;
@@ -130,209 +147,23 @@ namespace WellRoundedBalance.Enemies.Bosses {
             def.isCombatSkill = true;
             def.stockToConsume = 1;
             def.baseRechargeInterval = 12f;
-            def.activationState = new(typeof(Vagrant.ChainDashes));
+            def.activationState = new(typeof(ChainDashes));
 
             ContentAddition.AddSkillDef(def);
-            return def;
-        }
-
-        public void TweakVagrantPrefab() {
-            GameObject prefab = Utils.Paths.GameObject.VagrantBody15.Load<GameObject>();
-            
-            CharacterBody body = prefab.GetComponent<CharacterBody>();
-            ModelLocator loc = body.GetComponent<ModelLocator>();
-
-            if (VagrantChanges) {
-                // stats
-                body.baseMoveSpeed = 16f;
-                body.bodyFlags |= CharacterBody.BodyFlags.IgnoreFallDamage;
-
-                body.GetComponent<RigidbodyMotor>().canTakeImpactDamage = false;
-
-                // scale & rot
-                loc.modelBaseTransform.localScale = new(4f, 4f, 4f);
-
-            }
-
-            if (EnableChainDash) {
-                ApplySkillDef(body.GetComponent<SkillLocator>());
-                TweakMaster();
-
-                foreach (QuaternionPID p in body.GetComponents<QuaternionPID>()) {
-                    p.gain = 20;
+            family.variants =
+            [
+                new SkillFamily.Variant()
+                {
+                    skillDef = def,
+                    unlockableDef = null,
+                    viewableNode = new("j", false, null)
                 }
-            }
+            ];
 
-            if (ReplacePrimary) {
-                SkillDef skill = Utils.Paths.SkillDef.VagrantBodyJellyBarrage.Load<SkillDef>();
-                skill.beginSkillCooldownOnSkillEnd = true;
-                skill.baseRechargeInterval = 4.75f;
-            }
+            ContentAddition.AddSkillFamily(family);
 
-
-            VagrantSeekerOrb = PrefabAPI.InstantiateClone(Utils.Paths.GameObject.VagrantCannon.Load<GameObject>(), "VagrantSeekerBolt");
-            GameObject VagrantSeekerGhost = PrefabAPI.InstantiateClone(Utils.Paths.GameObject.VagrantCannonGhost.Load<GameObject>(), "VagrantSeekerBolt");
-            VagrantSeekerGhost.AddComponent<VagrantSeekerGhostController>();
-
-            LineRenderer renderer = VagrantSeekerGhost.AddComponent<LineRenderer>();
-            renderer.startWidth = 0.5f;
-            renderer.endWidth = 0.5f;
-            renderer.material = Utils.Paths.Material.matCaptainTracerTrail.Load<Material>();
-
-            VagrantSeekerOrb.AddComponent<ProjectileTargetComponent>();
-            var finder = VagrantSeekerOrb.AddComponent<ProjectileSphereTargetFinder>();
-            finder.allowTargetLoss = false;
-            finder.lookRange = 650f;
-            finder.testLoS = false;
-            finder.searchTimer = 0.1f;
-
-            VagrantSeekerOrb.GetComponent<ProjectileSimple>().updateAfterFiring = true;
-            VagrantSeekerOrb.GetComponent<ProjectileSimple>().enableVelocityOverLifetime = false;
-
-            VagrantSeekerOrb.GetComponent<ProjectileController>().ghostPrefab = VagrantSeekerGhost;
-            VagrantSeekerOrb.AddComponent<VagrantSeekerController>();
-
-            VagrantSeekerOrb.GetComponent<ProjectileImpactExplosion>().blastRadius = 1.5f;
-            VagrantSeekerOrb.GetComponent<ProjectileImpactExplosion>().blastDamageCoefficient = 1f;
-
-            ContentAddition.AddProjectile(VagrantSeekerOrb);
-        }
-
-        private class VagrantSeekerController : MonoBehaviour {
-            public ProjectileSimple simple;
-            public ProjectileTargetComponent targetComp;
-            public float duration = 1.5f;
-            public float ramSpeed = 165f;
-            public float initialSpeed = 40f;
-            public float speedDecPerSec;
-            public bool begunRam = false;
-            public Vector3 forward;
-            public void Start() {
-                simple = GetComponent<ProjectileSimple>();
-                initialSpeed = 60f * UnityEngine.Random.Range(0.75f, 2f);
-                targetComp = GetComponent<ProjectileTargetComponent>();
-                simple.lifetime = 20;
-                simple.desiredForwardSpeed = initialSpeed;
-                speedDecPerSec = initialSpeed / (duration - 1f);
-                forward = base.transform.forward;
-
-                ProjectileController controller = GetComponent<ProjectileController>();
-                controller.ghost.GetComponent<VagrantSeekerGhostController>().component = targetComp;
-                controller.ghost.GetComponent<VagrantSeekerGhostController>().owner = this;
-            }
-
-            public void FixedUpdate() {
-                if (duration >= 0f) {
-                    initialSpeed -= speedDecPerSec * Time.fixedDeltaTime;
-                    simple.desiredForwardSpeed = Mathf.Max(initialSpeed, 0f);
-                    base.transform.forward = forward;
-                    duration -= Time.fixedDeltaTime;
-                }
-
-                if (duration <= 0f && !begunRam) {
-                    begunRam = true;
-                    
-                    if (targetComp.target) {
-                        Vector3 facing = (targetComp.target.position - base.transform.position).normalized;
-                        base.transform.forward = facing;
-                        simple.desiredForwardSpeed = ramSpeed;
-                    }
-                    else {
-                        simple.lifetime = 0f;
-                    }
-                }
-            }
-        }
-
-        private class VagrantSeekerGhostController : MonoBehaviour {
-            public static List<Color> colors = new() {
-                Color.red, Color.yellow, Color.green, Color.cyan
-            };
-
-            public ProjectileTargetComponent component;
-            public VagrantSeekerController owner;
-            public LineRenderer lr;
-            public Color32 color;
-
-            public void Start() {
-                color = colors.GetRandom();
-
-                lr = GetComponent<LineRenderer>();
-                lr.startColor = color;
-                lr.endColor = color;
-
-                foreach (Renderer renderer in GetComponentsInChildren<Renderer>()) {
-                    if (renderer != lr) {
-                        renderer.material.SetColor("_Color", color);
-                        renderer.material.SetInt("_FEON", 0);
-                        renderer.material.SetInt("_FlowmapOn", 0);
-                        renderer.material.SetShaderKeywords(new string[0]);
-                    }
-                }
-            }
-
-            public void Update() {
-                if (!component.target || owner.begunRam) {
-                    lr.widthMultiplier = 0f;
-                    return;
-                }
-
-                lr.SetPosition(0, base.transform.position);
-                Ray ray = new Ray(base.transform.position, (component.target.position - base.transform.position).normalized);
-                lr.SetPosition(1, ray.GetPoint(400));
-
-                lr.widthMultiplier = 1f - ((1.5f - owner.duration) / 1.5f);
-
-                if (lr.widthMultiplier <= 0.05f) {
-                    lr.widthMultiplier = 1.5f;
-                    lr.startColor = Color.white;
-                    lr.endColor = Color.white;
-                }
-            }
-        }
-
-        private void LowTierGod(On.EntityStates.VagrantMonster.FireMegaNova.orig_Detonate orig, EntityStates.VagrantMonster.FireMegaNova self)
-        {
-            if (NovaTweak) {
-                self.outer.SetNextStateToMain();
-                self.healthComponent.Suicide(null, null, DamageType.BypassOneShotProtection);
-                return;
-            }
-
-            orig(self);
-        }
-
-        private void GrantInvuln(On.EntityStates.VagrantMonster.ChargeMegaNova.orig_OnEnter orig, EntityStates.VagrantMonster.ChargeMegaNova self)
-        {
-            if (NovaTweak) {
-                self.characterBody.AddBuff(RoR2Content.Buffs.HiddenInvincibility);
-            }
-
-            orig(self);
-        }
-
-        private void ReplacePrimaryHook(On.EntityStates.VagrantMonster.Weapon.JellyBarrage.orig_OnEnter orig, EntityStates.VagrantMonster.Weapon.JellyBarrage self)
-        {
-            if (ReplacePrimary) {
-                self.outer.SetNextState(new Vagrant.OrbSpread());
-                return;
-            }
-
-            orig(self);
-        }
-
-        private class ForceLook : MonoBehaviour {
-            public InputBankTest input;
-            public CharacterDirection direction;
-
-            public void Start() {
-                input = GetComponent<InputBankTest>();
-                direction = GetComponent<CharacterDirection>();
-            }
-
-            public void FixedUpdate() {
-                base.transform.forward = input.aimDirection;
-            }
+            slot._skillFamily = family;
+            prefab.GetComponent<SkillLocator>().utility = slot;
         }
     }
 }

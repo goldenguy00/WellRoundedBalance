@@ -1,4 +1,5 @@
 ﻿using System;
+using R2API.Utils;
 
 namespace WellRoundedBalance.Items.Whites
 {
@@ -21,60 +22,25 @@ namespace WellRoundedBalance.Items.Whites
 
         public override void Hooks()
         {
-            IL.RoR2.HealthComponent.TakeDamage += HealthComponent_TakeDamage1;
-            On.RoR2.HealthComponent.TakeDamage += HealthComponent_TakeDamage;
+            IL.RoR2.HealthComponent.TakeDamage += HealthComponent_TakeDamage;
         }
 
-        private void HealthComponent_TakeDamage1(ILContext il)
+        private void HealthComponent_TakeDamage(ILContext il)
         {
             ILCursor c = new(il);
 
             if (c.TryGotoNext(MoveType.Before,
-                x => x.MatchLdsfld("RoR2.RoR2Content/Items", "BossDamageBonus"),
-                x => x.MatchCallOrCallvirt(typeof(Inventory).GetMethod("GetItemCount", new Type[] { typeof(ItemDef) })),
-                x => x.MatchStloc(out _),
-                x => x.MatchLdloc(out _),
-                x => x.MatchLdcI4(0)))
+                    x => x.MatchLdsfld("RoR2.RoR2Content/Items", "BossDamageBonus")) &&
+                c.TryGotoNext(MoveType.Before,
+                    x => x.MatchLdcR4(0.2f)))
             {
-                c.Index += 5;
-                c.EmitDelegate<Func<int, int>>((useless) =>
-                {
-                    return int.MaxValue;
-                });
+                c.Remove();
+                c.Emit(OpCodes.Ldsfld, typeof(ArmorPiercingRounds).GetFieldCached(nameof(bossChampionDamageBonus)));
             }
             else
             {
                 Logger.LogError("Failed to apply Armor Piercing Rounds Deletion hook");
             }
-        }
-
-        private void HealthComponent_TakeDamage(On.RoR2.HealthComponent.orig_TakeDamage orig, HealthComponent victim, DamageInfo damageInfo)
-        {
-            var victimBody = victim.body;
-            if (victimBody)
-            {
-                var attacker = damageInfo.attacker;
-                if (attacker)
-                {
-                    var attackerBody = damageInfo.attacker.GetComponent<CharacterBody>();
-                    if (attackerBody)
-                    {
-                        var inventory = attackerBody.inventory;
-                        if (inventory)
-                        {
-                            var stack = inventory.GetItemCount(RoR2Content.Items.BossDamageBonus);
-                            if ((victimBody.isChampion || victimBody.isBoss) && stack > 0)
-                            {
-                                damageInfo.damage *= 1f + bossChampionDamageBonus * stack;
-                                damageInfo.damageColorIndex = DamageColorIndex.WeakPoint;
-                                EffectManager.SimpleImpactEffect(HealthComponent.AssetReferences.bossDamageBonusImpactEffectPrefab, damageInfo.position, -damageInfo.force, true);
-                            }
-                        }
-                    }
-                }
-            }
-
-            orig(victim, damageInfo);
         }
     }
 }

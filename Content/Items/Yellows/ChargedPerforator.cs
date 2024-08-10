@@ -35,9 +35,9 @@ namespace WellRoundedBalance.Items.Yellows
         {
             ILCursor c = new(il);
 
-            float initialDamage = baseTotalDamage - totalDamagePerStack;
+            var initialDamage = baseTotalDamage - totalDamagePerStack;
 
-            bool error = true;
+            var error = true;
             if (c.TryGotoNext(x => x.MatchLdsfld(typeof(RoR2Content.Items), "LightningStrikeOnHit")) &&
                 c.TryGotoNext(x => x.MatchLdfld<DamageInfo>("damage")))
             {
@@ -70,10 +70,10 @@ namespace WellRoundedBalance.Items.Yellows
                 x => x.MatchLdloc(1),
                 x => x.MatchCallOrCallvirt<CharacterBody>("get_crit"),
                 x => x.MatchLdloc(out _),
-                x => x.MatchCallOrCallvirt(typeof(Util).GetMethod("CheckRoll", new Type[] { typeof(float), typeof(CharacterMaster) })),
+                x => x.MatchCallOrCallvirt(typeof(Util).GetMethod("CheckRoll", [typeof(float), typeof(CharacterMaster)])),
                 x => x.MatchStfld<RoR2.Orbs.GenericDamageOrb>("isCrit")))
             {
-                for (int i = 0; i < 4; i++)
+                for (var i = 0; i < 4; i++)
                 {
                     c.Remove();
                 }

@@ -18,9 +18,7 @@
 
         private void Changes()
         {
-            var arti = Utils.Paths.GameObject.LockedMage.Load<GameObject>();
-            var purchaseInteraction = arti.GetComponent<PurchaseInteraction>();
-            purchaseInteraction.cost = lunarCoinCost;
+            Utils.Paths.GameObject.LockedMage.LoadComponent<PurchaseInteraction>().cost = lunarCoinCost;
         }
     }
 }

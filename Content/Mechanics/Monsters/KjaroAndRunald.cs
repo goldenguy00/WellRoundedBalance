@@ -18,14 +18,11 @@ namespace WellRoundedBalance.Mechanics.Monsters
 
         private void CharacterBody_onBodyStartGlobal(CharacterBody body)
         {
-            if (body.GetComponent<ElementalRingsBehavior>() != null && body.name == "LemurianBruiserBody(Clone)")
+            if (body.name == "LemurianBruiserBody(Clone)" && body.GetComponent<ElementalRingsBehavior>() && body.inventory)
             {
-                if (body.inventory)
-                {
-                    body.inventory.GiveItem(RoR2Content.Items.UseAmbientLevel);
-                    body.inventory.RemoveItem(RoR2Content.Items.IceRing);
-                    body.inventory.RemoveItem(RoR2Content.Items.FireRing);
-                }
+                body.inventory.GiveItem(RoR2Content.Items.UseAmbientLevel);
+                body.inventory.RemoveItem(RoR2Content.Items.IceRing);
+                body.inventory.RemoveItem(RoR2Content.Items.FireRing);
             }
         }
     }

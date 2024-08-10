@@ -53,7 +53,7 @@ namespace WellRoundedBalance.Equipment.Orange
 
         private void Changes()
         {
-            var vegg = Utils.Paths.GameObject.FireballVehicle.Load<GameObject>().GetComponent<FireballVehicle>();
+            var vegg = Utils.Paths.GameObject.FireballVehicle.LoadComponent<FireballVehicle>();
             vegg.duration = duration;
             vegg.targetSpeed = speed;
             vegg.initialSpeed = speed / 6f;

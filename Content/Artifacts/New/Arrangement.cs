@@ -43,14 +43,14 @@
             {
                 var categories = self.interactableCategories.categories;
                 var chest = Utils.Paths.InteractableSpawnCard.iscChest1.Load<InteractableSpawnCard>();
-                float chestWeight = 1f;
-                int categoryChestsFound = 0;
-                int totalCategoryChests = GetTotalCategoryChestCount(categories);
+                var chestWeight = 1f;
+                var categoryChestsFound = 0;
+                var totalCategoryChests = GetTotalCategoryChestCount(categories);
 
-                for (int i = 0; i < categories.Length && categoryChestsFound < totalCategoryChests; i++)
+                for (var i = 0; i < categories.Length && categoryChestsFound < totalCategoryChests; i++)
                 {
                     var categoryIndex = categories[i];
-                    for (int j = 0; j < categoryIndex.cards.Length && categoryChestsFound < totalCategoryChests; j++)
+                    for (var j = 0; j < categoryIndex.cards.Length && categoryChestsFound < totalCategoryChests; j++)
                     {
                         var cardIndex = categoryIndex.cards[j];
                         if (cardIndex.spawnCard == chest)
@@ -78,11 +78,11 @@
 
         private int GetTotalCategoryChestCount(DirectorCardCategorySelection.Category[] categories)
         {
-            int count = 0;
-            for (int i = 0; i < categories.Length; i++)
+            var count = 0;
+            for (var i = 0; i < categories.Length; i++)
             {
                 var categoryIndex = categories[i];
-                for (int j = 0; j < categoryIndex.cards.Length; j++)
+                for (var j = 0; j < categoryIndex.cards.Length; j++)
                 {
                     var cardIndex = categoryIndex.cards[j];
                     if (cardIndex.spawnCard.name.Contains("CategoryChest"))

@@ -1,4 +1,5 @@
 ﻿using HG;
+using Inferno;
 using RoR2.Navigation;
 using System.Collections;
 using UnityEngine;
@@ -62,18 +63,18 @@ namespace WellRoundedBalance.Elites.Tier1
 
             SpeedAura = Utils.Paths.GameObject.RailgunnerMineAltDetonated.Load<GameObject>().InstantiateClone("OverloadingSpeedAura");
             SpeedAura.RemoveComponent<SlowDownProjectiles>();
-            Transform areaIndicator = SpeedAura.transform.Find("AreaIndicator");
-            Transform softGlow = areaIndicator.Find("SoftGlow");
-            Transform sphere = areaIndicator.Find("Sphere");
-            Transform light = areaIndicator.Find("Point Light");
-            Transform core = areaIndicator.Find("Core");
+            var areaIndicator = SpeedAura.transform.Find("AreaIndicator");
+            var softGlow = areaIndicator.Find("SoftGlow");
+            var sphere = areaIndicator.Find("Sphere");
+            var light = areaIndicator.Find("Point Light");
+            var core = areaIndicator.Find("Core");
 
             softGlow.gameObject.SetActive(false);
             light.gameObject.SetActive(false);
             core.gameObject.SetActive(false);
 
-            MeshRenderer renderer = sphere.GetComponent<MeshRenderer>();
-            Material[] mats = renderer.sharedMaterials;
+            var renderer = sphere.GetComponent<MeshRenderer>();
+            var mats = renderer.sharedMaterials;
             mats[0] = Utils.Paths.Material.matMoonbatteryCrippleRadius.Load<Material>();
             mats[1] = Utils.Paths.Material.matCrippleSphereIndicator.Load<Material>();
             renderer.SetSharedMaterials(mats, 2);
@@ -137,65 +138,27 @@ namespace WellRoundedBalance.Elites.Tier1
         public override void Hooks()
         {
             IL.RoR2.GlobalEventManager.OnHitAll += GlobalEventManager_OnHitAll;
-            // CharacterBody.onBodyInventoryChangedGlobal += CharacterBody_onBodyInventoryChangedGlobal;
 
             RecalculateStatsAPI.GetStatCoefficients += RecalculateStatsAPI_GetStatCoefficients;
             IL.RoR2.CharacterBody.RecalculateStats += CharacterBody_RecalculateStats;
-            On.RoR2.CharacterBody.AddTimedBuff_BuffIndex_float += CharacterBody_AddTimedBuff_BuffIndex_float;
-            On.RoR2.CharacterBody.AddBuff_BuffIndex += CharacterBody_AddBuff_BuffIndex;
-            On.RoR2.CharacterBody.RemoveBuff_BuffIndex += CharacterBody_RemoveBuff_BuffIndex;
+
+            DelegateStuff.addBuff += CharacterBody_AddBuff;
+            DelegateStuff.removeBuff += CharacterBody_RemoveBuff;
         }
 
-        private void CharacterBody_RemoveBuff_BuffIndex(On.RoR2.CharacterBody.orig_RemoveBuff_BuffIndex orig, CharacterBody self, BuffIndex buffType)
+        private void CharacterBody_RemoveBuff(CharacterBody self, BuffIndex buffType)
         {
-            orig(self, buffType);
-            if (buffType == RoR2Content.Buffs.AffixBlue.buffIndex)
+            if (NetworkServer.active && buffType == RoR2Content.Buffs.AffixBlue.buffIndex && !self.isPlayerControlled)
             {
                 self.gameObject.RemoveComponent<OverloadingController>();
             }
         }
 
-        private void CharacterBody_AddBuff_BuffIndex(On.RoR2.CharacterBody.orig_AddBuff_BuffIndex orig, CharacterBody self, BuffIndex buffType)
+        private void CharacterBody_AddBuff(CharacterBody self, BuffIndex buffType)
         {
-            orig(self, buffType);
-            if (buffType == RoR2Content.Buffs.AffixBlue.buffIndex)
+            if (NetworkServer.active && buffType == RoR2Content.Buffs.AffixBlue.buffIndex && !self.GetComponent<OverloadingController>() && !self.isPlayerControlled)
             {
-                if (self.GetComponent<OverloadingController>() == null)
-                {
-                    self.gameObject.AddComponent<OverloadingController>();
-                }
-            }
-        }
-
-        private void CharacterBody_onBodyInventoryChangedGlobal(CharacterBody characterBody)
-        {
-            var sfp = characterBody.GetComponent<OverloadingController>();
-            if (characterBody.HasBuff(RoR2Content.Buffs.AffixBlue))
-            {
-                if (sfp == null)
-                {
-                    if (!characterBody.HasBuff(overloadingSelfBuff))
-                        characterBody.AddBuff(overloadingSelfBuff);
-                    characterBody.gameObject.AddComponent<OverloadingController>();
-                }
-            }
-            else if (sfp != null)
-            {
-                if (characterBody.HasBuff(overloadingSelfBuff))
-                    characterBody.RemoveBuff(overloadingSelfBuff);
-                characterBody.gameObject.RemoveComponent<OverloadingController>();
-            }
-        }
-
-        private void CharacterBody_AddTimedBuff_BuffIndex_float(On.RoR2.CharacterBody.orig_AddTimedBuff_BuffIndex_float orig, CharacterBody self, BuffIndex buffIndex, float duration)
-        {
-            if (buffIndex == overloadingSpeedBuff.buffIndex && self.HasBuff(RoR2Content.Buffs.AffixBlue))
-            {
-                return;
-            }
-            else
-            {
-                orig(self, buffIndex, duration);
+                self.gameObject.AddComponent<OverloadingController>();
             }
         }
 
@@ -233,7 +196,7 @@ namespace WellRoundedBalance.Elites.Tier1
 
         private void RecalculateStatsAPI_GetStatCoefficients(CharacterBody sender, RecalculateStatsAPI.StatHookEventArgs args)
         {
-            bool e3 = Run.instance && Run.instance.selectedDifficulty >= DifficultyIndex.Eclipse3 && Eclipse3.instance.isEnabled;
+            var e3 = Run.instance && Run.instance.selectedDifficulty >= DifficultyIndex.Eclipse3 && Eclipse3.instance.isEnabled;
             if (sender)
             {
                 if (sender.HasBuff(overloadingSpeedBuff) && !sender.HasBuff(RoR2Content.Buffs.AffixBlue))
@@ -251,77 +214,67 @@ namespace WellRoundedBalance.Elites.Tier1
             public CharacterBody cb;
             public GameObject wardInstance;
             public float stopwatch = 0f;
+            public Vector3 currentPosition;
 
             public void Start()
             {
                 hc = GetComponent<HealthComponent>();
                 cb = hc.body;
-            }
-
-            public void FixedUpdate()
-            {
-                stopwatch += Time.fixedDeltaTime;
-                if (!hc.alive && NetworkServer.active)
-                {
-                    Destroy(this);
-                }
-                if (stopwatch >= GetDelay())
-                {
-                    stopwatch = 0f;
-                    if (cb.isPlayerControlled)
-                    {
-                        return;
-                    }
-                    StartCoroutine(Teleport());
-                }
-            }
-
-            public IEnumerator Teleport()
-            {
-                var currentPosition = transform.position;
-
-                EffectManager.SpawnEffect(tpEffect, new EffectData
-                {
-                    scale = 0.66f,
-                    origin = currentPosition
-                }, true);
-
-                yield return new WaitForSeconds(0.33f);
-
-                HandleTeleport(PickTeleportPosition());
-
-                yield return new WaitForSeconds(0.33f);
-
-                EffectManager.SpawnEffect(tpEffect, new EffectData
-                {
-                    scale = 0.66f,
-                    origin = currentPosition
-                }, true);
+                
+                StartCoroutine(Teleport());
             }
 
             public void OnDestroy()
             {
-                if (NetworkServer.active)
+                if (wardInstance)
                 {
                     Destroy(wardInstance);
                 }
             }
 
-            public float GetDelay()
+            public IEnumerator Teleport()
             {
-                return teleportCooldown;
+                yield return new WaitForSeconds(teleportCooldown);
+
+                while (cb && hc && hc.alive)
+                {
+                    currentPosition = transform.position;
+
+                    EffectManager.SpawnEffect(tpEffect, new EffectData
+                    {
+                        scale = 0.66f,
+                        origin = currentPosition
+                    }, true);
+
+                    yield return new WaitForSeconds(0.33f);
+                    if (!cb || !hc || !hc.alive)
+                        break;
+
+                    HandleTeleport();
+
+                    yield return new WaitForSeconds(0.33f);
+                    if (!cb || !hc || !hc.alive)
+                        break;
+
+                    EffectManager.SpawnEffect(tpEffect, new EffectData
+                    {
+                        scale = 0.66f,
+                        origin = transform.position
+                    }, true);
+
+                    yield return new WaitForSeconds(teleportCooldown);
+                }
             }
 
-            public void HandleTeleport(Vector3 nextPosition)
+            public void HandleTeleport()
             {
-                nextPosition += new Vector3(0, 1, 0);
+                var nextPosition = PickTeleportPosition();
+                nextPosition.y += 1;
 
                 if (wardInstance != null)
                 {
                     NetworkServer.Destroy(wardInstance);
                 }
-
-                var currentPosition = transform.position;
 
                 wardInstance = Instantiate(SpeedAura, nextPosition, Quaternion.identity);
                 wardInstance.GetComponent<BuffWard>().Networkradius = Util.Remap(cb.baseMaxHealth, 0f, 2100f, minSpeedAuraRadius, maxSpeedAuraRadius);
@@ -337,50 +290,26 @@ namespace WellRoundedBalance.Elites.Tier1
                 TeleportHelper.TeleportBody(cb, nextPosition);
             }
 
-            /*
-            public Vector3[] PickValidPositions(float min, float max, NodeGraph.Node[] nodes)
+            public Vector3 PickTeleportPosition()
             {
-                NodeGraph.Node[] validNodes = nodes.Where(x => Vector3.Distance(x.position, transform.position) > min && Vector3.Distance(x.position, transform.position) < max).ToArray();
-                if (validNodes.Length <= 1)
-                {
-                    return new Vector3[] { transform.position };
-                }
-                return validNodes.Select(node => node.position).ToArray();
-            }
-            */
+                if (!SceneInfo.instance || !SceneInfo.instance.groundNodes)
+                    return currentPosition;
 
-            public Vector3[] PickValidPositions(float min, float max, NodeGraph.Node[] nodes)
-            {
-                List<Vector3> validPositions = new();
+                var nodes = SceneInfo.instance.groundNodes.nodes;
 
-                foreach (NodeGraph.Node node in nodes)
+                List<Vector3> validPositions = [];
+                foreach (var node in nodes)
                 {
-                    float distance = Vector3.Distance(node.position, transform.position);
-                    if (distance > min && distance < max)
+                    var distance = Vector3.SqrMagnitude(currentPosition - node.position);
+                    if (distance is > 100 and < 900)
                     {
                         validPositions.Add(node.position);
                     }
                 }
 
-                if (validPositions.Count <= 1)
-                {
-                    return new Vector3[] { transform.position };
-                }
-
-                return validPositions.ToArray();
-            }
-
-            public Vector3 PickTeleportPosition()
-            {
-                if (!SceneInfo.instance || !SceneInfo.instance.groundNodes)
-                {
-                    return transform.position;
-                }
-
-                NodeGraph.Node[] nodes = SceneInfo.instance.groundNodes.nodes;
-                Vector3[] validPositions;
-                validPositions = PickValidPositions(10, 30, nodes);
-                return validPositions.GetRandom();
+                if (validPositions.Any())
+                    return validPositions.GetRandom();
+                return currentPosition;
             }
         }
     }

@@ -180,10 +180,10 @@ namespace WellRoundedBalance.Items.Yellows
             Vector3? vector = searchOrigin;
             if (vector != null)
             {
-                Vector3 value = vector.Value;
+                var value = vector.Value;
                 var maxPos = sunPlacementIdealAltitudeBonus;
                 var halfDiameter = sunPrefabDiameter * 0.5f;
-                if (Physics.Raycast(value, Vector3.up, out RaycastHit raycastHit, ChannelSun.sunPlacementIdealAltitudeBonus + halfDiameter, LayerIndex.world.mask, QueryTriggerInteraction.Ignore))
+                if (Physics.Raycast(value, Vector3.up, out var raycastHit, ChannelSun.sunPlacementIdealAltitudeBonus + halfDiameter, LayerIndex.world.mask, QueryTriggerInteraction.Ignore))
                 {
                     maxPos = Mathf.Clamp(raycastHit.distance - halfDiameter, 0f, maxPos);
                 }

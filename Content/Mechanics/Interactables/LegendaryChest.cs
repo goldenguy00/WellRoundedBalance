@@ -21,8 +21,8 @@
         {
             if (affectOnlyStage4)
             {
-                bool parentIsRootJungle = chestTransform.parent && chestTransform.parent.name == "HOLDER: Newt Statues and Preplaced Chests";
-                bool parentIsDampCaveSimple = chestTransform.parent
+                var parentIsRootJungle = chestTransform.parent && chestTransform.parent.name == "HOLDER: Newt Statues and Preplaced Chests";
+                var parentIsDampCaveSimple = chestTransform.parent
                     && chestTransform.parent.parent
                     && chestTransform.parent.parent.name == "GROUP: Large Treasure Chests";
                 return parentIsDampCaveSimple || parentIsRootJungle;
@@ -44,11 +44,11 @@
                 return;
             }
 
-            int participatingPlayerCount = Run.instance.participatingPlayerCount != 0 ? Run.instance.participatingPlayerCount : 1;
-            float angle = 360f / participatingPlayerCount;
+            var participatingPlayerCount = Run.instance.participatingPlayerCount != 0 ? Run.instance.participatingPlayerCount : 1;
+            var angle = 360f / participatingPlayerCount;
             var chestVelocity = Vector3.up * self.dropUpVelocityStrength + self.dropTransform.forward * self.dropForwardVelocityStrength;
-            Quaternion rotation = Quaternion.AngleAxis(angle, Vector3.up);
-            int i = 0;
+            var rotation = Quaternion.AngleAxis(angle, Vector3.up);
+            var i = 0;
             while (i < participatingPlayerCount)
             {
                 PickupDropletController.CreatePickupDroplet(self.dropPickup, self.dropTransform.position + Vector3.up * 1.5f, chestVelocity);

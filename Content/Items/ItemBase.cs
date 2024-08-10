@@ -15,13 +15,13 @@ namespace WellRoundedBalance.Items
 
         public static event Action onTokenRegister;
 
-        public static List<string> itemList = new();
+        public static List<string> itemList = [];
 
-        
+
 
         public static int GetItemLoc(ILCursor c, string item) // modify this on compat update
         {
-            int ret = -1;
+            var ret = -1;
             if (c.TryGotoNext(x => x.MatchLdsfld(typeof(RoR2Content.Items), item), x => x.MatchCallOrCallvirt<Inventory>(nameof(Inventory.GetItemCount)), x => x.MatchStloc(out ret))) c.Index--;
             else if (c.TryGotoNext(x => x.MatchLdsfld(typeof(DLC1Content.Items), item), x => x.MatchCallOrCallvirt<Inventory>(nameof(Inventory.GetItemCount)), x => x.MatchStloc(out ret))) c.Index--;
             return ret;
@@ -29,7 +29,7 @@ namespace WellRoundedBalance.Items
 
         public T ConfigOption<T>(T value, string name, string desc)
         {
-            ConfigEntry<T> entry = Main.WRBConfig.Bind(Name, name, value, desc);
+            var entry = Main.WRBConfig.Bind(Name, name, value, desc);
             if (typeof(T) == typeof(int)) ModSettingsManager.AddOption(new IntSliderOption(entry as ConfigEntry<int>));
             else if (typeof(T) == typeof(float)) ModSettingsManager.AddOption(new SliderOption(entry as ConfigEntry<float>));
             else if (typeof(T) == typeof(string)) ModSettingsManager.AddOption(new StringInputFieldOption(entry as ConfigEntry<string>));
@@ -61,8 +61,8 @@ namespace WellRoundedBalance.Items
 
         public string GetToken(string addressablePath)
         {
-            ItemDef def = Addressables.LoadAssetAsync<ItemDef>(addressablePath).WaitForCompletion();
-            string token = def.nameToken;
+            var def = Addressables.LoadAssetAsync<ItemDef>(addressablePath).WaitForCompletion();
+            var token = def.nameToken;
             token = token.Replace("ITEM_", string.Empty);
             token = token.Replace("_NAME", string.Empty);
             return token;

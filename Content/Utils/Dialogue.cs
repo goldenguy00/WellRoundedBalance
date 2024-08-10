@@ -11,7 +11,7 @@ namespace WellRoundedBalance.Utils
             Time.timeScale = 0f;
             input.eventSystem.cursorOpenerCount++;
             input.eventSystem.cursorOpenerForGamepadCount++;
-            SimpleDialogBox box = SimpleDialogBox.Create();
+            var box = SimpleDialogBox.Create();
             box.headerToken = new SimpleDialogBox.TokenParamsPair(title);
             box.descriptionToken = new SimpleDialogBox.TokenParamsPair(desc);
             if (!noCancel) box.AddActionButton(() => DefaultCancel(input.eventSystem), "OK");

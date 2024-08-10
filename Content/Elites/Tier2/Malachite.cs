@@ -39,15 +39,15 @@ namespace WellRoundedBalance.Elites.Tier2
             MalachiteTurret = PrefabAPI.InstantiateClone(new("e"), "MalachiteTurret", false);
             MalachiteTurret.AddComponent<NetworkIdentity>();
             MalachiteTurret.AddComponent<TurretController>();
-            Rigidbody rb = MalachiteTurret.AddComponent<Rigidbody>();
+            var rb = MalachiteTurret.AddComponent<Rigidbody>();
             rb.useGravity = false;
             rb.mass = 300;
-            GameObject turretMdl = Object.Instantiate(Utils.Paths.GameObject.mdlUrchinTurret.Load<GameObject>());
+            var turretMdl = Object.Instantiate(Utils.Paths.GameObject.mdlUrchinTurret.Load<GameObject>());
             turretMdl.transform.SetParent(MalachiteTurret.transform);
             turretMdl.transform.localScale *= 0.4f;
             turretMdl.transform.rotation = Quaternion.Euler(-90, 0, 0);
-            SkinnedMeshRenderer srenderer = turretMdl.GetComponentInChildren<SkinnedMeshRenderer>();
-            MeshRenderer mrenderer = turretMdl.GetComponentInChildren<MeshRenderer>();
+            var srenderer = turretMdl.GetComponentInChildren<SkinnedMeshRenderer>();
+            var mrenderer = turretMdl.GetComponentInChildren<MeshRenderer>();
             if (srenderer)
             {
                 srenderer.material = Utils.Paths.Material.matEliteUrchinCrown.Load<Material>();
@@ -59,25 +59,25 @@ namespace WellRoundedBalance.Elites.Tier2
             MalachiteTurret.RegisterNetworkPrefab();
 
             MalachiteDebuffZone = Utils.Paths.GameObject.RailgunnerMineAltDetonated.Load<GameObject>().InstantiateClone("AntihealZone");
-            Transform areaIndicator = MalachiteDebuffZone.transform.Find("AreaIndicator");
-            Transform softGlow = areaIndicator.Find("SoftGlow");
-            Transform sphere = areaIndicator.Find("Sphere");
-            Transform light = areaIndicator.Find("Point Light");
-            Transform core = areaIndicator.Find("Core");
+            var areaIndicator = MalachiteDebuffZone.transform.Find("AreaIndicator");
+            var softGlow = areaIndicator.Find("SoftGlow");
+            var sphere = areaIndicator.Find("Sphere");
+            var light = areaIndicator.Find("Point Light");
+            var core = areaIndicator.Find("Core");
 
             softGlow.gameObject.SetActive(false);
             light.gameObject.SetActive(false);
             core.gameObject.SetActive(false);
 
-            MeshRenderer renderer = sphere.GetComponent<MeshRenderer>();
-            Material[] mats = renderer.sharedMaterials;
+            var renderer = sphere.GetComponent<MeshRenderer>();
+            var mats = renderer.sharedMaterials;
             mats[0] = Utils.Paths.Material.matElitePoisonOverlay.Load<Material>();
             mats[1] = Utils.Paths.Material.matElitePoisonAreaIndicator.Load<Material>();
             renderer.SetSharedMaterials(mats, 2);
 
             MalachiteDebuffZone.RemoveComponent<BuffWard>();
 
-            SphereZone zone = MalachiteDebuffZone.AddComponent<SphereZone>();
+            var zone = MalachiteDebuffZone.AddComponent<SphereZone>();
             zone.rangeIndicator = areaIndicator;
             zone.isInverted = true;
             zone.radius = 30;
@@ -89,7 +89,7 @@ namespace WellRoundedBalance.Elites.Tier2
 
         internal class TurretSpawner : MonoBehaviour
         {
-            private List<TurretController> activeTurrets = new();
+            private List<TurretController> activeTurrets = [];
             private float startTime;
             private CharacterBody body;
             private GameObject zoneInstance;
@@ -99,13 +99,13 @@ namespace WellRoundedBalance.Elites.Tier2
             {
                 body = GetComponent<CharacterBody>();
                 startTime = Run.instance.GetRunStopwatch();
-                bool e3 = Run.instance && Run.instance.selectedDifficulty >= DifficultyIndex.Eclipse3 && Eclipse3.instance.isEnabled;
+                var e3 = Run.instance && Run.instance.selectedDifficulty >= DifficultyIndex.Eclipse3 && Eclipse3.instance.isEnabled;
                 turretCount = e3 ? turretCountE3 : TurretCount;
 
-                for (int i = 0; i < turretCount; i++)
+                for (var i = 0; i < turretCount; i++)
                 {
-                    GameObject turret = Instantiate(MalachiteTurret);
-                    TurretController controller = turret.GetComponent<TurretController>();
+                    var turret = Instantiate(MalachiteTurret);
+                    var controller = turret.GetComponent<TurretController>();
                     controller.owner = body;
                     activeTurrets.Add(controller);
                     NetworkServer.Spawn(turret);
@@ -117,22 +117,22 @@ namespace WellRoundedBalance.Elites.Tier2
 
             private void FixedUpdate()
             {
-                for (int i = 0; i < turretCount; i++)
+                for (var i = 0; i < turretCount; i++)
                 {
                     if (!activeTurrets[i].rb)
                     {
                         continue;
                     }
 
-                    float elapsed = Run.instance.GetRunStopwatch() - startTime;
-                    Vector3 plane1 = Vector3.up;
-                    Vector3 plane2 = Vector3.forward;
+                    var elapsed = Run.instance.GetRunStopwatch() - startTime;
+                    var plane1 = Vector3.up;
+                    var plane2 = Vector3.forward;
 
-                    Vector3 targetPosition = body.footPosition + new Vector3(0, 2, 0) + Quaternion.AngleAxis(360 / turretCount * i + elapsed / 10 * 360, plane1) * plane2 * 3;
-                    float vel = body.isSprinting ? body.moveSpeed * body.sprintingSpeedMultiplier * 1.35f : body.moveSpeed * 1.35f;
+                    var targetPosition = body.footPosition + new Vector3(0, 2, 0) + Quaternion.AngleAxis(360 / turretCount * i + elapsed / 10 * 360, plane1) * plane2 * 3;
+                    var vel = body.isSprinting ? body.moveSpeed * body.sprintingSpeedMultiplier * 1.35f : body.moveSpeed * 1.35f;
 
-                    Vector3 currentPos = activeTurrets[i].rb.position;
-                    Vector3 lerpedPosition = Vector3.Lerp(currentPos, targetPosition, vel * Time.fixedDeltaTime);
+                    var currentPos = activeTurrets[i].rb.position;
+                    var lerpedPosition = Vector3.Lerp(currentPos, targetPosition, vel * Time.fixedDeltaTime);
 
                     activeTurrets[i].rb.MovePosition(lerpedPosition);
                 }
@@ -140,7 +140,7 @@ namespace WellRoundedBalance.Elites.Tier2
 
             private void OnDestroy()
             {
-                for (int i = 0; i < activeTurrets.Count; i++)
+                for (var i = 0; i < activeTurrets.Count; i++)
                 {
                     activeTurrets[i].Suicide();
                 }
@@ -153,7 +153,7 @@ namespace WellRoundedBalance.Elites.Tier2
 
             private void OnDisable()
             {
-                for (int i = 0; i < activeTurrets.Count; i++)
+                for (var i = 0; i < activeTurrets.Count; i++)
                 {
                     activeTurrets[i].Suicide();
                 }
@@ -187,7 +187,7 @@ namespace WellRoundedBalance.Elites.Tier2
                     RefreshTarget();
                     if (target)
                     {
-                        Vector3 aim = (target.transform.position - transform.position).normalized;
+                        var aim = (target.transform.position - transform.position).normalized;
                         if (Util.HasEffectiveAuthority(gameObject))
                         {
                             FireProjectileInfo info = new()

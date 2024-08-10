@@ -51,7 +51,7 @@ namespace WellRoundedBalance.Equipment.Orange
                     }
                     else
                     {
-                        Transform transform = purchasedObject.transform;
+                        var transform = purchasedObject.transform;
                         vector = ((transform != null) ? new Vector3?(transform.position) : null);
                     }
                     orb.origin = vector ?? body.corePosition;

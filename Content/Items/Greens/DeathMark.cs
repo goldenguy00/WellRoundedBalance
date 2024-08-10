@@ -55,19 +55,19 @@ namespace WellRoundedBalance.Items.Greens
                 {
                     if (self.body && attacker.master && attacker.master.inventory)
                     {
-                        int DeathMarkCount = Util.GetItemCountForTeam(attacker.master.teamIndex, RoR2Content.Items.DeathMark.itemIndex, false);
-                        int debuffCount = 0;
-                        foreach (BuffIndex buffType in BuffCatalog.debuffBuffIndices)
+                        var DeathMarkCount = Util.GetItemCountForTeam(attacker.master.teamIndex, RoR2Content.Items.DeathMark.itemIndex, false);
+                        var debuffCount = 0;
+                        foreach (var buffType in BuffCatalog.debuffBuffIndices)
                         {
                             if (self.body.HasBuff(buffType))
                             {
                                 debuffCount++;
                             }
                         }
-                        DotController dotController = DotController.FindDotController(self.gameObject);
+                        var dotController = DotController.FindDotController(self.gameObject);
                         if (dotController)
                         {
-                            for (DotController.DotIndex dotIndex = DotController.DotIndex.Bleed; dotIndex < DotController.DotIndex.Count; dotIndex++)
+                            for (var dotIndex = DotController.DotIndex.Bleed; dotIndex < DotController.DotIndex.Count; dotIndex++)
                             {
                                 if (dotController.HasDotActive(dotIndex))
                                 {
@@ -75,7 +75,7 @@ namespace WellRoundedBalance.Items.Greens
                                 }
                             }
                         }
-                        float damageBonus = debuffCount * baseDamageIncreasePerDebuff;
+                        var damageBonus = debuffCount * baseDamageIncreasePerDebuff;
                         if (DeathMarkCount > 0)
                         {
                             return 1f + damageBonus + (damageIncreasePerDebuffPerStack * damageBonus * ((float)DeathMarkCount - 1f));
@@ -97,7 +97,7 @@ namespace WellRoundedBalance.Items.Greens
             if (c.TryGotoNext(
                     x => x.MatchLdloc(16),
                     x => x.MatchLdcI4(4),
-                    x => x.MatchBlt(out ILLabel IL_1180)))
+                    x => x.MatchBlt(out var IL_1180)))
             {
                 c.Index += 2;
                 c.Emit(OpCodes.Pop);

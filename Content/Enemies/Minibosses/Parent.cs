@@ -24,7 +24,7 @@
 
         private void Changes()
         {
-            var parent = Utils.Paths.GameObject.ParentBody6.Load<GameObject>().GetComponent<CharacterBody>();
+            var parent = Utils.Paths.GameObject.ParentBody6.LoadComponent<CharacterBody>();
             parent.baseDamage = 14f;
             parent.levelDamage = 2.8f;
         }

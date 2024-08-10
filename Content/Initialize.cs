@@ -70,7 +70,7 @@ namespace WellRoundedBalance
             var stopwatch = Stopwatch.StartNew();
             // Main.WRBLogger.LogError("init called");
 
-            Type[] types = typeof(Initialize).Assembly.GetTypes();
+            var types = typeof(Initialize).Assembly.GetTypes();
 
             FunnyLabel.Init();
             // Useless.Create();
@@ -84,7 +84,7 @@ namespace WellRoundedBalance
             EarthQuakeWave.Init();
             GupSpike.Init();
 
-            On.RoR2.ItemCatalog.Init += ItemCatalog_Init;
+            BetterItemCategories.Init();
 
             /*
             object achievementLock = new();
@@ -104,14 +104,14 @@ namespace WellRoundedBalance
 
             if (Main.enableAchievements.Value)
             {
-                IEnumerable<Type> achievement = types
+                var achievement = types
                                                 .Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(AchievementBase)));
 
                 Main.WRBLogger.LogInfo("==+----------------==ACHIEVEMENTS==----------------+==");
 
-                foreach (Type type in achievement)
+                foreach (var type in achievement)
                 {
-                    AchievementBase based = (AchievementBase)Activator.CreateInstance(type);
+                    var based = (AchievementBase)Activator.CreateInstance(type);
                     if (Validate(based))
                     {
                         // try { based.Init(); } catch (Exception ex) { Main.WRBLogger.LogError($"Failed to initialize {type.Name}: {ex}"); }
@@ -139,14 +139,14 @@ namespace WellRoundedBalance
 
             if (Main.enableAllies.Value)
             {
-                IEnumerable<Type> ally = types
+                var ally = types
                                                 .Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(AllyBase)));
 
                 Main.WRBLogger.LogInfo("==+----------------==ALLIES==----------------+==");
 
-                foreach (Type type in ally)
+                foreach (var type in ally)
                 {
-                    AllyBase based = (AllyBase)Activator.CreateInstance(type);
+                    var based = (AllyBase)Activator.CreateInstance(type);
                     if (Validate(based))
                     {
                         // try { based.Init(); } catch (Exception ex) { Main.WRBLogger.LogError($"Failed to initialize {type.Name}: {ex}"); }
@@ -177,14 +177,14 @@ namespace WellRoundedBalance
 
             if (Main.enableArtifactEdits.Value)
             {
-                IEnumerable<Type> artifactEdit = types
+                var artifactEdit = types
                                                 .Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(ArtifactEditBase)));
 
                 Main.WRBLogger.LogInfo("==+----------------==ARTIFACT EDITS==----------------+==");
 
-                foreach (Type type in artifactEdit)
+                foreach (var type in artifactEdit)
                 {
-                    ArtifactEditBase based = (ArtifactEditBase)Activator.CreateInstance(type);
+                    var based = (ArtifactEditBase)Activator.CreateInstance(type);
                     if (Validate(based))
                     {
                         // try { based.Init(); } catch (Exception ex) { Main.WRBLogger.LogError($"Failed to initialize {type.Name}: {ex}"); }
@@ -195,14 +195,14 @@ namespace WellRoundedBalance
 
             if (Main.enableDifficulties.Value)
             {
-                IEnumerable<Type> difficulty = types
+                var difficulty = types
                                                 .Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(DifficultyBase)));
 
                 Main.WRBLogger.LogInfo("==+----------------==DIFFICULTIES==----------------+==");
 
-                foreach (Type type in difficulty)
+                foreach (var type in difficulty)
                 {
-                    DifficultyBase based = (DifficultyBase)Activator.CreateInstance(type);
+                    var based = (DifficultyBase)Activator.CreateInstance(type);
                     if (Validate(based))
                     {
                         // try { based.Init(); } catch (Exception ex) { Main.WRBLogger.LogError($"Failed to initialize {type.Name}: {ex}"); }
@@ -213,14 +213,14 @@ namespace WellRoundedBalance
 
             if (Main.enableElites.Value)
             {
-                IEnumerable<Type> elite = types
+                var elite = types
                                                 .Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(EliteBase)));
 
                 Main.WRBLogger.LogInfo("==+----------------==ELITES==----------------+==");
 
-                foreach (Type type in elite)
+                foreach (var type in elite)
                 {
-                    EliteBase based = (EliteBase)Activator.CreateInstance(type);
+                    var based = (EliteBase)Activator.CreateInstance(type);
                     if (Validate(based))
                     {
                         // try { based.Init(); } catch (Exception ex) { Main.WRBLogger.LogError($"Failed to initialize {type.Name}: {ex}"); }
@@ -231,14 +231,14 @@ namespace WellRoundedBalance
 
             if (Main.enableEnemies.Value)
             {
-                IEnumerable<Type> enemy = types
+                var enemy = types
                                                 .Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(EnemyBase)));
 
                 Main.WRBLogger.LogInfo("==+----------------==ENEMIES==----------------+==");
 
-                foreach (Type type in enemy)
+                foreach (var type in enemy)
                 {
-                    EnemyBase based = (EnemyBase)Activator.CreateInstance(type);
+                    var based = (EnemyBase)Activator.CreateInstance(type);
                     if (Validate(based))
                     {
                         // try { based.Init(); } catch (Exception ex) { Main.WRBLogger.LogError($"Failed to initialize {type.Name}: {ex}"); }
@@ -249,14 +249,14 @@ namespace WellRoundedBalance
 
             if (Main.enableEquipment.Value)
             {
-                IEnumerable<Type> equipment = types
+                var equipment = types
                                                 .Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(EquipmentBase)));
 
                 Main.WRBLogger.LogInfo("==+----------------==EQUIPMENT==----------------+==");
 
-                foreach (Type type in equipment)
+                foreach (var type in equipment)
                 {
-                    EquipmentBase based = (EquipmentBase)Activator.CreateInstance(type);
+                    var based = (EquipmentBase)Activator.CreateInstance(type);
                     if (Validate(based))
                     {
                         // try { based.Init(); } catch (Exception ex) { Main.WRBLogger.LogError($"Failed to initialize {type.Name}: {ex}"); }
@@ -267,14 +267,14 @@ namespace WellRoundedBalance
 
             if (Main.enableGamemodes.Value)
             {
-                IEnumerable<Type> gamemode = types
+                var gamemode = types
                                                 .Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(GamemodeBase)));
 
                 Main.WRBLogger.LogInfo("==+----------------==GAMEMODES==----------------+==");
 
-                foreach (Type type in gamemode)
+                foreach (var type in gamemode)
                 {
-                    GamemodeBase based = (GamemodeBase)Activator.CreateInstance(type);
+                    var based = (GamemodeBase)Activator.CreateInstance(type);
                     if (Validate(based))
                     {
                         // try { based.Init(); } catch (Exception ex) { Main.WRBLogger.LogError($"Failed to initialize {type.Name}: {ex}"); }
@@ -285,14 +285,14 @@ namespace WellRoundedBalance
 
             if (Main.enableInteractables.Value)
             {
-                IEnumerable<Type> interactable = types
+                var interactable = types
                                                 .Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(InteractableBase)));
 
                 Main.WRBLogger.LogInfo("==+----------------==INTERACTABLES==----------------+==");
 
-                foreach (Type type in interactable)
+                foreach (var type in interactable)
                 {
-                    InteractableBase based = (InteractableBase)Activator.CreateInstance(type);
+                    var based = (InteractableBase)Activator.CreateInstance(type);
                     if (Validate(based))
                     {
                         // try { based.Init(); } catch (Exception ex) { Main.WRBLogger.LogError($"Failed to initialize {type.Name}: {ex}"); }
@@ -303,14 +303,14 @@ namespace WellRoundedBalance
 
             if (Main.enableItems.Value)
             {
-                IEnumerable<Type> item = types
+                var item = types
                                                 .Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(ItemBase)));
 
                 Main.WRBLogger.LogInfo("==+----------------==ITEMS==----------------+==");
 
-                foreach (Type type in item)
+                foreach (var type in item)
                 {
-                    ItemBase based = (ItemBase)Activator.CreateInstance(type);
+                    var based = (ItemBase)Activator.CreateInstance(type);
                     if (Validate(based))
                     {
                         // try { based.Init(); } catch (Exception ex) { Main.WRBLogger.LogError($"Failed to initialize {type.Name}: {ex}"); }
@@ -324,14 +324,14 @@ namespace WellRoundedBalance
 
             if (Main.enableMechanics.Value)
             {
-                IEnumerable<Type> mechanic = types
+                var mechanic = types
                                                 .Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(MechanicBase)));
 
                 Main.WRBLogger.LogInfo("==+----------------==MECHANICS==----------------+==");
 
-                foreach (Type type in mechanic)
+                foreach (var type in mechanic)
                 {
-                    MechanicBase based = (MechanicBase)Activator.CreateInstance(type);
+                    var based = (MechanicBase)Activator.CreateInstance(type);
                     if (Validate(based))
                     {
                         // try { based.Init(); } catch (Exception ex) { Main.WRBLogger.LogError($"Failed to initialize {type.Name}: {ex}"); }
@@ -342,14 +342,14 @@ namespace WellRoundedBalance
 
             if (Main.enableSurvivors.Value)
             {
-                IEnumerable<Type> survivor = types
+                var survivor = types
                                                     .Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(SurvivorBase)));
 
                 Main.WRBLogger.LogInfo("==+----------------==SURVIVORS==----------------+==");
 
-                foreach (Type type in survivor)
+                foreach (var type in survivor)
                 {
-                    SurvivorBase based = (SurvivorBase)Activator.CreateInstance(type);
+                    var based = (SurvivorBase)Activator.CreateInstance(type);
                     if (Validate(based))
                     {
                         // try { based.Init(); } catch (Exception ex) { Main.WRBLogger.LogError($"Failed to initialize {type.Name}: {ex}"); }
@@ -367,20 +367,12 @@ namespace WellRoundedBalance
             Main.WRBLogger.LogDebug("Lotussy");
         }
 
-        private static void ItemCatalog_Init(On.RoR2.ItemCatalog.orig_Init orig)
-        {
-            Main.WRBLogger.LogDebug("ItemAPI.AddItemTag(\"Defense\") returns " + ItemAPI.AddItemTag("Defense"));
-            BetterItemCategories.Init();
-            orig();
-            BetterItemCategories.BetterAIBlacklist();
-        }
-
         public static bool Validate<T>(T obj) where T : SharedBase
         {
             if (obj.isEnabled)
             {
                 // Main.WRBLogger.LogError("validating T: " + obj);
-                bool enabledfr = GetConfigForType<T>().Bind(obj.Name, "Enable Changes?", true, "Vanilla is false").Value;
+                var enabledfr = GetConfigForType<T>().Bind(obj.Name, "Enable Changes?", true, "Vanilla is false").Value;
                 if (enabledfr) return true;
                 else ConfigManager.ConfigChanged = true;
             }

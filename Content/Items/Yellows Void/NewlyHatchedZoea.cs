@@ -27,26 +27,11 @@
         {
             var inventory = body.inventory;
             if (!inventory)
-            {
                 return;
-            }
+
             var stack = inventory.GetItemCount(RoR2Content.Items.BoostDamage);
-            {
-                switch (body.name)
-                {
-                    case "VoidJailerAllyBody(Clone)":
-                        if (stack == 0) inventory.GiveItem(RoR2Content.Items.BoostDamage, voidAllyDamageBonus);
-                        break;
-
-                    case "NullifierAllyBody(Clone)":
-                        if (stack == 0) inventory.GiveItem(RoR2Content.Items.BoostDamage, voidAllyDamageBonus);
-                        break;
-
-                    case "VoidMegaCrabAllyBody(Clone)":
-                        if (stack == 0) inventory.GiveItem(RoR2Content.Items.BoostDamage, voidAllyDamageBonus);
-                        break;
-                }
-            }
+            if (stack == 0 && body.name is "VoidJailerAllyBody(Clone)" or "NullifierAllyBody(Clone)" or "VoidMegaCrabAllyBody(Clone)")
+                inventory.GiveItem(RoR2Content.Items.BoostDamage, voidAllyDamageBonus);
         }
     }
 }

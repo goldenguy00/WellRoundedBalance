@@ -4,7 +4,7 @@
 // a specific target and scoped to a namespace, type, member, etc.
 
 using System.Diagnostics.CodeAnalysis;
-
+/*
 [assembly: SuppressMessage("Style", "IDE0090:Use 'new(...)'", Justification = "<Pending>", Scope = "member", Target = "~M:WellRoundedBalance.Global.CritDamageMultiplier.ChangeDamage(MonoMod.Cil.ILContext)")]
 [assembly: SuppressMessage("Style", "IDE0090:Use 'new(...)'", Justification = "<Pending>", Scope = "member", Target = "~M:WellRoundedBalance.Global.EquipmentChargeCap.ChangeCap(MonoMod.Cil.ILContext)")]
 [assembly: SuppressMessage("Style", "IDE0090:Use 'new(...)'", Justification = "<Pending>", Scope = "member", Target = "~M:WellRoundedBalance.Global.GetNotMoving.ChangeTimer(MonoMod.Cil.ILContext)")]
@@ -92,7 +92,7 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage("Style", "IDE0090:Use 'new(...)'", Justification = "<Pending>", Scope = "member", Target = "~M:WellRoundedBalance.Items.Whites.TriTipDagger.ChangeDuration(MonoMod.Cil.ILContext)")]
 [assembly: SuppressMessage("Style", "IDE0090:Use 'new(...)'", Justification = "<Pending>", Scope = "member", Target = "~M:WellRoundedBalance.Items.Whites.Warbanner.WardOnLevelManager_OnCharacterLevelUp(MonoMod.Cil.ILContext)")]
 [assembly: SuppressMessage("Style", "IDE0090:Use 'new(...)'", Justification = "<Pending>", Scope = "member", Target = "~M:WellRoundedBalance.Items.Whites.Warbanner.ChargingState_OnEnter(MonoMod.Cil.ILContext)")]
-[assembly: SuppressMessage("Style", "IDE0090:Use 'new(...)'", Justification = "<Pending>", Scope = "member", Target = "~P:WellRoundedBalance.Survivors.CommandoStats.Entity")]
+[assembly: SuppressMessage("Style", "IDE0090:Use 'new(...)'", Justification = "<Pending>", Scope = "member", Target = "~P:WellRoundedBalance.Survivors.CommandoStats.Entity")]*/
 [assembly: SuppressMessage("CodeQuality", "IDE0079:Remove unnecessary suppression", Justification = "<Pending>")]
 [assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~M:WellRoundedBalance.MechanicBase.d(System.Single)~System.String")]
 [assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~M:WellRoundedBalance.ItemBase.d(System.Single)~System.String")]

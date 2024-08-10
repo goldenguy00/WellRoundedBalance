@@ -20,8 +20,8 @@ namespace WellRoundedBalance.Gamemodes.Simulacrum
         private void InfiniteTowerRun_Start(On.RoR2.InfiniteTowerRun.orig_Start orig, InfiniteTowerRun self)
         {
             orig(self);
-            self.blacklistedItems = new ItemDef[] { RoR2Content.Items.FocusConvergence, RoR2Content.Items.LunarTrinket, RoR2Content.Items.TitanGoldDuringTP };
-            self.blacklistedTags = new ItemTag[] { ItemTag.ObliterationRelated };
+            self.blacklistedItems = [RoR2Content.Items.FocusConvergence, RoR2Content.Items.LunarTrinket, RoR2Content.Items.TitanGoldDuringTP];
+            self.blacklistedTags = [ItemTag.ObliterationRelated];
         }
     }
 }

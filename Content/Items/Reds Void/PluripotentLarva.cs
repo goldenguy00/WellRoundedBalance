@@ -18,19 +18,18 @@
 
         public override void Hooks()
         {
-            On.RoR2.Inventory.GiveItem_ItemIndex_int += Inventory_GiveItem_ItemIndex_int;
+            RoR2.Inventory.onServerItemGiven += Inventory_onServerItemGiven;
         }
 
-        private void Inventory_GiveItem_ItemIndex_int(On.RoR2.Inventory.orig_GiveItem_ItemIndex_int orig, Inventory self, ItemIndex itemIndex, int count)
+        private void Inventory_onServerItemGiven(Inventory self, ItemIndex itemIndex, int count)
         {
-            orig(self, itemIndex, count);
             if (itemIndex == DLC1Content.Items.ExtraLifeVoid.itemIndex)
             {
-                List<ItemIndex> tier1Indices = new();
-                List<int> stacks = new();
+                List<ItemIndex> tier1Indices = [];
+                List<int> stacks = [];
 
                 // Store the indices and stack counts of all Tier 1 items in the inventory
-                for (int i = 0; i < self.itemAcquisitionOrder.Count; i++)
+                for (var i = 0; i < self.itemAcquisitionOrder.Count; i++)
                 {
                     var index = self.itemAcquisitionOrder[i];
                     var itemDef = ItemCatalog.GetItemDef(index);
@@ -43,18 +42,18 @@
                 }
 
                 // Shuffle the stack counts using Fisher-Yates shuffle algorithm
-                int n = stacks.Count;
+                var n = stacks.Count;
                 while (n > 1)
                 {
                     n--;
-                    int k = Random.Range(0, n + 1);
-                    int temp = stacks[k];
+                    var k = Random.Range(0, n + 1);
+                    var temp = stacks[k];
                     stacks[k] = stacks[n];
                     stacks[n] = temp;
                 }
 
                 // Assign the shuffled stack counts to the Tier 1 items
-                for (int i = 0; i < tier1Indices.Count; i++)
+                for (var i = 0; i < tier1Indices.Count; i++)
                 {
                     var index = tier1Indices[i];
                     var stackCount = stacks[i];

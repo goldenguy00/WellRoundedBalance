@@ -47,8 +47,9 @@ namespace WellRoundedBalance.Difficulties
 
         private void Changes()
         {
-            DifficultyDef def = DifficultyCatalog.difficultyDefs.FirstOrDefault(x => DifficultyCatalog.GetDifficultyDef(InternalDiff) == x);
-            if (def != null && def != default) def.scalingValue = totalDifficultyScaling / 50f;
+            var def = DifficultyCatalog.GetDifficultyDef(InternalDiff);
+            if (def != null)
+                def.scalingValue = totalDifficultyScaling / 50f;
         }
     }
 }

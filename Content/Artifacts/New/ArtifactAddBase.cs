@@ -24,7 +24,7 @@ namespace WellRoundedBalance.Artifacts.New
 
         public static event Action onTokenRegister;
 
-        public static List<string> artifactAddList = new();
+        public static List<string> artifactAddList = [];
 
         public override void Init()
         {

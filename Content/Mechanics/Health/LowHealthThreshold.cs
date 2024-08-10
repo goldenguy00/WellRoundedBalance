@@ -28,7 +28,7 @@ namespace WellRoundedBalance.Mechanics.Health
             if (hc)
             {
                 var bar = self.barInfoCollection.lowHealthUnderBarInfo;
-                bool underHalf = (hc.health / hc.shield) / hc.fullCombinedHealth <= 0.5f;
+                var underHalf = (hc.health / hc.shield) / hc.fullCombinedHealth <= 0.5f;
                 bar.enabled = self.hasLowHealthItem && underHalf;
 
                 bar.normalizedXMax = 0.5f * (1f - hc.GetHealthBarValues().curseFraction);
@@ -55,26 +55,32 @@ namespace WellRoundedBalance.Mechanics.Health
         public static void Hook()
         {
             On.RoR2.UI.HealthBar.UpdateBarInfos += UpdateBarInfos;
-            fragileDefs = new();
-            fragileMap = new();
+            fragileDefs = [];
+            fragileMap = [];
         }
 
-        private static void UpdateBarInfos(On.RoR2.UI.HealthBar.orig_UpdateBarInfos orig, HealthBar self) {
+        private static void UpdateBarInfos(On.RoR2.UI.HealthBar.orig_UpdateBarInfos orig, HealthBar self)
+        {
             orig(self);
-            float highest = LowHealthThreshold.lowHealthFraction;
-            if (!self.source || !self.source.body || !self.source.body.inventory) {
+            var highest = LowHealthThreshold.lowHealthFraction;
+            if (!self.source || !self.source.body || !self.source.body.inventory)
+            {
                 return;
             }
-            if (self.source.body.inventory) {
-                CharacterBody body = self.source.body;
-                Inventory inventory = body.inventory;
+            if (self.source.body.inventory)
+            {
+                var body = self.source.body;
+                var inventory = body.inventory;
 
-                foreach (ItemIndex item in inventory.itemAcquisitionOrder) {
-                    ItemDef def = ItemCatalog.GetItemDef(item);
-                    if (fragileMap.TryGetValue(def, out FragileInfo info)) {
+                foreach (var item in inventory.itemAcquisitionOrder)
+                {
+                    var def = ItemCatalog.GetItemDef(item);
+                    if (fragileMap.TryGetValue(def, out var info))
+                    {
                         self.hasLowHealthItem = true;
-                        float newFraction = info.fraction * 0.01f;
-                        if (newFraction > highest) {
+                        var newFraction = info.fraction * 0.01f;
+                        if (newFraction > highest)
+                        {
                             highest = newFraction;
                         }
                     }
@@ -89,7 +95,7 @@ namespace WellRoundedBalance.Mechanics.Health
             self.barInfoCollection.lowHealthOverBarInfo.sprite = self.style.lowHealthOverStyle.sprite;
             self.barInfoCollection.lowHealthOverBarInfo.imageType = self.style.lowHealthOverStyle.imageType;
             self.barInfoCollection.lowHealthOverBarInfo.sizeDelta = self.style.lowHealthOverStyle.sizeDelta;
-            
+
             self.barInfoCollection.lowHealthUnderBarInfo.enabled = self.hasLowHealthItem && !self.source.IsAboveFraction(highest * 100);
             self.barInfoCollection.lowHealthUnderBarInfo.normalizedXMin = 0f;
             self.barInfoCollection.lowHealthUnderBarInfo.normalizedXMax = highest * (1f - val.curseFraction);

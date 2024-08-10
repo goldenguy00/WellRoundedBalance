@@ -1,7 +1,43 @@
+using System.Reflection;
+
 namespace WellRoundedBalance.Utils
 {
     public static class Extensions
     {
+        public static T GetCopyOf<T>(this Component comp, T other) where T : Component
+        {
+            var type = comp.GetType();
+            if (type != other.GetType()) 
+                return null; // type mis-match
+
+            var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Default | BindingFlags.DeclaredOnly;
+            var pinfos = type.GetProperties(flags);
+            foreach (var pinfo in pinfos)
+            {
+                if (pinfo.CanWrite)
+                {
+                    try
+                    {
+                        pinfo.SetValue(comp, pinfo.GetValue(other, null), null);
+                    }
+                    catch { } // In case of NotImplementedException being thrown. For some reason specifying that exception didn't seem to catch it, so I didn't catch anything specific.
+                }
+            }
+
+            var finfos = type.GetFields(flags);
+            foreach (var finfo in finfos)
+            {
+                finfo.SetValue(comp, finfo.GetValue(other));
+            }
+
+            return comp as T;
+        }
+
+        public static T AddComponentCopy<T>(this GameObject go, T toAdd) where T : Component
+        {
+            return go.AddComponent<T>().GetCopyOf(toAdd);
+        }
+
         public static PickupIndex GetPickupIndex(this ItemDef def)
         {
             return PickupCatalog.FindPickupIndex(def.itemIndex);
@@ -9,21 +45,25 @@ namespace WellRoundedBalance.Utils
 
         public static void RemoveComponent<T>(this GameObject go) where T : Component
         {
-            GameObject.Destroy(go.GetComponent<T>());
+            if (go.TryGetComponent<T>(out var component))
+            {
+                MonoBehaviour.Destroy(component);
+            }
         }
 
         public static void RemoveComponents<T>(this GameObject go) where T : Component
         {
-            T[] coms = go.GetComponents<T>();
-            for (int i = 0; i < coms.Length; i++)
+            var coms = go.GetComponents<T>();
+            for (var i = 0; i < coms.Length; i++)
             {
                 GameObject.Destroy(coms[i]);
             }
         }
 
-        public static bool IsAboveFraction(this HealthComponent healthComponent, float fraction) {
-            float newFraction = fraction * 0.01f;
-            float health = healthComponent.fullHealth * newFraction;
+        public static bool IsAboveFraction(this HealthComponent healthComponent, float fraction)
+        {
+            var newFraction = fraction * 0.01f;
+            var health = healthComponent.fullHealth * newFraction;
             return healthComponent.combinedHealth > health;
         }
 
@@ -45,7 +85,7 @@ namespace WellRoundedBalance.Utils
 
         public static T GetRandom<T>(this T[] array)
         {
-            int index = UnityEngine.Random.Range(0, array.Length);
+            var index = UnityEngine.Random.Range(0, array.Length);
             return array[index];
         }
 
@@ -58,7 +98,7 @@ namespace WellRoundedBalance.Utils
         {
             var vector = victimPosition - attackerPosition;
             if (vector.magnitude >= maxRange) return false; // < 120m + LoS check
-            return !Physics.Raycast(victimPosition, vector, out RaycastHit raycastHit, vector.magnitude, LayerIndex.world.mask, QueryTriggerInteraction.Ignore);
+            return !Physics.Raycast(victimPosition, vector, out var raycastHit, vector.magnitude, LayerIndex.world.mask, QueryTriggerInteraction.Ignore);
         }
 
         public static bool HasEquipment(Inventory inventory, EquipmentDef equipmentDef)

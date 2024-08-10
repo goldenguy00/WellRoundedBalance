@@ -71,7 +71,7 @@ namespace WellRoundedBalance.Items.VoidWhites
 
             var ch = StackAmount(chance, chanceStack, inventory.GetItemCount(DLC1Content.Items.CritGlassesVoid), chanceIsHyperbolic);
 
-            ProcType mask = (ProcType)58129798;
+            var mask = (ProcType)58129798;
             if (Util.CheckRoll(ch * 100f, attackerBody.master) && !report.damageInfo.procChainMask.HasProc(mask) && report.damageInfo.procCoefficient > 0)
             {
                 var vroggleVFX = HealthComponent.AssetReferences.critGlassesVoidExecuteEffectPrefab; // where did the r come from

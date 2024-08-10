@@ -28,20 +28,20 @@ namespace WellRoundedBalance.Attributes
         internal static bool VersionChanged = false;
         public static void HandleConfigAttributes(Type type, string section, ConfigFile config)
         {
-            TypeInfo info = type.GetTypeInfo();
+            var info = type.GetTypeInfo();
 
-            foreach (FieldInfo field in info.GetFields())
+            foreach (var field in info.GetFields())
             {
                 if (!field.IsStatic) continue;
 
-                Type t = field.FieldType;
-                ConfigFieldAttribute configattr = field.GetCustomAttribute<ConfigFieldAttribute>();
+                var t = field.FieldType;
+                var configattr = field.GetCustomAttribute<ConfigFieldAttribute>();
                 if (configattr == null) continue;
 
-                MethodInfo method = typeof(ConfigFile).GetMethods().Where(x => x.Name == nameof(ConfigFile.Bind)).First();
+                var method = typeof(ConfigFile).GetMethods().Where(x => x.Name == nameof(ConfigFile.Bind)).First();
                 method = method.MakeGenericMethod(t);
-                ConfigEntryBase val = (ConfigEntryBase)method.Invoke(config, new object[] { new ConfigDefinition(section, configattr.name), configattr.defaultValue, new ConfigDescription(configattr.desc) });
-                ConfigEntryBase backupVal = (ConfigEntryBase)method.Invoke(Main.WRBBackupConfig, new object[] { new ConfigDefinition(Regex.Replace(config.ConfigFilePath, "\\W", "") + " : " + section, configattr.name), val.DefaultValue, new ConfigDescription(configattr.desc) });
+                var val = (ConfigEntryBase)method.Invoke(config, [new ConfigDefinition(section, configattr.name), configattr.defaultValue, new ConfigDescription(configattr.desc)]);
+                var backupVal = (ConfigEntryBase)method.Invoke(Main.WRBBackupConfig, [new ConfigDefinition(Regex.Replace(config.ConfigFilePath, "\\W", "") + " : " + section, configattr.name), val.DefaultValue, new ConfigDescription(configattr.desc)]);
                 // Main.WRBLogger.LogDebug(section + " : " + configattr.name + " " + val.DefaultValue + " / " + val.BoxedValue + " ... " + backupVal.DefaultValue + " / " + backupVal.BoxedValue + " >> " + VersionChanged);
 
                 if (!ConfigEqual(backupVal.DefaultValue, backupVal.BoxedValue))

@@ -136,14 +136,14 @@ namespace WellRoundedBalance.Items.Whites
 
             buffCount = 0;
 
-            for (TeamIndex firstIndex = TeamIndex.Neutral; firstIndex < TeamIndex.Count && buffCount < maxBuffs; firstIndex++)
+            for (var firstIndex = TeamIndex.Neutral; firstIndex < TeamIndex.Count && buffCount < maxBuffs; firstIndex++)
             {
                 if (firstIndex == ownerIndex || firstIndex <= TeamIndex.Neutral)
                 {
                     continue;
                 }
 
-                foreach (TeamComponent teamComponent in TeamComponent.GetTeamMembers(firstIndex))
+                foreach (var teamComponent in TeamComponent.GetTeamMembers(firstIndex))
                 {
                     if ((teamComponent.transform.position - body.corePosition).sqrMagnitude <= radiusSquared && buffCount < maxBuffs)
                     {
@@ -163,14 +163,14 @@ namespace WellRoundedBalance.Items.Whites
                 var buffCountDiff = buffCountAdd - currentBuffCount;
                 if (buffCountDiff > 0)
                 {
-                    for (int j = 0; j < buffCountDiff; j++)
+                    for (var j = 0; j < buffCountDiff; j++)
                     {
                         body.AddBuff(OddlyShapedOpal.opalArmor);
                     }
                 }
                 else
                 {
-                    for (int k = 0; k < -buffCountDiff; k++)
+                    for (var k = 0; k < -buffCountDiff; k++)
                     {
                         body.RemoveBuff(OddlyShapedOpal.opalArmor);
                     }

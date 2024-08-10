@@ -71,7 +71,7 @@ namespace WellRoundedBalance.Enemies.Minibosses
 
         private void Changes()
         {
-            var golemBody = Utils.Paths.GameObject.GolemBody28.Load<GameObject>().GetComponent<CharacterBody>();
+            var golemBody = Utils.Paths.GameObject.GolemBody28.LoadComponent<CharacterBody>();
             golemBody.baseDamage = 9f;
             golemBody.levelDamage = 2.4f;
         }

@@ -106,7 +106,7 @@ namespace WellRoundedBalance.Interactables
             behavior.baseRadius = shrineOfWoodBaseRadius;
             behavior.radiusBonusPerPurchase = shrineOfWoodRadiusPerUpgrade;
 
-            var shrineHealingWard = Utils.Paths.GameObject.ShrineHealingWard.Load<GameObject>().GetComponent<HealingWard>();
+            var shrineHealingWard = Utils.Paths.GameObject.ShrineHealingWard.LoadComponent<HealingWard>();
             shrineHealingWard.healFraction = shrineOfWoodPercentHealingPerSecond * 0.25f;
 
             var goldShrine = Utils.Paths.GameObject.ShrineGoldshoresAccess.Load<GameObject>();
@@ -186,17 +186,8 @@ namespace WellRoundedBalance.Interactables
                 minimumStageCompletions = 0
             };
 
-            var roost1 = Utils.Paths.DirectorCardCategorySelection.dccsBlackBeachInteractables.Load<DirectorCardCategorySelection>();
-            Array.Resize(ref roost1.categories[2].cards, 3);
-            roost1.categories[2].cards[0] = shrineBloodDC;
-            roost1.categories[2].cards[1] = shrineBossDC;
-            roost1.categories[2].cards[2] = shrineChanceDC;
-
-            var roost2 = Utils.Paths.DirectorCardCategorySelection.dccsBlackBeachInteractablesDLC1.Load<DirectorCardCategorySelection>();
-            Array.Resize(ref roost2.categories[2].cards, 3);
-            roost2.categories[2].cards[0] = shrineBloodDC;
-            roost2.categories[2].cards[1] = shrineBossDC;
-            roost2.categories[2].cards[2] = shrineChanceDC;
+            Utils.Paths.DirectorCardCategorySelection.dccsBlackBeachInteractables.Load<DirectorCardCategorySelection>().categories[2].cards = [shrineBloodDC, shrineBossDC, shrineChanceDC];
+            Utils.Paths.DirectorCardCategorySelection.dccsBlackBeachInteractablesDLC1.Load<DirectorCardCategorySelection>().categories[2].cards = [shrineBloodDC, shrineBossDC, shrineChanceDC];
         }
     }
 }

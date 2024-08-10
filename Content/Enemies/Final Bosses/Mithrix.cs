@@ -100,10 +100,10 @@ namespace WellRoundedBalance.Enemies.FinalBosses
 
         public static SpawnCard mithrixGlass = LegacyResourcesAPI.Load<SpawnCard>("SpawnCards/CharacterSpawnCards/cscBrotherGlass");
 
-        public static CharacterBody stationaryBody = Utils.Paths.GameObject.EngiTurretBody.Load<GameObject>().GetComponent<CharacterBody>();
-        public static CharacterBody walkerBody = Utils.Paths.GameObject.EngiWalkerTurretBody.Load<GameObject>().GetComponent<CharacterBody>();
-        public static CharacterMaster stationaryMaster = Utils.Paths.GameObject.EngiTurretMaster.Load<GameObject>().GetComponent<CharacterMaster>();
-        public static CharacterMaster walkerMaster = Utils.Paths.GameObject.EngiWalkerTurretMaster.Load<GameObject>().GetComponent<CharacterMaster>();
+        public static CharacterBody stationaryBody = Utils.Paths.GameObject.EngiTurretBody.LoadComponent<CharacterBody>();
+        public static CharacterBody walkerBody = Utils.Paths.GameObject.EngiWalkerTurretBody.LoadComponent<CharacterBody>();
+        public static CharacterMaster stationaryMaster = Utils.Paths.GameObject.EngiTurretMaster.LoadComponent<CharacterMaster>();
+        public static CharacterMaster walkerMaster = Utils.Paths.GameObject.EngiWalkerTurretMaster.LoadComponent<CharacterMaster>();
 
         public override string Name => ":::: Final Bosses :: Mithrix";
 
@@ -172,7 +172,7 @@ namespace WellRoundedBalance.Enemies.FinalBosses
                     var slices = 360f / projectileCount;
                     var upVector = Vector3.ProjectOnPlane(body.inputBank.aimDirection, Vector3.up);
                     var footPosition = body.footPosition;
-                    for (int i = 0; i < projectileCount; i++)
+                    for (var i = 0; i < projectileCount; i++)
                     {
                         var vector2 = Quaternion.AngleAxis(slices * i, Vector3.up) * upVector;
                         if (self.isAuthority)
@@ -193,7 +193,7 @@ namespace WellRoundedBalance.Enemies.FinalBosses
                 if (phase4SpeedBuff)
                 {
                     var players = CharacterBody.readOnlyInstancesList.Where(x => x.isPlayerControlled).ToList();
-                    foreach (CharacterBody body in players)
+                    foreach (var body in players)
                     {
                         body.RemoveBuff(speedBuff);
                     }
@@ -231,7 +231,7 @@ namespace WellRoundedBalance.Enemies.FinalBosses
                 timer += Time.fixedDeltaTime;
                 if (timer >= interval)
                 {
-                    for (int i = 0; i < CharacterBody.readOnlyInstancesList.ToList().Count; i++)
+                    for (var i = 0; i < CharacterBody.readOnlyInstancesList.ToList().Count; i++)
                     {
                         var body = CharacterBody.readOnlyInstancesList[i];
                         if (body.teamComponent.teamIndex == TeamIndex.Player && !body.isPlayerControlled && body != stationaryBody && body != walkerBody)
@@ -434,7 +434,7 @@ namespace WellRoundedBalance.Enemies.FinalBosses
                 ramp3.SetActive(false);
                 rocks.SetActive(false);
             }
-            for (int i = 0; i < CharacterBody.readOnlyInstancesList.Count; i++)
+            for (var i = 0; i < CharacterBody.readOnlyInstancesList.Count; i++)
             {
                 var body = CharacterBody.readOnlyInstancesList[i];
                 if (body.isPlayerControlled)
@@ -535,35 +535,35 @@ namespace WellRoundedBalance.Enemies.FinalBosses
                 {
                     case "BrotherMaster(Clone)":
                         {
-                            AISkillDriver MithrixFireShards = (from x in cm.GetComponents<AISkillDriver>()
-                                                               where x.customName == "Sprint and FireLunarShards"
-                                                               select x).First();
+                            var MithrixFireShards = (from x in cm.GetComponents<AISkillDriver>()
+                                                     where x.customName == "Sprint and FireLunarShards"
+                                                     select x).First();
                             MithrixFireShards.minDistance = 0f;
                             MithrixFireShards.maxUserHealthFraction = Mathf.Infinity;
 
-                            AISkillDriver MithrixSprint = (from x in cm.GetComponents<AISkillDriver>()
-                                                           where x.customName == "Sprint After Target"
-                                                           select x).First();
+                            var MithrixSprint = (from x in cm.GetComponents<AISkillDriver>()
+                                                 where x.customName == "Sprint After Target"
+                                                 select x).First();
                             MithrixSprint.minDistance = 40f;
 
-                            AISkillDriver DashStrafe = (from x in cm.GetComponents<AISkillDriver>()
-                                                        where x.customName == "DashStrafe"
-                                                        select x).First();
+                            var DashStrafe = (from x in cm.GetComponents<AISkillDriver>()
+                                              where x.customName == "DashStrafe"
+                                              select x).First();
                             DashStrafe.nextHighPriorityOverride = MithrixFireShards;
                         }
 
                         break;
 
                     case "BrotherHurtMaster(Clone)":
-                        AISkillDriver MithrixWeakSlam = (from x in cm.GetComponents<AISkillDriver>()
-                                                         where x.customName == "SlamGround"
-                                                         select x).First();
+                        var MithrixWeakSlam = (from x in cm.GetComponents<AISkillDriver>()
+                                               where x.customName == "SlamGround"
+                                               select x).First();
                         MithrixWeakSlam.maxUserHealthFraction = Mathf.Infinity;
                         MithrixWeakSlam.movementType = AISkillDriver.MovementType.StrafeMovetarget;
 
-                        AISkillDriver MithrixWeakShards = (from x in cm.GetComponents<AISkillDriver>()
-                                                           where x.customName == "Shoot"
-                                                           select x).First();
+                        var MithrixWeakShards = (from x in cm.GetComponents<AISkillDriver>()
+                                                 where x.customName == "Shoot"
+                                                 select x).First();
                         MithrixWeakShards.movementType = AISkillDriver.MovementType.StrafeMovetarget;
 
                         break;
@@ -622,7 +622,7 @@ namespace WellRoundedBalance.Enemies.FinalBosses
 
         private void Changes()
         {
-            var glass = Utils.Paths.GameObject.BrotherGlassBody.Load<GameObject>().GetComponent<CharacterBody>();
+            var glass = Utils.Paths.GameObject.BrotherGlassBody.LoadComponent<CharacterBody>();
             glass.baseMaxHealth = phase4BaseMaxHealth * 0.25f;
             glass.levelMaxHealth = phase4BaseMaxHealth * 0.25f * 0.3f;
             glass.baseDamage = 9f;

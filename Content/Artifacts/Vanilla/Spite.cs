@@ -76,7 +76,7 @@ namespace WellRoundedBalance.Artifacts.Vanilla
             var origin = self.transform.position;
             var maxDistance = velocity.magnitude * fixedDeltaTime + self.radius;
 
-            if (Physics.Raycast(origin, velocity, out RaycastHit raycastHit, maxDistance, LayerIndex.world.mask, QueryTriggerInteraction.Ignore))
+            if (Physics.Raycast(origin, velocity, out var raycastHit, maxDistance, LayerIndex.world.mask, QueryTriggerInteraction.Ignore))
             {
                 origin = raycastHit.point;
                 velocity -= 2f * Vector3.Dot(velocity, raycastHit.normal) * raycastHit.normal;

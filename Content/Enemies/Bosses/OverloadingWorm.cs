@@ -22,8 +22,7 @@
 
         private void Changes()
         {
-            var worm = Utils.Paths.GameObject.ElectricWormBody32.Load<GameObject>();
-            var wormBody = worm.GetComponent<CharacterBody>();
+            var wormBody = Utils.Paths.GameObject.ElectricWormBody32.LoadComponent<CharacterBody>();
             wormBody.baseDamage = 42f;
             wormBody.levelDamage = 8.4f;
             wormBody.baseMaxHealth = 9000f;

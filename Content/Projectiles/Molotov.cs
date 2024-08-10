@@ -41,8 +41,6 @@
 
             projectileImpactExplosionChild.childrenProjectilePrefab = firePool;
 
-            var hitboxGroup = firePool.GetComponent<HitBoxGroup>();
-
             var hitbox = firePool.transform.GetChild(0).GetChild(2);
             hitbox.localScale = new Vector3(1.4f, 0.1f, 1.4f);
 
@@ -58,7 +56,14 @@
             var hitbox5 = Object.Instantiate(hitbox, firePool.transform.GetChild(0));
             hitbox5.localEulerAngles = new Vector3(0f, 105f, 0f);
 
-            hitboxGroup.hitBoxes = new HitBox[] { hitbox.GetComponent<HitBox>(), hitbox2.GetComponent<HitBox>(), hitbox3.GetComponent<HitBox>(), hitbox4.GetComponent<HitBox>(), hitbox5.GetComponent<HitBox>() };
+            firePool.GetComponent<HitBoxGroup>().hitBoxes = 
+            [
+                hitbox.GetComponent<HitBox>(),
+                hitbox2.GetComponent<HitBox>(),
+                hitbox3.GetComponent<HitBox>(),
+                hitbox4.GetComponent<HitBox>(),
+                hitbox5.GetComponent<HitBox>()
+            ];
 
             PrefabAPI.RegisterNetworkPrefab(firePool);
             PrefabAPI.RegisterNetworkPrefab(molotovChild);

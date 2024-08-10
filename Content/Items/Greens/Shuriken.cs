@@ -109,7 +109,7 @@ namespace WellRoundedBalance.Items.Greens
                     hitBox.layer = 14;
 
                     var hitBoxGroup = shurikenProjectile.GetComponent<HitBoxGroup>();
-                    hitBoxGroup.hitBoxes = new HitBox[] { hitBox.GetComponent<HitBox>() };
+                    hitBoxGroup.hitBoxes = [hitBox.GetComponent<HitBox>()];
                 }
             }
 

@@ -127,14 +127,14 @@ namespace WellRoundedBalance.Items.Greens
 
             enableRadiusIndicator = true;
 
-            for (TeamIndex firstIndex = TeamIndex.Neutral; firstIndex < TeamIndex.Count; firstIndex++)
+            for (var firstIndex = TeamIndex.Neutral; firstIndex < TeamIndex.Count; firstIndex++)
             {
                 if (firstIndex == ownerIndex || firstIndex <= TeamIndex.Neutral)
                 {
                     continue;
                 }
 
-                foreach (TeamComponent teamComponent in TeamComponent.GetTeamMembers(firstIndex))
+                foreach (var teamComponent in TeamComponent.GetTeamMembers(firstIndex))
                 {
                     var enemyPosition = teamComponent.transform.position;
                     var corePosition = body.corePosition;

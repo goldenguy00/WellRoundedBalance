@@ -127,7 +127,7 @@ namespace WellRoundedBalance.Items.Yellows
             {
                 if (laserInstance && laserEndTrans)
                 {
-                    Vector3 pos = body.inputBank.GetAimRay().GetPoint(10000);
+                    var pos = body.inputBank.GetAimRay().GetPoint(10000);
                     laserEndTrans.position = pos;
                 }
             }
@@ -149,7 +149,7 @@ namespace WellRoundedBalance.Items.Yellows
 
                 if (Util.HasEffectiveAuthority(gameObject))
                 {
-                    for (int i = 0; i < ticks; i++)
+                    for (var i = 0; i < ticks; i++)
                     {
                         BulletAttack attack = new()
                         {

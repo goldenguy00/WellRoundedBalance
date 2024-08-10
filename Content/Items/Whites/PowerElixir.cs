@@ -47,19 +47,19 @@ namespace WellRoundedBalance.Items.Whites
 
         public override void Hooks()
         {
-            IL.RoR2.HealthComponent.UpdateLastHitTime += HealthComponent_UpdateLastHitTime;
-            IL.RoR2.HealthComponent.ServerFixedUpdate += HealthComponent_ServerFixedUpdate;
-            On.RoR2.Stage.Start += Stage_Start;
-            On.RoR2.HealthComponent.UpdateLastHitTime += HealthComponent_UpdateLastHitTime1;
+            //IL.RoR2.HealthComponent.UpdateLastHitTime += HealthComponent_UpdateLastHitTime;
+            //IL.RoR2.HealthComponent.ServerFixedUpdate += HealthComponent_ServerFixedUpdate;
+            //On.RoR2.Stage.Start += Stage_Start;
+            //On.RoR2.HealthComponent.UpdateLastHitTime += HealthComponent_UpdateLastHitTime1;
 
-            Mechanics.Health.Fragile.AddFragileItem(InternalPickup, new Mechanics.Health.Fragile.FragileInfo { fraction = healthThreshold * 100f });
+            //Mechanics.Health.Fragile.AddFragileItem(InternalPickup, new Mechanics.Health.Fragile.FragileInfo { fraction = healthThreshold * 100f });
         }
 
         private void HealthComponent_UpdateLastHitTime1(On.RoR2.HealthComponent.orig_UpdateLastHitTime orig, HealthComponent self, float damageValue, Vector3 damagePosition, bool damageIsSilent, GameObject attacker)
         {
             if (self.itemCounts.healingPotion > 0 && !self.body.HasBuff(regen))
             {
-                float healthFraction = self.health / self.fullHealth;
+                var healthFraction = self.health / self.fullHealth;
                 if (healthFraction < healthThreshold)
                 {
                     self.body.inventory.RemoveItem(DLC1Content.Items.HealingPotion, 1);
@@ -84,11 +84,11 @@ namespace WellRoundedBalance.Items.Whites
             orig(self);
             if (CharacterMaster.instancesList != null && refillEveryStage)
             {
-                foreach (CharacterMaster cm in CharacterMaster.instancesList)
+                foreach (var cm in CharacterMaster.instancesList)
                 {
                     if (cm.inventory)
                     {
-                        int brokenElixirCount = cm.inventory.GetItemCount(DLC1Content.Items.HealingPotionConsumed);
+                        var brokenElixirCount = cm.inventory.GetItemCount(DLC1Content.Items.HealingPotionConsumed);
                         if (brokenElixirCount > 0)
                         {
                             cm.inventory.RemoveItem(DLC1Content.Items.HealingPotionConsumed, brokenElixirCount);

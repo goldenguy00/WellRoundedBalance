@@ -1,15 +1,6 @@
 ﻿using EntityStates.AI;
-using Mono.Cecil.Cil;
-using MonoMod.Cil;
-using RoR2.Navigation;
 using RoR2.UI;
 using System;
-using System.Linq;
-using System.Collections;
-using System.Collections.Generic;
-using RoR2;
-using RoR2.CharacterAI;
-using UnityEngine;
 using BepInEx.Configuration;
 
 namespace WellRoundedBalance.Mechanics.Allies
@@ -19,7 +10,9 @@ namespace WellRoundedBalance.Mechanics.Allies
         [ConfigField("Order Button", "", KeyCode.Mouse3)]
         public static KeyCode keyCode;
 
-        public static Dictionary<CharacterMaster, List<AwaitOrders>> subordinateDict = new();
+        public static Dictionary<CharacterMaster, List<AwaitOrders>> subordinateDict = [];
+
+        public static GameObject PingPrefab;
 
         public static KeyboardShortcut button;
 
@@ -32,13 +25,13 @@ namespace WellRoundedBalance.Mechanics.Allies
 
         public override void Hooks()
         {
-            button = new KeyboardShortcut(keyCode);
-            IL.RoR2.UI.PingIndicator.RebuildPing += PingIndicator_RebuildPing;
-            On.RoR2.Highlight.GetColor += Highlight_GetColor;
-            On.RoR2.PlayerCharacterMasterController.Update += PlayerCharacterMasterController_Update;
+            //button = new KeyboardShortcut(keyCode);
+            //IL.RoR2.UI.PingIndicator.RebuildPing += PingIndicator_RebuildPing;
+            //On.RoR2.Highlight.GetColor += Highlight_GetColor;
+            //On.RoR2.PlayerCharacterMasterController.CheckPinging += PlayerCharacterMasterController_CheckPinging;
         }
 
-        private void PlayerCharacterMasterController_Update(On.RoR2.PlayerCharacterMasterController.orig_Update orig, PlayerCharacterMasterController self)
+        private void PlayerCharacterMasterController_CheckPinging(On.RoR2.PlayerCharacterMasterController.orig_CheckPinging orig, PlayerCharacterMasterController self)
         {
             orig(self);
             if (button.IsPressed())
@@ -48,15 +41,15 @@ namespace WellRoundedBalance.Mechanics.Allies
                 {
                     foreach (var minion in minionGroup.members)
                     {
-                        if (minion?.gameObject)
+                        if (minion && minion.TryGetComponent<EntityStateMachine>(out var stateMachine))
                         {
-                            var stat = new AwaitOrders();
-                            if (!subordinateDict.ContainsKey(self.master))
-                            {
-                                subordinateDict.Add(self.master, new List<AwaitOrders>());
-                            }
-                            subordinateDict[self.master].Add(stat);
-                            minion?.gameObject?.GetComponent<EntityStateMachine>()?.SetState(stat);
+                            var state = new AwaitOrders();
+                            if (subordinateDict.TryGetValue(self.master, out var val))
+                                val.Add(state);
+                            else
+                                subordinateDict.Add(self.master, [state]);
+
+                            stateMachine.SetState(state);
                         }
                     }
                 }
@@ -78,62 +71,84 @@ namespace WellRoundedBalance.Mechanics.Allies
             ILCursor c = new(il);
 
             c.GotoNext(x => x.MatchLdstr("PLAYER_PING_ENEMY"));
-            c.Index += 6;
-            ILLabel l = c.MarkLabel();
-            c.GotoPrev(x => x.MatchLdstr("PLAYER_PING_ENEMY"));
+
+            c.FindNext(out var cList, x => x.MatchBr(out _));
+            var label = cList[0].MarkLabel();
+
             c.Emit(OpCodes.Ldarg_0);
-            c.EmitDelegate<Func<PingIndicator, bool>>((PingIndicator self) =>
+            c.EmitDelegate((PingIndicator self) =>
             {
-                CharacterMaster ownerMaster = self.pingOwner.GetComponent<CharacterMaster>();
-                CharacterMaster targetMaster = self.pingTarget.GetComponent<CharacterBody>().master;
-                if (subordinateDict.ContainsKey(ownerMaster) && subordinateDict[ownerMaster].Any())
+                var ownerMaster = self.pingOwner.GetComponent<CharacterMaster>();
+                var targetMaster = self.pingTarget.GetComponent<CharacterBody>().master;
+
+                if (subordinateDict.TryGetValue(ownerMaster, out var orderList) && orderList.Any())
                 {
                     var isEnemy = TeamManager.IsTeamEnemy(ownerMaster.teamIndex, targetMaster.teamIndex);
-                    subordinateDict[ownerMaster].ForEach((m) => m.SubmitOrder(isEnemy ? AwaitOrders.Orders.Attack : AwaitOrders.Orders.Assist, self.pingTarget));
+
+                    foreach(var order in orderList)
+                    {
+                        order.SubmitOrder(isEnemy ? AwaitOrders.Orders.Attack : AwaitOrders.Orders.Assist, self.pingTarget);
+                    }
+                    orderList.Clear();
                     subordinateDict.Remove(ownerMaster);
                     //Chat.AddMessage(string.Format(Language.GetString("PING_ORDER_ENEMY"),self.pingText.text,Util.GetBestBodyName(subordinateDict[ownerMaster].characterBody),Util.GetBestBodyName(targetMaster.characterBody));
                     self.pingDuration = 1f;
+
                     return true;
                 }
-                else if (targetMaster.GetComponent<BaseAI>()?.leader.characterBody?.master == ownerMaster)
+                
+                if (targetMaster.TryGetComponent<BaseAI>(out var ai) && ai.leader.characterBody?.master == ownerMaster)
                 {
-                    self.pingOwner.GetComponent<PingerController>().pingIndicator = null;
-                    self.pingOwner.GetComponent<PingerController>().pingStock++;
-                    subordinateDict.Add(ownerMaster, new List<AwaitOrders>() { new AwaitOrders(self) });
-                    targetMaster.GetComponent<EntityStateMachine>().SetState(subordinateDict[ownerMaster][0]);
+                    var pctrl = self.pingOwner.GetComponent<PingerController>();
+                    pctrl.pingIndicator = null;
+                    pctrl.pingStock++;
+
+                    var orders = new AwaitOrders(self);
+                    subordinateDict[ownerMaster] = [orders];
+                    targetMaster.GetComponent<EntityStateMachine>().SetState(orders);
+
                     self.pingColor = Color.cyan;
                     self.pingDuration = float.PositiveInfinity;
                     self.enemyPingGameObjects[0].GetComponent<SpriteRenderer>().color = Color.cyan;
-                    self.pingHighlight.highlightColor = (Highlight.HighlightColor)(669);
+                    self.pingHighlight.highlightColor = (Highlight.HighlightColor)669;
+
                     return true;
                 }
+
                 return false;
             });
-            c.Emit(OpCodes.Brtrue, l);
+
+            c.Emit(OpCodes.Brtrue, label);
+
             c.Index = 0;
             c.GotoNext(x => x.MatchLdstr("PLAYER_PING_DEFAULT"));
-            c.Index += 5;
-            l = c.MarkLabel();
-            c.GotoPrev(x => x.MatchLdstr("PLAYER_PING_DEFAULT"));
+
+            c.FindNext(out cList, x => x.MatchBr(out _));
+            label = cList[0].MarkLabel();
+
             c.Emit(OpCodes.Ldarg_0);
-            c.EmitDelegate<Func<PingIndicator, bool>>((PingIndicator self) =>
+            c.EmitDelegate((PingIndicator self) =>
             {
-                CharacterMaster ownerMaster = self.pingOwner.GetComponent<CharacterMaster>();
-                if (subordinateDict.ContainsKey(ownerMaster))
+                var ownerMaster = self.pingOwner.GetComponent<CharacterMaster>();
+                if (subordinateDict.TryGetValue(ownerMaster, out var ordersList))
                 {
-                    subordinateDict[ownerMaster].ForEach((m) => m.SubmitOrder(AwaitOrders.Orders.Move, null, self.pingOrigin));
+                    foreach (var order in ordersList)
+                    {
+                        order.SubmitOrder(AwaitOrders.Orders.Move, null, self.pingOrigin);
+                    }
                     subordinateDict.Remove(ownerMaster);
                     //Chat.AddMessage(string.Format(Language.GetString("PING_ORDER_ENEMY"),self.pingText.text,Util.GetBestBodyName(subordinateDict[ownerMaster].characterBody),Util.GetBestBodyName(targetMaster.characterBody));
                     self.pingDuration = 1f;
+
                     return true;
                 }
                 return false;
             });
-            c.Emit(OpCodes.Brtrue, l);
+            c.Emit(OpCodes.Brtrue, label);
         }
     }
 
-    public class AwaitOrders : BaseAIState
+    public class AwaitOrders(PingIndicator pInd = null) : BaseAIState
     {
         public enum Orders
         {
@@ -151,12 +166,7 @@ namespace WellRoundedBalance.Mechanics.Allies
 
         public float sprintThreshold;
 
-        public PingIndicator ping;
-
-        public AwaitOrders(PingIndicator ing = null)
-        {
-            ping = ing;
-        }
+        public PingIndicator ping = pInd;
 
         public override void OnEnter()
         {
@@ -208,53 +218,52 @@ namespace WellRoundedBalance.Mechanics.Allies
         public override void FixedUpdate()
         {
             base.FixedUpdate();
+
             if (!target && !targetPosition.HasValue)
                 AimAt(ref bodyInputs, ai.leader);
+
             switch (order)
             {
-                case Orders.None:
-                    {
-                        return;
-                    }
                 case Orders.Attack:
-                    {
-                        ai.currentEnemy.gameObject = target;
-                        ai.enemyAttention = ai.enemyAttentionDuration;
-                        outer.SetNextState(new EntityStates.AI.Walker.Combat());
-                        break;
-                    }
+                {
+                    ai.currentEnemy.gameObject = target;
+                    ai.enemyAttention = ai.enemyAttentionDuration;
+                    outer.SetNextState(new EntityStates.AI.Walker.Combat());
+                    break;
+                }
                 case Orders.Move:
+                {
+                    if (!body || body.moveSpeed == 0)
+                        outer.SetNextStateToMain();
+
+                    var agent = ai.broadNavigationAgent;
+                    agent.currentPosition = ai.body.footPosition;
+                    
+                    ai.SetGoalPosition(targetPosition);
+                    ai.localNavigator.targetPosition = agent.output.nextPosition ?? ai.localNavigator.targetPosition;
+
+                    if (!agent.output.targetReachable)
                     {
-                        if (!body || body.moveSpeed == 0)
-                        {
-                            outer.SetNextStateToMain();
-                        }
-                        BroadNavigationSystem.Agent agent = ai.broadNavigationAgent;
-                        agent.currentPosition = ai.body.footPosition;
-                        ai.SetGoalPosition(targetPosition);
-                        ai.localNavigator.targetPosition = agent.output.nextPosition ?? ai.localNavigator.targetPosition;
-                        if (!agent.output.targetReachable)
-                        {
-                            agent.InvalidatePath();
-                        }
-                        ai.localNavigator.Update(cvAIUpdateInterval.value);
-                        bodyInputs.moveVector = ai.localNavigator.moveVector;
-                        float sqrMagnitude = (base.body.footPosition - targetPosition.Value).sqrMagnitude;
-                        bodyInputs.pressSprint = sqrMagnitude > sprintThreshold;
-                        if (ai.localNavigator.wasObstructedLastUpdate)
-                            base.ModifyInputsForJumpIfNeccessary(ref bodyInputs);
-                        float num = base.body.radius * base.body.radius * 4;
-                        if (sqrMagnitude < num)
-                            outer.SetNextStateToMain();
-                        break;
+                        agent.InvalidatePath();
                     }
+                    ai.localNavigator.Update(cvAIUpdateInterval.value);
+                    bodyInputs.moveVector = ai.localNavigator.moveVector;
+                    var sqrMagnitude = (base.body.footPosition - targetPosition.Value).sqrMagnitude;
+                    bodyInputs.pressSprint = sqrMagnitude > sprintThreshold;
+                    if (ai.localNavigator.wasObstructedLastUpdate)
+                        base.ModifyInputsForJumpIfNeccessary(ref bodyInputs);
+                    var num = base.body.radius * base.body.radius * 4;
+                    if (sqrMagnitude < num)
+                        outer.SetNextStateToMain();
+                    break;
+                }
                 case Orders.Assist:
-                    {
-                        ai.buddy.gameObject = target;
-                        ai.customTarget.gameObject = target;
-                        outer.SetNextState(new EntityStates.AI.Walker.Combat());
-                        break;
-                    }
+                {
+                    ai.buddy.gameObject = target;
+                    ai.customTarget.gameObject = target;
+                    outer.SetNextState(new EntityStates.AI.Walker.Combat());
+                    break;
+                }
             };
         }
 
@@ -274,7 +283,7 @@ namespace WellRoundedBalance.Mechanics.Allies
             this.targetPosition = targetPosition;
             if (targetPosition.HasValue)
             {
-                BroadNavigationSystem.Agent agent = ai.broadNavigationAgent;
+                var agent = ai.broadNavigationAgent;
                 agent.goalPosition = targetPosition;
                 agent.InvalidatePath();
             }

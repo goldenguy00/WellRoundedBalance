@@ -5,7 +5,7 @@ namespace WellRoundedBalance.Allies
     public abstract class AllyBase : SharedBase
     {
         public override ConfigFile Config => Main.WRBAllyConfig;
-        public static List<string> allyList = new();
+        public static List<string> allyList = [];
 
         public override void Init()
         {

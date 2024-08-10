@@ -29,7 +29,7 @@ namespace WellRoundedBalance.Equipment.Orange
                     return;
                 }
 
-                HealthComponent hc = self.currentTarget.hurtBox.healthComponent;
+                var hc = self.currentTarget.hurtBox.healthComponent;
                 if (hc.health >= (hc.fullCombinedHealth * GetActualThreshold))
                 {
                     HurtBox box = null; // prevents ambiguous call error

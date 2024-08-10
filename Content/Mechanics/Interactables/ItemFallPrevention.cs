@@ -1,4 +1,5 @@
 ﻿using RoR2.Navigation;
+using UnityEngine;
 
 namespace WellRoundedBalance.Mechanics.Interactables
 {
@@ -21,8 +22,11 @@ namespace WellRoundedBalance.Mechanics.Interactables
         {
             if (self.zoneType == MapZone.ZoneType.OutOfBounds)
             {
-                if (IsCollider(other))
+                if (other.GetComponent<PickupDropletController>() ||
+                    other.GetComponent<GenericPickupController>() ||
+                    other.GetComponent<PickupPickerController>())
                 {
+
                     var spawnCard = ScriptableObject.CreateInstance<SpawnCard>();
                     spawnCard.hullSize = HullClassification.Human;
                     spawnCard.nodeGraphType = MapNodeGroup.GraphType.Ground;
@@ -46,15 +50,6 @@ namespace WellRoundedBalance.Mechanics.Interactables
                 }
             }
             orig(self, other);
-        }
-
-        private static bool IsCollider(Collider collider)
-        {
-            if (collider.GetComponent<PickupDropletController>()) return true;
-            if (collider.GetComponent<GenericPickupController>()) return true;
-            if (collider.GetComponent<PickupPickerController>()) return true;
-
-            return false;
         }
     }
 }

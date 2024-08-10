@@ -78,10 +78,10 @@ namespace WellRoundedBalance.Interactables
         public void GenerateWeightedSelection()
         {
             weighted.Clear();
-            foreach (PickupIndex index in Run.instance.availableLunarCombinedDropList)
+            foreach (var index in Run.instance.availableLunarCombinedDropList)
             {
-                ItemDef itemDef = ItemCatalog.GetItemDef(index.itemIndex);
-                EquipmentDef equipmentDef = EquipmentCatalog.GetEquipmentDef(index.equipmentIndex);
+                var itemDef = ItemCatalog.GetItemDef(index.itemIndex);
+                var equipmentDef = EquipmentCatalog.GetEquipmentDef(index.equipmentIndex);
                 if (itemDef && !string.IsNullOrEmpty(itemDef.name) && !itemDef.name.ToLower().Contains("replacement"))
                 {
                     // Main.WRBLogger.LogError("Adding Item: " + Language.GetString(itemDef.nameToken));
@@ -98,8 +98,8 @@ namespace WellRoundedBalance.Interactables
         public override PickupIndex[] GenerateUniqueDropsPreReplacement(int maxDrops, Xoroshiro128Plus rng)
         {
             GenerateWeightedSelection();
-            PickupIndex[] drops = GenerateUniqueDropsFromWeightedSelection(maxDrops, rng, weighted);
-            foreach (PickupIndex index in drops)
+            var drops = GenerateUniqueDropsFromWeightedSelection(maxDrops, rng, weighted);
+            foreach (var index in drops)
             {
                 // Debug.Log(index);
             }

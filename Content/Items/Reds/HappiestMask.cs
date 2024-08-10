@@ -23,7 +23,7 @@
         [ConfigField("Damage Per Stack", "Decimal.", 4)]
         public static int damagePerStack;
 
-        public static string[] blacklistedBodies = { "BrotherHurtBody(Clone)", "MiniVoidRaidCrabBodyBase(Clone)", "MiniVoidRaidCrabBodyPhase1(Clone)", "MiniVoidRaidCrabBodyPhase2(Clone)", "MiniVoidRaidCrabBodyPhase3(Clone)" };
+        public static string[] blacklistedBodies = ["BrotherHurtBody(Clone)", "MiniVoidRaidCrabBodyBase(Clone)", "MiniVoidRaidCrabBodyPhase1(Clone)", "MiniVoidRaidCrabBodyPhase2(Clone)", "MiniVoidRaidCrabBodyPhase3(Clone)"];
 
         public override void Init()
         {
@@ -112,7 +112,7 @@
                         if (happiestMaskController && happiestMaskController.CanSpawnGhost())
                         {
                             happiestMaskController.AddGhost(SpawnMaskGhost(victimBody, attackerBody, stack));
-                            for (int i = 1; i <= buffCooldown; i++)
+                            for (var i = 1; i <= buffCooldown; i++)
                             {
                                 attackerBody.AddTimedBuff(happiestMaskCooldown.buffIndex, i);
                             }
@@ -177,7 +177,7 @@
             var characterBody = characterMaster2.GetBody();
             if (characterBody)
             {
-                foreach (EntityStateMachine entityStateMachine in characterBody.GetComponents<EntityStateMachine>())
+                foreach (var entityStateMachine in characterBody.GetComponents<EntityStateMachine>())
                 {
                     entityStateMachine.initialStateType = entityStateMachine.mainStateType;
                 }
@@ -208,13 +208,13 @@
 
         private void Awake()
         {
-            activeGhosts = new();
+            activeGhosts = [];
         }
 
         private void FixedUpdate()
         {
-            bool hasCooldown = body.HasBuff(HappiestMask.happiestMaskCooldown.buffIndex);
-            bool hasReady = body.HasBuff(HappiestMask.happiestMaskReady.buffIndex);
+            var hasCooldown = body.HasBuff(HappiestMask.happiestMaskCooldown.buffIndex);
+            var hasReady = body.HasBuff(HappiestMask.happiestMaskReady.buffIndex);
             if (!hasCooldown && !hasReady)
             {
                 body.AddBuff(HappiestMask.happiestMaskReady.buffIndex);
@@ -229,8 +229,8 @@
 
         private void UpdateGhosts()
         {
-            List<CharacterBody> toRemove = new();
-            foreach (CharacterBody characterBody in activeGhosts)
+            List<CharacterBody> toRemove = [];
+            foreach (var characterBody in activeGhosts)
             {
                 if (!(characterBody && characterBody.healthComponent && characterBody.healthComponent.alive))
                 {
@@ -238,7 +238,7 @@
                 }
             }
 
-            foreach (CharacterBody characterBody in toRemove)
+            foreach (var characterBody in toRemove)
             {
                 activeGhosts.Remove(characterBody);
             }

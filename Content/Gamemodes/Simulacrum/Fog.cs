@@ -20,7 +20,7 @@ namespace WellRoundedBalance.Gamemodes.Simulacrum
 
         public override void Hooks()
         {
-            var fog = Utils.Paths.GameObject.InfiniteTowerFogDamager.Load<GameObject>().GetComponent<FogDamageController>();
+            var fog = Utils.Paths.GameObject.InfiniteTowerFogDamager.LoadComponent<FogDamageController>();
             fog.healthFractionPerSecond = maxHpDamage;
             fog.healthFractionRampCoefficientPerSecond = rampingDamage;
         }

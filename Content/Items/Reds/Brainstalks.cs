@@ -14,8 +14,8 @@ namespace WellRoundedBalance.Items.Reds
 
         public override string DescText => "Upon killing an elite monster, <style=cIsDamage>enter a frenzy</style> for <style=cIsDamage>4s</style> <style=cStack>(+4s per stack)</style> where <style=cIsUtility>skills have no cooldowns</style>.";
 
-        public static HashSet<SkillDef> forbidden = new();
-        public static HashSet<SkillDef> allowed = new();
+        public static HashSet<SkillDef> forbidden = [];
+        public static HashSet<SkillDef> allowed = [];
 
         public override void Init()
         {

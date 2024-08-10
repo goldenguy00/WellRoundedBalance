@@ -11,7 +11,7 @@ namespace WellRoundedBalance.Achievements
 
         public static event Action onTokenRegister;
 
-        public static List<string> achievementList = new();
+        public static List<string> achievementList = [];
 
         public override void Init()
         {

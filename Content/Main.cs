@@ -16,20 +16,11 @@ namespace WellRoundedBalance
     [BepInDependency("HIFU.Inferno", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("com.Moffein.RiskyArtifacts", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("com.Moffein.AI_Blacklist", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency("com.Wolfo.WolfoQualityOfLife", BepInDependency.DependencyFlags.SoftDependency)]
+    //[BepInDependency("com.Wolfo.WolfoQualityOfLife", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("com.Wolfo.LittleGameplayTweaks", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("dev.wildbook.multitudes", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("com.TPDespair.ZetArtifacts", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("com.phreel.TitansOfTheRiftSOTV", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency(LanguageAPI.PluginGUID)]
-    [BepInDependency(RecalculateStatsAPI.PluginGUID)]
-    [BepInDependency(DirectorAPI.PluginGUID)]
-    [BepInDependency(PrefabAPI.PluginGUID)]
-    [BepInDependency(R2APIContentManager.PluginGUID)]
-    [BepInDependency(ItemAPI.PluginGUID)]
-    [BepInDependency(DamageAPI.PluginGUID)]
-    [BepInDependency(EliteAPI.PluginGUID)]
-    [BepInDependency(DotAPI.PluginGUID)]
     [BepInPlugin(PluginGUID, PluginName, PluginVersion)]
     public class Main : BaseUnityPlugin
     {
@@ -78,11 +69,12 @@ namespace WellRoundedBalance
 
         public static bool InfernoLoaded = false;
         public static bool RiskyArtifactsLoaded = false;
-        public static bool PieceOfShitLoaded = false;
+        //public static bool PieceOfShitLoaded = false;
         public static bool ZetArtifactsLoaded = false;
         public static bool WildbookMultitudesLoaded = false;
         public static bool LeagueOfLiteralGaysLoadeded = false;
         public static DifficultyDef InfernoDef = null;
+        public static DifficultyIndex InfernoIndex = DifficultyIndex.Invalid;
         public static Hook hook;
 
         private bool mp = false;
@@ -137,7 +129,7 @@ namespace WellRoundedBalance
 
             enableLogging = WRBMiscConfig.Bind("Logging", "Enable Initialization logging?", false, "Enabling this slows down loading times, but can help with resolving mod compatibility issues in some cases.");
             enableAutoConfig = WRBMiscConfig.Bind("Config", "Enable Auto Config Sync", true, "Disabling this would stop WRB from syncing config whenever a new version is found.");
-            bool _preVersioning = !((Dictionary<ConfigDefinition, string>)AccessTools.DeclaredPropertyGetter(typeof(ConfigFile), "OrphanedEntries").Invoke(WRBMiscConfig, null)).Keys.Any(x => x.Key == "Latest Version");
+            var _preVersioning = !((Dictionary<ConfigDefinition, string>)AccessTools.DeclaredPropertyGetter(typeof(ConfigFile), "OrphanedEntries").Invoke(WRBMiscConfig, null)).Keys.Any(x => x.Key == "Latest Version");
             latestVersion = WRBMiscConfig.Bind("Config", "Latest Version", PluginVersion, "DO NOT CHANGE THIS");
             if (enableAutoConfig.Value && (_preVersioning || (latestVersion.Value != PluginVersion)))
             {
@@ -154,15 +146,15 @@ namespace WellRoundedBalance
 
             InfernoLoaded = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("HIFU.Inferno");
             RiskyArtifactsLoaded = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("com.Moffein.RiskyArtifacts");
-            PieceOfShitLoaded = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("com.Wolfo.WolfoQualityOfLife");
+            //PieceOfShitLoaded = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("com.Wolfo.WolfoQualityOfLife");
             ZetArtifactsLoaded = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("com.TPDespair.ZetArtifacts");
-            WildbookMultitudesLoaded = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("dev.wildbook.multitudes"); 
+            WildbookMultitudesLoaded = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("dev.wildbook.multitudes");
             LeagueOfLiteralGaysLoadeded = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("com.phreel.TitansOfTheRiftSOTV");
 
             Initialize.Init();
 
-            string balls = WRBMiscConfig.Bind("Annoying Pop Up", "Set to Fuck Off to disable", "", "Disables the mf config changed message").Value;
-            bool shownConfigMessage = false;
+            //var balls = WRBMiscConfig.Bind("Annoying Pop Up", "Set to Fuck Off to disable", "", "Disables the mf config changed message").Value;
+            /*var shownConfigMessage = false;
             RoR2Application.onLoad += () => Dialogue.input = GameObject.Find("MPEventSystem Player0").GetComponent<RoR2.UI.MPInput>();
             On.RoR2.UI.MainMenu.BaseMainMenuScreen.OnEnter += (orig, self, mainMenuController) =>
             {
@@ -172,55 +164,36 @@ namespace WellRoundedBalance
                     shownConfigMessage = true;
                     Dialogue.ShowPopup("Config changed?", "Thank you for enjoying Well Rounded Balance <3! Despite the extensive configuration, we want our default experience to be as enjoyable as possible. Please let us know your balanced takes at <style=cDeath>cutt.ly/ballscord</style>! any constructive feedback is welcome <3.\n\n<style=cStack>set Misc > Annoying Pop Up to \'Fuck Off\' to disable this message.</style>");
                 }
-            };
+            };*/
 
-            On.RoR2.UI.MainMenu.BaseMainMenuScreen.OnEnter += BaseMainMenuScreen_OnEnter;
-
+            //On.RoR2.UI.MainMenu.BaseMainMenuScreen.OnEnter += BaseMainMenuScreen_OnEnter;
+            /*
             if (PieceOfShitLoaded)
             {
+                // most uselss hook in existance what the fuck
                 WRBLogger.LogDebug("Wolfo QoL detected");
-                On.RoR2.PickupPickerController.OnDisplayBegin += PickupPickerController_OnDisplayBegin;
-            }
+                On.RoR2.PickupPickerController.OnDisplayBegin += (orig, self, net, user, cam) => orig(self, net, user, cam);
+            }*/
 
-            InfernoCompat();
-            //Misc.HarmonyHooks.Init();
+            if (InfernoLoaded)
+                InfernoIndex = GetInfernoDef();
+            Misc.HarmonyHooks.Init();
         }
-
-        private void PickupPickerController_OnDisplayBegin(On.RoR2.PickupPickerController.orig_OnDisplayBegin orig, PickupPickerController self, NetworkUIPromptController networkUIPromptController, LocalUser localUser, CameraRigController cameraRigController)
-        {
-            orig(self, networkUIPromptController, localUser, cameraRigController);
-            return;
-        }
-
+/*
         private void BaseMainMenuScreen_OnEnter(On.RoR2.UI.MainMenu.BaseMainMenuScreen.orig_OnEnter orig, RoR2.UI.MainMenu.BaseMainMenuScreen self, RoR2.UI.MainMenu.MainMenuController mainMenuController)
         {
             orig(self, mainMenuController);
             if (!hasZanySoupd)
             {
                 WRBLogger.LogDebug("==+-----------------==ZANY==----------------+==");
-                for (int j = 0; j < 3; j++)
+                for (var j = 0; j < 3; j++)
                 {
                     WRBLogger.LogMessage("Thanks for playing Well Rounded Balance <3");
                 }
                 WRBLogger.LogDebug("==+----------------==GOOFY==----------------+==");
                 hasZanySoupd = true;
             }
-        }
-
-        private void InfernoCompat()
-        {
-            if (InfernoLoaded)
-            {
-                InfernoDef = GetInfernoDef();
-            }
-        }
-
-        public static float GetProjectileSimpleModifiers(float speed)
-        {
-            if (InfernoLoaded) speed *= GetInfernoProjectileSpeedMult();
-            if (RiskyArtifactsLoaded) speed *= GetRiskyArtifactsWarfareProjectileSpeedMult();
-            return speed;
-        }
+        }*/
 
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         public static float GetRiskyArtifactsWarfareProjectileSpeedMult()
@@ -233,29 +206,27 @@ namespace WellRoundedBalance
         }
 
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-        public static DifficultyDef GetInfernoDef()
+        public static DifficultyIndex GetInfernoDef()
         {
-            return Inferno.Main.InfernoDiffDef;
+            return Inferno.Main.InfernoDiffIndex;
         }
 
-        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-        public static bool IsInfernoDef()
+        //[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        public static bool IsInfernoDef() => InfernoLoaded && Run.instance?.selectedDifficulty == InfernoIndex;
+            /*
         {
-            if (InfernoLoaded && Run.instance)
+            return InfernoLoaded && Run.instance && Run.instance.selectedDifficulty == InfernoIndex)
             {
-                if (DifficultyCatalog.GetDifficultyDef(Run.instance.selectedDifficulty) == InfernoDef)
-                {
-                    // WRBLogger.LogError("Difficulty is inferno");
-                    return true;
-                }
+                // WRBLogger.LogError("Difficulty is inferno");
+                return true;
             }
             return false;
-        }
+        }*/
 
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         public static float GetInfernoProjectileSpeedMult()
         {
-            if (Run.instance && DifficultyCatalog.GetDifficultyDef(Run.instance.selectedDifficulty) == InfernoDef)
+            if (Run.instance && Run.instance.selectedDifficulty == InfernoIndex)
             {
                 return Inferno.Main.ProjectileSpeed.Value;
             }

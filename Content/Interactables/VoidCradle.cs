@@ -23,22 +23,22 @@ namespace WellRoundedBalance.Interactables
 
         public override void Hooks()
         {
-            GameObject VoidCradle = Utils.Paths.GameObject.VoidChest.Load<GameObject>();
-            PurchaseInteraction interaction = VoidCradle.GetComponent<PurchaseInteraction>();
+            var VoidCradle = Utils.Paths.GameObject.VoidChest.Load<GameObject>();
+            var interaction = VoidCradle.GetComponent<PurchaseInteraction>();
             interaction.costType = costTypeIndex;
             interaction.cost = 0;
             interaction.contextToken = "WRB_VOIDCHEST_CONTEXT";
             VoidCradle.RemoveComponent<ChestBehavior>();
             VoidCradle.AddComponent<NetworkUIPromptController>();
             VoidCradle.AddComponent<PickupIndexNetworker>();
-            PickupPickerController controller = VoidCradle.AddComponent<PickupPickerController>();
+            var controller = VoidCradle.AddComponent<PickupPickerController>();
             controller.cutoffDistance = 10;
             optionPanel = Utils.Paths.GameObject.OptionPickerPanel.Load<GameObject>().InstantiateClone("VoidCradleOptionPicker", false);
-            Transform bg = optionPanel.transform.Find("MainPanel").Find("Juice").Find("BG, Colored");
-            Transform bgCenter = bg.Find("BG, Colored Center");
+            var bg = optionPanel.transform.Find("MainPanel").Find("Juice").Find("BG, Colored");
+            var bgCenter = bg.Find("BG, Colored Center");
             bg.GetComponent<Image>().color = new Color32(237, 127, 205, 255);
             bgCenter.GetComponent<Image>().color = new Color32(237, 127, 205, 255);
-            Transform label = optionPanel.transform.Find("MainPanel").Find("Juice").Find("Label");
+            var label = optionPanel.transform.Find("MainPanel").Find("Juice").Find("Label");
             label.GetComponent<HGTextMeshProUGUI>().text = "Awaiting Transmutation...";
             controller.panelPrefab = optionPanel;
             LanguageAPI.Add("WRB_VOIDCHEST_CONTEXT", "Open?");
@@ -47,92 +47,80 @@ namespace WellRoundedBalance.Interactables
 
             vradle = Utils.Paths.InteractableSpawnCard.iscVoidChest.Load<InteractableSpawnCard>();
 
-            def = new()
-            {
-                buildCostString = delegate (CostTypeDef def, CostTypeDef.BuildCostStringContext c)
-                {
-                    c.stringBuilder.Append("<style=cDeath>10% Curse</style>");
-                },
-
-                isAffordable = delegate (CostTypeDef def, CostTypeDef.IsAffordableContext c)
-                {
-                    return HasAtLeastOneItem(c.activator.GetComponent<CharacterBody>().inventory);
-                },
-
-                payCost = delegate (CostTypeDef def, CostTypeDef.PayCostContext c)
-                {
-                }
-            };
-
-            On.RoR2.CostTypeCatalog.Init += (orig) =>
-            {
-                orig();
-                CostTypeCatalog.Register(costTypeIndex, def);
-            };
-
-            IL.RoR2.CostTypeCatalog.Init += (il) =>
-            {
-                ILCursor c = new(il);
-                bool found = c.TryGotoNext(MoveType.Before,
-                    x => x.MatchLdcI4(15)
-                );
-
-                if (found)
-                {
-                    c.Index++;
-                    c.EmitDelegate<Func<int, int>>((c) =>
-                    {
-                        return 20;
-                    });
-                }
-                else
-                {
-                    Logger.LogError("Failed to apply CostTypeCatalog IL hook");
-                }
-            };
-
-            On.RoR2.UI.PickupPickerPanel.OnCreateButton += (orig, self, i, button) =>
-            {
-                orig(self, i, button);
-                if (!self.gameObject.name.Contains("VoidChest"))
-                {
-                    return;
-                }
-                TooltipProvider tp = button.gameObject.AddComponent<TooltipProvider>();
-                TooltipContent c = new();
-                ItemDef def = ItemCatalog.GetItemDef(GetCorruption(self.pickerController.options[i].pickupIndex.itemIndex));
-                if (!def)
-                {
-                    return;
-                }
-                c.bodyColor = ColorCatalog.GetColor(ColorCatalog.ColorIndex.VoidItem);
-                c.titleColor = ColorCatalog.GetColor(ColorCatalog.ColorIndex.VoidItemDark);
-                c.overrideTitleText = "Transmutes into: " + Language.GetString(def.nameToken);
-                c.bodyToken = def.descriptionToken;
-                c.titleToken = "gdfgdfgdfghgh";
-                tp.SetContent(c);
-            };
+            On.RoR2.CostTypeCatalog.Init += On_CostTypeCatalog_Init;
+            IL.RoR2.CostTypeCatalog.Init += IL_CostTypeCatalog_Init;
+            On.RoR2.UI.PickupPickerPanel.OnCreateButton += this.PickupPickerPanel_OnCreateButton;
 
             On.RoR2.SceneDirector.SelectCard += SceneDirector_SelectCard;
 
-            On.RoR2.PickupPickerController.OnInteractionBegin += (orig, self, interactor) =>
+            On.RoR2.PickupPickerController.OnInteractionBegin += this.PickupPickerController_OnInteractionBegin;
+        }
+
+        private void PickupPickerController_OnInteractionBegin(On.RoR2.PickupPickerController.orig_OnInteractionBegin orig, PickupPickerController self, Interactor activator)
+        {
+            // dont run this method on cradles since cradlemanager implements its own version
+            if (!self.gameObject.name.Contains("VoidChest"))
+                orig(self, activator);
+        }
+
+        private void PickupPickerPanel_OnCreateButton(On.RoR2.UI.PickupPickerPanel.orig_OnCreateButton orig, PickupPickerPanel self, int index, MPButton button)
+        {
+            orig(self, index, button);
+
+            if (!self.gameObject.name.Contains("VoidChest"))
+                return;
+
+            var pickupDef = PickupCatalog.GetPickupDef(self.pickerController.options[index].pickupIndex);
+            if (pickupDef is null)
+                return;
+
+            var def = ItemCatalog.GetItemDef(GetCorruption(pickupDef.itemIndex));
+            if (!def)
+                return;
+
+            var tp = button.gameObject.AddComponent<TooltipProvider>();
+            tp.SetContent(new TooltipContent
             {
-                // Debug.Log(self.gameObject.name);
-                if (self.gameObject.name.Contains("VoidChest"))
-                {
-                    // Debug.Log("void cradle, returning");
-                    return; // dont run this method on cradles since cradlemanager implements its own version
-                }
-                orig(self, interactor);
-            };
+                bodyColor = ColorCatalog.GetColor(ColorCatalog.ColorIndex.VoidItem),
+                titleColor = ColorCatalog.GetColor(ColorCatalog.ColorIndex.VoidItemDark),
+                overrideTitleText = "Transmutes into: " + Language.GetString(def.nameToken),
+                bodyToken = def.descriptionToken,
+                titleToken = "gdfgdfgdfghgh"
+            });
+        }
+
+        private void IL_CostTypeCatalog_Init(ILContext il)
+        {
+            ILCursor c = new(il);
+
+            if (c.TryGotoNext(MoveType.After,
+                x => x.MatchLdcI4(15)))
+            {
+                c.EmitDelegate<Func<int, int>>((c) => 20);
+            }
+            else
+            {
+                Logger.LogError("Failed to apply CostTypeCatalog IL hook");
+            }
+        }
+
+        private void On_CostTypeCatalog_Init(On.RoR2.CostTypeCatalog.orig_Init orig)
+        {
+            orig();
+            CostTypeCatalog.Register(costTypeIndex, new()
+            {
+                buildCostString = (def, c) => c.stringBuilder.Append("<style=cDeath>10% Curse</style>"),
+                isAffordable = (def, c) => HasAtLeastOneItem(c.activator.GetComponent<CharacterBody>().inventory),
+                payCost = (def, c) => { }
+            });
         }
 
         private DirectorCard SceneDirector_SelectCard(On.RoR2.SceneDirector.orig_SelectCard orig, SceneDirector self, WeightedSelection<DirectorCard> deck, int max)
         {
             DirectorCard card = null;
-            for (int i = 0; i < 10; i++)
+            for (var i = 0; i < 10; i++)
             {
-                DirectorCard next = orig(self, deck, max);
+                var next = orig(self, deck, max);
                 if (next != null && next.spawnCard && next.spawnCard == vradle && ShouldBlockCradles())
                 {
                     // Main.WRBLogger.LogError("No players have corruptible items, blocking vradle spawn");
@@ -146,7 +134,7 @@ namespace WellRoundedBalance.Interactables
 
         public static bool ShouldBlockCradles()
         {
-            foreach (PlayerCharacterMasterController pmc in PlayerCharacterMasterController.instances)
+            foreach (var pmc in PlayerCharacterMasterController.instances)
             {
                 if (pmc.master && HasAtLeastOneItem(pmc.master.inventory))
                 {
@@ -160,7 +148,7 @@ namespace WellRoundedBalance.Interactables
 
         public static bool HasAtLeastOneItem(Inventory inventory)
         {
-            foreach (ItemIndex index in inventory.itemAcquisitionOrder)
+            foreach (var index in inventory.itemAcquisitionOrder)
             {
                 if (IsCorruptible(index))
                 {
@@ -173,11 +161,12 @@ namespace WellRoundedBalance.Interactables
         public static bool IsCorruptible(ItemIndex index)
         {
             if (ItemCatalog.GetItemDef(index).tier == ItemTier.Boss)
-            { // boss items cant be selected by vradles so dont return true
+            {
+                // boss items cant be selected by vradles so dont return true
                 // Main.WRBLogger.LogError("ItemTier was boss");
                 return false;
             }
-            ItemIndex item = RoR2.Items.ContagiousItemManager.GetTransformedItemIndex(index);
+            var item = RoR2.Items.ContagiousItemManager.GetTransformedItemIndex(index);
             return item != ItemIndex.None;
         }
 
@@ -193,7 +182,7 @@ namespace WellRoundedBalance.Interactables
             public bool wasDisabled = false;
             public PurchaseInteraction interaction => GetComponent<PurchaseInteraction>();
             public PickupPickerController controller => GetComponent<PickupPickerController>();
-            public List<PickupPickerController.Option> options = new();
+            public List<PickupPickerController.Option> options = [];
             public bool hasSet = false;
 
             private void Start()
@@ -205,24 +194,24 @@ namespace WellRoundedBalance.Interactables
             public void Corrupt(int i)
             {
                 PickupIndex index = new(i);
-                ItemIndex def = index.itemIndex;
-                Interactor interactor = interaction.lastActivator;
-                CharacterBody body = interactor.GetComponent<CharacterBody>();
-                int c = body.inventory.GetItemCount(def);
+                var def = index.itemIndex;
+                var interactor = interaction.lastActivator;
+                var body = interactor.GetComponent<CharacterBody>();
+                var c = body.inventory.GetItemCount(def);
                 body.inventory.RemoveItem(def, c);
                 body.inventory.GiveItem(GetCorruption(def), c);
                 CharacterMasterNotificationQueue.PushItemTransformNotification(body.master, def, GetCorruption(def), CharacterMasterNotificationQueue.TransformationType.ContagiousVoid);
                 interaction.SetAvailable(false);
-                float amount = body.healthComponent.fullCombinedHealth * curseGain;
+                var amount = body.healthComponent.fullCombinedHealth * curseGain;
                 float curse = Mathf.RoundToInt(amount / body.healthComponent.fullCombinedHealth * 100f);
                 controller.networkUIPromptController.SetParticipantMaster(null);
 
-                for (int j = 0; j < curse; j++)
+                for (var j = 0; j < curse; j++)
                 {
                     body.AddBuff(RoR2Content.Buffs.PermanentCurse);
                 }
 
-                EntityStateMachine machine = GetComponent<EntityStateMachine>();
+                var machine = GetComponent<EntityStateMachine>();
                 if (machine)
                 {
                     machine.SetNextState(new EntityStates.Barrel.Opening());
@@ -234,11 +223,11 @@ namespace WellRoundedBalance.Interactables
                 if (interactor.GetComponent<CharacterBody>())
                 {
                     // Main.WRBLogger.LogError("Running OnPurchase");
-                    CharacterBody body = interactor.GetComponent<CharacterBody>();
-                    int c = 0;
-                    for (int i = 0; i < options.Count; i++)
+                    var body = interactor.GetComponent<CharacterBody>();
+                    var c = 0;
+                    for (var i = 0; i < options.Count; i++)
                     {
-                        PickupPickerController.Option opt = options[i];
+                        var opt = options[i];
                         if (body.inventory.GetItemCount(opt.pickupIndex.itemIndex) <= 0)
                         {
                             options.Remove(opt);
@@ -249,7 +238,7 @@ namespace WellRoundedBalance.Interactables
                         // Main.WRBLogger.LogError("Options count 0, regenerating.");
                         hasSet = false;
                     }
-                    foreach (ItemIndex index in body.inventory.itemAcquisitionOrder.OrderBy(x => UnityEngine.Random.value))
+                    foreach (var index in body.inventory.itemAcquisitionOrder.OrderBy(x => UnityEngine.Random.value))
                     {
                         if (hasSet)
                         {
@@ -257,7 +246,7 @@ namespace WellRoundedBalance.Interactables
                         }
                         if (IsCorruptible(index))
                         {
-                            ItemDef def = ItemCatalog.GetItemDef(index);
+                            var def = ItemCatalog.GetItemDef(index);
                             if (def.tier == ItemTier.Boss || c >= 3)
                             {
                                 continue;
@@ -275,8 +264,8 @@ namespace WellRoundedBalance.Interactables
                     {
                         hasSet = true;
                         // Debug.Log("starting UI");
-                        controller.SetOptionsInternal(options.ToArray());
-                        controller.SetOptionsServer(options.ToArray());
+                        controller.SetOptionsInternal([.. options]);
+                        controller.SetOptionsServer([.. options]);
                         controller.onServerInteractionBegin.Invoke(interactor);
                         controller.networkUIPromptController.SetParticipantMasterFromInteractor(interactor);
                     }

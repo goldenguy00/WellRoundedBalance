@@ -68,10 +68,10 @@ namespace WellRoundedBalance.Elites.Tier2
             CelestinePPV.isGlobal = true;
             CelestinePPV.weight = 0f;
             CelestinePPV.priority = float.MaxValue;
-            PostProcessProfile postProcessProfile = ScriptableObject.CreateInstance<PostProcessProfile>();
+            var postProcessProfile = ScriptableObject.CreateInstance<PostProcessProfile>();
             Object.DontDestroyOnLoad(postProcessProfile);
             postProcessProfile.name = "Celesting Fog PP";
-            RampFog fog = postProcessProfile.AddSettings<RampFog>();
+            var fog = postProcessProfile.AddSettings<RampFog>();
             fog.SetAllOverridesTo(true, true);
             fog.fogColorStart.value = new Color32(0, 0, 0, 165);
             fog.fogColorMid.value = new Color32(1, 2, 44, byte.MaxValue);
@@ -81,7 +81,7 @@ namespace WellRoundedBalance.Elites.Tier2
             fog.fogIntensity.value = 1f;
             fog.fogZero.value = 0f;
             fog.fogOne.value = 0.3f;
-            DepthOfField dof = postProcessProfile.AddSettings<DepthOfField>();
+            var dof = postProcessProfile.AddSettings<DepthOfField>();
             dof.SetAllOverridesTo(true, true);
             dof.aperture.value = 5f;
             dof.focalLength.value = 68.31f;
@@ -153,12 +153,12 @@ namespace WellRoundedBalance.Elites.Tier2
 
         private static GameObject GetWard() // this sucks lmfao, please replace with PrefabAPI stuff
         {
-            bool e3 = Run.instance && Run.instance.selectedDifficulty >= DifficultyIndex.Eclipse3 && Eclipse3.instance.isEnabled;
+            var e3 = Run.instance && Run.instance.selectedDifficulty >= DifficultyIndex.Eclipse3 && Eclipse3.instance.isEnabled;
             BlindnessWard = new("Blindness Ward") { layer = LayerIndex.defaultLayer.intVal };
-            TeamFilter filter = BlindnessWard.AddComponent<TeamFilter>();
+            var filter = BlindnessWard.AddComponent<TeamFilter>();
             BlindnessWard.AddComponent<MeshRenderer>().material = Utils.Paths.Material.matHauntedAura.Load<Material>();
             filter.teamIndex = TeamIndex.None;
-            BuffWard ward = BlindnessWard.AddComponent<BuffWard>();
+            var ward = BlindnessWard.AddComponent<BuffWard>();
             ward.buffDef = Blindness;
             ward.invertTeamFilter = true;
             ward.radius = e3 ? fogRadius : fogRadiusE3;
@@ -184,7 +184,7 @@ namespace WellRoundedBalance.Elites.Tier2
 
             private void Start()
             {
-                BuffWard ward = transform.parent.GetComponent<BuffWard>();
+                var ward = transform.parent.GetComponent<BuffWard>();
                 radius = ward.radius * 2;
                 age = ward.expireDuration;
                 _radius = 0;
@@ -211,7 +211,7 @@ namespace WellRoundedBalance.Elites.Tier2
 
         private static VisibilityLevel HandleAIBlindness(On.RoR2.CharacterBody.orig_GetVisibilityLevel_CharacterBody orig, CharacterBody self, CharacterBody observer)
         {
-            VisibilityLevel ret = orig(self, observer);
+            var ret = orig(self, observer);
             if (observer.HasBuff(Blindness)) return VisibilityLevel.Cloaked;
             return ret;
         }
@@ -233,7 +233,7 @@ namespace WellRoundedBalance.Elites.Tier2
             orig(self);
             if (self.affixHauntedWard)
             {
-                BuffWard ward = self.affixHauntedWard.GetComponent<BuffWard>();
+                var ward = self.affixHauntedWard.GetComponent<BuffWard>();
                 ward.buffDef = CelestineBoost;
             }
         }

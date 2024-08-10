@@ -46,7 +46,7 @@
                 sunderedGroveDLC1.categories[0] /* champions */.cards[0] /* clay dunestrider */.spawnCard = Utils.Paths.CharacterSpawnCard.cscGravekeeper.Load<CharacterSpawnCard>();
             }
 
-            var wisp = Utils.Paths.GameObject.GravekeeperTrackingFireball.Load<GameObject>().GetComponent<CharacterBody>();
+            var wisp = Utils.Paths.GameObject.GravekeeperTrackingFireball.LoadComponent<CharacterBody>();
             wisp.baseMaxHealth = 35f;
             wisp.levelMaxHealth = 10.5f;
 

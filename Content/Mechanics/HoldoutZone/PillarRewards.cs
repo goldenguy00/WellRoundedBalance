@@ -20,13 +20,13 @@ namespace WellRoundedBalance.Mechanics.HoldoutZone
                 return;
             }
 
-            int count = Run.instance.participatingPlayerCount;
-            float angle = 360f / count; 
-            float offset = 3f;
-            Vector3 vector = Quaternion.AngleAxis(Random.Range(0, 360), Vector3.up) * (Vector3.up * 40f + Vector3.forward * 5f);
-            Quaternion quaternion = Quaternion.AngleAxis(angle, Vector3.up);
+            var count = Run.instance.participatingPlayerCount;
+            var angle = 360f / count;
+            var offset = 3f;
+            var vector = Quaternion.AngleAxis(Random.Range(0, 360), Vector3.up) * (Vector3.up * 40f + Vector3.forward * 5f);
+            var quaternion = Quaternion.AngleAxis(angle, Vector3.up);
 
-            for (int i = 0; i < count; i++)
+            for (var i = 0; i < count; i++)
             {
                 GenericPickupController.CreatePickupInfo info = new()
                 {

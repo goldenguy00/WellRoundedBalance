@@ -18,9 +18,11 @@ namespace WellRoundedBalance.Mechanics.Bosses
             IL.RoR2.TeleporterInteraction.ChargingState.OnEnter += ChargingState_OnEnter;
         }
 
-        public static List<float> latestCosts = new();
+        public static List<float> latestCosts = [];
 
-        private bool CombatDirector_Spawn(On.RoR2.CombatDirector.orig_Spawn orig, CombatDirector self, SpawnCard spawnCard, EliteDef eliteDef, Transform spawnTarget, DirectorCore.MonsterSpawnDistance spawnDistance, bool preventOverhead, float valueMultiplier, DirectorPlacementRule.PlacementMode placementMode)
+        private bool CombatDirector_Spawn(On.RoR2.CombatDirector.orig_Spawn orig, CombatDirector self, SpawnCard spawnCard,
+            EliteDef eliteDef, Transform spawnTarget, DirectorCore.MonsterSpawnDistance spawnDistance, bool preventOverhead, 
+            float valueMultiplier, DirectorPlacementRule.PlacementMode placementMode)
         {
             var ret = orig(self, spawnCard, eliteDef, spawnTarget, spawnDistance, preventOverhead, valueMultiplier, placementMode);
             if (spawnCard)

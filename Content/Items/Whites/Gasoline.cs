@@ -58,14 +58,14 @@ namespace WellRoundedBalance.Items.Whites
         private void GlobalEventManager_ProcIgniteOnKill(ILContext il)
         {
             ILCursor c = new(il);
-            int stack = -1;
-            int body = -1;
-            int report = -1;
+            var stack = -1;
+            var body = -1;
+            var report = -1;
             c.TryGotoNext(x => x.MatchLdarg(out stack), x => x.MatchConvR4());
             c.TryGotoNext(x => x.MatchLdarg(out body), x => x.MatchCallOrCallvirt<CharacterBody>("get_" + nameof(CharacterBody.radius)));
             c.TryGotoNext(x => x.MatchLdarg(out report), x => x.MatchLdfld<DamageReport>(nameof(DamageReport.attackerBody)));
             if (stack == -1 || body == -1 || report == -1) return;
-            int radius = -1;
+            var radius = -1;
             c.Index = 0;
             if (c.TryGotoNext(x => x.MatchCallOrCallvirt<CharacterBody>("get_" + nameof(CharacterBody.radius))) && c.TryGotoNext(x => x.MatchStloc(out radius)) && c.TryGotoNext(x => x.MatchLdloc(radius)) && c.TryGotoNext(x => x.MatchStloc(out _)))
             {

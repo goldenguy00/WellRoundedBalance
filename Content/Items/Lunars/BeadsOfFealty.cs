@@ -74,7 +74,7 @@ namespace WellRoundedBalance.Items.Lunars
             {
                 var stack = Util.GetItemCountForTeam(TeamIndex.Player, RoR2Content.Items.LunarTrinket.itemIndex, false);
                 rewardCounter = stack;
-                for (int i = 0; i < stack; i++)
+                for (var i = 0; i < stack; i++)
                 {
                     self.hasSpawnedServer = false;
                     orig(self);

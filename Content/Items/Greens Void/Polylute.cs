@@ -70,9 +70,9 @@ namespace WellRoundedBalance.Items.VoidGreens
         {
             ILCursor c = new(il);
 
-            int stack = GetItemLoc(c, nameof(DLC1Content.Items.ChainLightningVoid));
-            int idx = c.Index;
-            int dmg = -1;
+            var stack = GetItemLoc(c, nameof(DLC1Content.Items.ChainLightningVoid));
+            int idx = c.Index, dmg = -1;
+
             if (c.TryGotoNext(x => x.MatchLdloc(out dmg), x => x.MatchCallOrCallvirt(typeof(Util), nameof(Util.OnHitProcDamage))) && c.TryGotoPrev(x => x.MatchStloc(dmg)))
             {
                 c.Emit(OpCodes.Pop);
@@ -83,6 +83,7 @@ namespace WellRoundedBalance.Items.VoidGreens
                 c.EmitDelegate<Func<float, float, float>>((t, f) => damageIsTotal ? t : f);
             }
             else Logger.LogError("Failed to apply Polylute Damage hook");
+
             c.Index = idx;
             if (c.TryGotoNext(x => x.MatchStfld<VoidLightningOrb>(nameof(VoidLightningOrb.totalStrikes))))
             {
@@ -91,6 +92,7 @@ namespace WellRoundedBalance.Items.VoidGreens
                 c.EmitDelegate<Func<int, int>>(stack => (int)StackAmount(strikeCount, strikeCountPerStack, stack));
             }
             else Logger.LogError("Failed to apply Polylute Hit Count hook");
+
             c.Index = idx;
             if (c.TryGotoNext(x => x.MatchStfld<VoidLightningOrb>(nameof(VoidLightningOrb.secondsPerStrike))))
             {
@@ -99,6 +101,7 @@ namespace WellRoundedBalance.Items.VoidGreens
                 c.EmitDelegate<Func<int, float>>(stack => StackAmount(interval, intervalStack, stack, intervalIsHyperbolic));
             }
             else Logger.LogError("Failed to apply Polylute Hit Interval hook");
+
             c.Index = idx;
             if (c.TryGotoNext(x => x.MatchStfld<VoidLightningOrb>(nameof(VoidLightningOrb.procCoefficient))))
             {
@@ -106,8 +109,9 @@ namespace WellRoundedBalance.Items.VoidGreens
                 c.EmitDelegate(() => procCoefficient * Items.Greens._ProcCoefficients.globalProc);
             }
             else Logger.LogError("Failed to apply Polylute Proc Coefficient hook");
+
             c.Index = idx;
-            int ch = -1;
+            var ch = -1;
             if (c.TryGotoNext(x => x.MatchCallOrCallvirt(typeof(Util), nameof(Util.CheckRoll))) && c.TryGotoPrev(x => x.MatchMul()) && c.TryGotoPrev(x => x.MatchLdloc(out ch)) && c.TryGotoPrev(x => x.MatchStloc(ch)))
             {
                 c.Emit(OpCodes.Pop);

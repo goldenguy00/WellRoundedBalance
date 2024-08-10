@@ -36,9 +36,9 @@ namespace WellRoundedBalance.Items.Yellows
         {
             ILCursor c = new(il);
 
-            float initialDamage = baseTotalDamage - totalDamagePerStack;
+            var initialDamage = baseTotalDamage - totalDamagePerStack;
 
-            bool error = true;
+            var error = true;
 
             if (c.TryGotoNext(x => x.MatchLdsfld(typeof(RoR2Content.Items), "FireballsOnHit")) &&
             c.TryGotoNext(x => x.MatchLdfld<DamageInfo>("damage")))

@@ -11,7 +11,6 @@ using EntityStates.LemurianBruiserMonster;
 using EntityStates.LemurianMonster;
 using EntityStates.RoboBallBoss.Weapon;
 using EntityStates.ScavMonster;
-using EntityStates.VagrantMonster.Weapon;
 using EntityStates.Vulture.Weapon;
 using HarmonyLib;
 
@@ -43,27 +42,23 @@ namespace WellRoundedBalance.Gamemodes.Eclipse
             IL.EntityStates.ImpMonster.FireSpines.FixedUpdate += (il) => FireProjectile<FireSpines>(new(il));
 
             //fire many
-            IL.EntityStates.VagrantMonster.Weapon.JellyBarrage.FixedUpdate += (il) => FireProjectileGroup<JellyBarrage>(new(il));
             IL.EntityStates.ImpBossMonster.FireVoidspikes.FixedUpdate += (il) => FireProjectileGroup<FireVoidspikes>(new(il));
 
             // original wrb stuff
             IL.RoR2.HoldoutZoneController.FixedUpdate += HoldoutZoneController_FixedUpdate;
-            //IL.EntityStates.BeetleGuardMonster.FireSunder.FixedUpdate += FireSunder_FixedUpdate;
-            //IL.EntityStates.Bell.BellWeapon.ChargeTrioBomb.FixedUpdate += ChargeTrioBomb_FixedUpdate;
-            //IL.EntityStates.ClayBoss.ClayBossWeapon.FireBombardment.FireGrenade += FireBombardment_FireGrenade;
-            //On.EntityStates.ClayGrenadier.ThrowBarrel.ModifyProjectileAimRay += ThrowBarrel_ModifyProjectileAimRay;
-            //IL.EntityStates.GenericProjectileBaseState.FireProjectile += GenericProjectileBaseState_FireProjectile;
-            //IL.EntityStates.GreaterWispMonster.FireCannons.OnEnter += FireCannons_OnEnter;
-            //IL.EntityStates.GravekeeperBoss.FireHook.OnEnter += FireHook_OnEnter;
-            //IL.EntityStates.LemurianMonster.FireFireball.OnEnter += FireFireball_OnEnter;
-            //IL.EntityStates.LemurianBruiserMonster.FireMegaFireball.FixedUpdate += FireMegaFireball_FixedUpdate;
-            //IL.EntityStates.GenericProjectileBaseState.FireProjectile += GenericProjectileBaseState_FireProjectile1;
-            //IL.EntityStates.GenericProjectileBaseState.FireProjectile += GenericProjectileBaseState_FireProjectile2;
-            //IL.EntityStates.RoboBallBoss.Weapon.FireEyeBlast.FixedUpdate += FireEyeBlast_FixedUpdate;
-            //IL.EntityStates.ScavMonster.FireEnergyCannon.OnEnter += FireEnergyCannon_OnEnter;
-            //IL.EntityStates.VagrantMonster.Weapon.JellyBarrage.FixedUpdate += JellyBarrage_FixedUpdate;
-            //On.EntityStates.VoidJailer.Weapon.Fire.ModifyProjectileAimRay += Fire_ModifyProjectileAimRay;
-            //IL.EntityStates.Vulture.Weapon.FireWindblade.OnEnter += FireWindblade_OnEnter;
+
+            // old e5
+            CharacterMaster.onStartGlobal += CharacterMaster_onStartGlobal;
+        }
+
+        private void CharacterMaster_onStartGlobal(CharacterMaster master)
+        {
+            if (Run.instance?.selectedDifficulty >= DifficultyIndex.Eclipse2 && master.TryGetComponent<BaseAI>(out var baseAI))
+            {
+                baseAI.fullVision = true;
+                baseAI.aimVectorMaxSpeed = 250f;
+                baseAI.aimVectorDampTime = 0.05f;
+            }
         }
 
         #region Generic Prediction IL
@@ -111,11 +106,13 @@ namespace WellRoundedBalance.Gamemodes.Eclipse
 
         private static void FireSunder_FixedUpdate(ILCursor c)
         {
-            int loc = 0;
+            var loc = 0;
 
-            if (c.TryGotoNext(x => x.MatchCall<BaseState>(nameof(BaseState.GetAimRay))) &&
-                c.TryGotoNext(x => x.MatchStloc(out loc)) &&
-                c.TryGotoNext(x => x.MatchCall(AccessTools.PropertyGetter(typeof(ProjectileManager), nameof(ProjectileManager.instance)))))
+            if (c.TryFindNext(out _,
+                    x => x.MatchCall<BaseState>(nameof(BaseState.GetAimRay)),
+                    x => x.MatchStloc(out loc)) &&
+                c.TryGotoNext(
+                    x => x.MatchCall(AccessTools.PropertyGetter(typeof(ProjectileManager), nameof(ProjectileManager.instance)))))
             {
                 c.Emit(OpCodes.Ldloc, loc);
                 EmitPredictAimray(c, typeof(FireSunder));
@@ -123,22 +120,23 @@ namespace WellRoundedBalance.Gamemodes.Eclipse
             }
             else Logger.LogError("Failed to apply Eclipse 2 BeetleGuardMonster.FireSunder.FixedUpdate IL Hook");
         }
-        
+
         private static void ChargeTrioBomb_FixedUpdate(ILCursor c)
         {
             int rayLoc = 0, transformLoc = 0;
 
-            if (c.TryGotoNext(x => x.MatchCall<BaseState>(nameof(BaseState.GetAimRay))) &&
-                c.TryGotoNext(x => x.MatchStloc(out rayLoc)) &&
-                c.TryGotoNext(x => x.MatchCall<ChargeTrioBomb>(nameof(ChargeTrioBomb.FindTargetChildTransformFromBombIndex))) &&
-                c.TryGotoNext(x => x.MatchStloc(out transformLoc)) &&
-                c.TryGotoNext(x => x.MatchCall(AccessTools.PropertyGetter(typeof(ProjectileManager), nameof(ProjectileManager.instance)))))
+            if (c.TryFindNext(out _,
+                    x => x.MatchCall<BaseState>(nameof(BaseState.GetAimRay)),
+                    x => x.MatchStloc(out rayLoc),
+                    x => x.MatchCall<ChargeTrioBomb>(nameof(ChargeTrioBomb.FindTargetChildTransformFromBombIndex)),
+                    x => x.MatchStloc(out transformLoc)) &&
+                c.TryGotoNext(MoveType.Before,
+                    x => x.MatchCall(AccessTools.PropertyGetter(typeof(ProjectileManager), nameof(ProjectileManager.instance)))))
             {
                 // set origin
                 c.Emit(OpCodes.Ldloc, rayLoc);
                 c.Emit(OpCodes.Ldloc, transformLoc);
-                c.Emit(OpCodes.Callvirt, AccessTools.PropertyGetter(typeof(Transform), nameof(Transform.position)));
-                c.Emit(OpCodes.Call, AccessTools.PropertySetter(typeof(Ray), nameof(Ray.origin)));
+                c.EmitDelegate<Action<Ray, Transform>>((ray, transform) => ray.origin = transform.position);
 
                 // call prediction utils
                 c.Emit(OpCodes.Ldloc, rayLoc);

@@ -1,6 +1,4 @@
-﻿using EntityStates;
-using RoR2.Skills;
-using System;
+﻿using System;
 
 namespace WellRoundedBalance.Enemies.Bosses
 {
@@ -21,27 +19,8 @@ namespace WellRoundedBalance.Enemies.Bosses
             On.EntityStates.BeetleQueenMonster.SummonEggs.OnEnter += SummonEggs_OnEnter;
             On.EntityStates.BeetleQueenMonster.FireSpit.OnEnter += FireSpit_OnEnter;
             On.EntityStates.BeetleQueenMonster.SpawnWards.OnEnter += SpawnWards_OnEnter;
-            On.RoR2.CharacterAI.BaseAI.Awake += BaseAI_Awake;
             Changes();
         }
-
-        private void BaseAI_Awake(On.RoR2.CharacterAI.BaseAI.orig_Awake orig, BaseAI self)
-        {
-            orig(self);
-            if (self.master && self.master.masterIndex == MasterCatalog.FindMasterIndex("BeetleQueenMaster"))
-            {
-                if (self.skillDrivers[0].customName != "SummonEarthquake")
-                {
-                    var driversList = self.skillDrivers.ToList();
-                    var lastNumber = driversList[driversList.Count - 1];
-                    driversList.RemoveAt(driversList.Count - 1);
-                    driversList.Insert(0, lastNumber);
-                    self.skillDrivers = driversList.ToArray();
-                }
-            }
-        }
-
-        public static CharacterMaster queen = Utils.Paths.GameObject.BeetleQueenMaster.Load<GameObject>().GetComponent<CharacterMaster>();
 
         private void SpawnWards_OnEnter(On.EntityStates.BeetleQueenMonster.SpawnWards.orig_OnEnter orig, EntityStates.BeetleQueenMonster.SpawnWards self)
         {
@@ -83,21 +62,18 @@ namespace WellRoundedBalance.Enemies.Bosses
 
         private void Changes()
         {
-            ContentAddition.AddEntityState(typeof(Earthquake), out _);
-
             var beetleQueen = Utils.Paths.GameObject.BeetleQueen2Body9.Load<GameObject>();
-
+            
             var esm = beetleQueen.AddComponent<EntityStateMachine>();
             esm.customName = "Earthquake";
             esm.initialStateType = new(typeof(EntityStates.BeetleQueenMonster.SpawnState));
             esm.mainStateType = new(typeof(GenericCharacterMain));
 
             var nsm = beetleQueen.GetComponent<NetworkStateMachine>();
-            Array.Resize(ref nsm.stateMachines, nsm.stateMachines.Length + 1);
-            nsm.stateMachines[nsm.stateMachines.Length - 1] = esm;
+            nsm.stateMachines = [.. nsm.stateMachines, esm];
 
             var utilitySD = ScriptableObject.CreateInstance<SkillDef>();
-            utilitySD.activationState = new SerializableEntityStateType(typeof(Earthquake));
+            utilitySD.activationState = ContentAddition.AddEntityState<Earthquake>(out _);
             utilitySD.activationStateMachineName = "Earthquake";
             utilitySD.interruptPriority = InterruptPriority.Skill;
             utilitySD.baseRechargeInterval = 9f;
@@ -119,8 +95,7 @@ namespace WellRoundedBalance.Enemies.Bosses
             ContentAddition.AddSkillDef(utilitySD);
 
             var utilityFamily = ScriptableObject.CreateInstance<SkillFamily>();
-            Array.Resize(ref utilityFamily.variants, 1);
-            utilityFamily.variants[0].skillDef = utilitySD;
+            utilityFamily.variants = [new SkillFamily.Variant { skillDef = utilitySD }];
             (utilityFamily as ScriptableObject).name = "UtilityFamily";
 
             ContentAddition.AddSkillFamily(utilityFamily);
@@ -157,6 +132,19 @@ namespace WellRoundedBalance.Enemies.Bosses
             ed.driverUpdateTimerOverride = -1;
             ed.resetCurrentEnemyOnNextDriverSelection = false;
             ed.noRepeat = false;
+
+            var components = master.GetComponents<AISkillDriver>().ToArray();
+            for (var i = 0; i < components.Length; i++)
+            {
+                var c = components[i];
+                if (c.customName != "SummonEarthquake")
+                {
+                    if (c.nextHighPriorityOverride != null)
+                        Logger.LogError("PRIORITY OVERRIDE MIGHT FUCK SHIT UP " + c.customName + " -> " + c.nextHighPriorityOverride.customName);
+                    master.AddComponentCopy(c);
+                    Component.DestroyImmediate(c);
+                }
+            }
 
             var locator = beetleQueen.GetComponent<SkillLocator>();
             locator.utility = utility;
@@ -236,12 +224,22 @@ namespace WellRoundedBalance.Enemies.Bosses
             var slices = 360f / waveProjectileCount;
             var upVector = Vector3.ProjectOnPlane(inputBank.aimDirection, Vector3.up);
             var footPosition = characterBody.footPosition;
-            for (int i = 0; i < waveProjectileCount; i++)
+            for (var i = 0; i < waveProjectileCount; i++)
             {
                 var quat = Quaternion.AngleAxis(slices * i, Vector3.up) * upVector;
                 if (isAuthority)
                 {
-                    ProjectileManager.instance.FireProjectile(waveProjectilePrefab, footPosition, Util.QuaternionSafeLookRotation(quat), gameObject, characterBody.damage * waveProjectileDamageCoefficient, waveProjectileForce, Util.CheckRoll(characterBody.crit, characterBody.master), DamageColorIndex.Default, null, -1f);
+                    ProjectileManager.instance.FireProjectile(new FireProjectileInfo()
+                    {
+                        projectilePrefab = waveProjectilePrefab,
+                        position = footPosition,
+                        rotation = Util.QuaternionSafeLookRotation(quat),
+                        owner = base.gameObject,
+                        damage = characterBody.damage * waveProjectileDamageCoefficient,
+                        force = waveProjectileForce,
+                        crit = Util.CheckRoll(characterBody.crit, characterBody.master),
+                        damageColorIndex = DamageColorIndex.Default
+                    });
                 }
             }
         }

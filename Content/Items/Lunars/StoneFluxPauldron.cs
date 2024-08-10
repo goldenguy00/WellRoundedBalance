@@ -21,9 +21,9 @@ namespace WellRoundedBalance.Items.Lunars
 
         public override void Hooks()
         {
-            IL.RoR2.CharacterBody.RecalculateStats += Changes;
-            On.RoR2.HealthComponent.TakeDamage += HealthComponent_TakeDamage;
-            RecalculateStatsAPI.GetStatCoefficients += RecalculateStatsAPI_GetStatCoefficients;
+            //IL.RoR2.CharacterBody.RecalculateStats += Changes;
+            //On.RoR2.HealthComponent.TakeDamage += HealthComponent_TakeDamage;
+            //RecalculateStatsAPI.GetStatCoefficients += RecalculateStatsAPI_GetStatCoefficients;
         }
 
         private void RecalculateStatsAPI_GetStatCoefficients(CharacterBody sender, RecalculateStatsAPI.StatHookEventArgs args)

@@ -37,7 +37,8 @@ namespace WellRoundedBalance.Items.Whites
         [ConfigField("Health Threshold is Hyperbolic", "Decimal, Max value. Set to 0 to make it linear.", 0f)]
         public static float healthThresholdIsHyperbolic;
 
-        public static Dictionary<CharacterBody, List<CharacterBody>> db = new();
+        // nah this is fucked up no man no. dont fuckin do shit like this. horrible. no.
+        public static Dictionary<CharacterBody, List<CharacterBody>> db = [];
 
         public override void Init()
         {
@@ -46,9 +47,9 @@ namespace WellRoundedBalance.Items.Whites
 
         public override void Hooks()
         {
-            Stage.onStageStartGlobal += _ => db.Clear();
-            IL.RoR2.HealthComponent.TakeDamage += HealthComponent_TakeDamage;
-            On.RoR2.GlobalEventManager.OnCharacterDeath += GlobalEventManager_OnCharacterDeath;
+            //Stage.onStageStartGlobal += _ => db.Clear();
+            //IL.RoR2.HealthComponent.TakeDamage += HealthComponent_TakeDamage;
+            //On.RoR2.GlobalEventManager.OnCharacterDeath += GlobalEventManager_OnCharacterDeath;
             // IL.RoR2.HealthComponent.TakeDamage += HealthComponent_TakeDamage1;
         }
 
@@ -85,10 +86,10 @@ namespace WellRoundedBalance.Items.Whites
         public void HealthComponent_TakeDamage(ILContext il)
         {
             ILCursor c = new(il);
-            int info = -1; int dmg = -1;
+            var info = -1; var dmg = -1;
             c.TryGotoNext(x => x.MatchLdarg(out info), x => x.MatchLdfld<DamageInfo>(nameof(DamageInfo.damage)), x => x.MatchStloc(out dmg));
-            int stack = GetItemLoc(c, nameof(RoR2Content.Items.Crowbar));
-            int m = -1; c.TryGotoPrev(x => x.MatchLdloc(out m));
+            var stack = GetItemLoc(c, nameof(RoR2Content.Items.Crowbar));
+            var m = -1; c.TryGotoPrev(x => x.MatchLdloc(out m));
             if (dmg == -1 || stack == -1) return;
             if (c.TryGotoPrev(x => x.MatchCallOrCallvirt<HealthComponent>("get_" + nameof(HealthComponent.fullCombinedHealth))) && c.TryGotoNext(MoveType.After, x => x.MatchMul()))
             {
@@ -99,12 +100,14 @@ namespace WellRoundedBalance.Items.Whites
                 {
                     if (firstHit)
                     {
-                        CharacterBody from = master.GetBody();
-                        CharacterBody to = self.body;
+                        var from = master.GetBody();
+                        var to = self.body;
                         if (from && to)
                         {
-                            if (!db.ContainsKey(from)) db.Add(from, new());
-                            if (db[from].Contains(to)) return float.MaxValue;
+                            if (!db.ContainsKey(from))
+                                db.Add(from, []);
+                            if (db[from].Contains(to))
+                                return float.MaxValue;
                             db[from].Add(to);
                             return 0;
                         }

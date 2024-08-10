@@ -26,12 +26,12 @@ namespace WellRoundedBalance.Items.Lunars
 
         public override void Hooks()
         {
-            IL.RoR2.CharacterBody.RecalculateStats += Changes;
-            On.RoR2.HealthComponent.TakeDamage += HealthComponent_TakeDamage;
-            RecalculateStatsAPI.GetStatCoefficients += RecalculateStatsAPI_GetStatCoefficients;
-            On.RoR2.CharacterMotor.OnLanded += CharacterMotor_OnLanded;
-            On.RoR2.CharacterMotor.OnLeaveStableGround += CharacterMotor_OnLeaveStableGround;
-            On.RoR2.Inventory.GiveItem_ItemIndex_int += Inventory_GiveItem_ItemIndex_int;
+            //IL.RoR2.CharacterBody.RecalculateStats += Changes;
+            //On.RoR2.HealthComponent.TakeDamage += HealthComponent_TakeDamage;
+            //RecalculateStatsAPI.GetStatCoefficients += RecalculateStatsAPI_GetStatCoefficients;
+            //On.RoR2.CharacterMotor.OnLanded += CharacterMotor_OnLanded;
+            //On.RoR2.CharacterMotor.OnLeaveStableGround += CharacterMotor_OnLeaveStableGround;
+            //RoR2.Inventory.onServerItemGiven += Inventory_GiveItem_ItemIndex_int;
         }
 
         private void Inventory_GiveItem_ItemIndex_int(On.RoR2.Inventory.orig_GiveItem_ItemIndex_int orig, Inventory self, ItemIndex itemIndex, int count)
@@ -85,33 +85,29 @@ namespace WellRoundedBalance.Items.Lunars
             if (sender.inventory && sender.characterMotor)
             {
                 var stack = sender.inventory.GetItemCount(DLC1Content.Items.HalfAttackSpeedHalfCooldowns);
-                if (!sender.characterMotor.isGrounded) args.moveSpeedMultAdd += baseMovementSpeedGain + movementSpeedGainPerStack * (stack - 1);
+                if (stack > 0 && !sender.characterMotor.isGrounded) 
+                    args.moveSpeedMultAdd += baseMovementSpeedGain + movementSpeedGainPerStack * (stack - 1);
             }
         }
 
         private void HealthComponent_TakeDamage(On.RoR2.HealthComponent.orig_TakeDamage orig, HealthComponent self, DamageInfo damageInfo)
         {
-            var attacker = damageInfo.attacker;
-            if (attacker)
+            var body = self.body;
+            if (damageInfo.procCoefficient > 0 && body)
             {
-                var body = self.body;
-                if (body)
+                var inventory = body.inventory;
+                if (inventory)
                 {
-                    var attackerBody = attacker.GetComponent<CharacterBody>();
-                    var inventory = body.inventory;
-                    if (attackerBody)
+                    // enemies pulling player on hit
+                    var stack = inventory.GetItemCount(DLC1Content.Items.HalfAttackSpeedHalfCooldowns);
+                    if (stack > 0)
                     {
-                        if (inventory)
+                        var bodyMotor = body.characterMotor;
+                        if (bodyMotor)
                         {
-                            // enemies pulling player on hit
-                            var stack = inventory.GetItemCount(DLC1Content.Items.HalfAttackSpeedHalfCooldowns);
-                            var bodyMotor = body.characterMotor;
-                            if (bodyMotor && stack > 0 && damageInfo.procCoefficient > 0)
-                            {
-                                bodyMotor.velocity.y = Mathf.Min((Mathf.Abs(bodyMotor.velocity.y) - body.jumpPower - 35f) * damageInfo.procCoefficient * stack, 0f);
-                                // Main.WRBLogger.LogFatal("body y velocity is " + bodyMotor.velocity.y);
-                            }
+                            bodyMotor.velocity.y = Mathf.Min((Mathf.Abs(bodyMotor.velocity.y) - body.jumpPower - 35f) * damageInfo.procCoefficient * stack, 0f);
                         }
+                        // Main.WRBLogger.LogFatal("body y velocity is " + bodyMotor.velocity.y);
                     }
                 }
             }

@@ -12,7 +12,7 @@ namespace WellRoundedBalance.Equipment
 
         public static event Action onTokenRegister;
 
-        public static List<string> equipmentList = new();
+        public static List<string> equipmentList = [];
 
         public override void Init()
         {

@@ -7,7 +7,7 @@ namespace WellRoundedBalance.Enemies
     public abstract class EnemyBase : SharedBase
     {
         public override ConfigFile Config => Main.WRBEnemyConfig;
-        public static List<string> enemyList = new();
+        public static List<string> enemyList = [];
 
         public override void Init()
         {
@@ -15,8 +15,9 @@ namespace WellRoundedBalance.Enemies
             enemyList.Add(Name);
         }
 
-        public SkillDef CreateSkillDef<T>(float cooldown, string esm) where T : EntityState {
-            SkillDef skill = ScriptableObject.CreateInstance<SkillDef>();
+        public SkillDef CreateSkillDef<T>(float cooldown, string esm) where T : EntityState
+        {
+            var skill = ScriptableObject.CreateInstance<SkillDef>();
             skill.baseRechargeInterval = cooldown;
             skill.activationStateMachineName = esm;
             skill.activationState = new(typeof(T));
@@ -25,7 +26,8 @@ namespace WellRoundedBalance.Enemies
             return skill;
         }
 
-        public void ReplaceSkill(SkillDef skill, GenericSkill slot) {
+        public void ReplaceSkill(SkillDef skill, GenericSkill slot)
+        {
             slot._skillFamily.variants[0].skillDef = skill;
         }
     }

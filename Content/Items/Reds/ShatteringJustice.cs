@@ -123,7 +123,7 @@ namespace WellRoundedBalance.Items.Reds
                 c.Emit<ShatteringJustice>(OpCodes.Ldsfld, nameof(pulverized));
                 c.Index++;
                 c.Next.Operand = baseDebuffDuration;
-                for (int i = 0; i < 3; i++)
+                for (var i = 0; i < 3; i++)
                 {
                     c.Remove();
                 }

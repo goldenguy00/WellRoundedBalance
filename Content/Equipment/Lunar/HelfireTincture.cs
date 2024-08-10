@@ -68,7 +68,7 @@ namespace WellRoundedBalance.Equipment.Lunar
 
         private void Changes()
         {
-            var hel = Utils.Paths.GameObject.HelfireController.Load<GameObject>().GetComponent<HelfireController>();
+            var hel = Utils.Paths.GameObject.HelfireController.LoadComponent<HelfireController>();
             hel.gameObject.transform.localScale = new Vector3(range, range, range);
             hel.baseRadius = range;
             hel.dotDuration = burnDuration;

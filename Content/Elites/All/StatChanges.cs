@@ -1,47 +1,49 @@
-﻿using static RoR2.CombatDirector;
-using System;
-using BepInEx.Configuration;
-using JetBrains.Annotations;
+﻿using System;
 
 namespace WellRoundedBalance.Elites.All
 {
     public class StatChanges : EliteBase<StatChanges>
     {
-        public static ConfigEntry<bool> enable { get; set; }
 
         public override string Name => ":: Elites : Stat & Drop Rate Changes";
 
         [ConfigField("Tier 0 Cost Multiplier", "Applies to Perfected elites.", 18f)]
         public static float tier0CostMultiplier;
 
-        [ConfigField("Tier 1 Cost Multiplier", "", 5.5f)]
+        [ConfigField("Tier 1 Cost Multiplier", "", 5f)]
         public static float tier1CostMultiplier;
+
+        [ConfigField("Tier 1 Health Multiplier", "", 2.5f)]
+        public static float tier1HealthMultiplier;
+
+        [ConfigField("Tier 1 Damage Multiplier", "", 1.5f)]
+        public static float tier1DamageMultiplier;
+
+        [ConfigField("Tier 2 Cost Multiplier", "Applies to Artifact of Honor", 26f)]
+        public static float tier2CostMultiplier;
+
+        [ConfigField("Tier 2 Health Multiplier", "Applies to Artifact of Honor", 6f)]
+        public static float tier2HealthMultiplier;
+
+        [ConfigField("Tier 2 Damage Multiplier", "Applies to Artifact of Honor", 1f)]
+        public static float tier2DamageMultiplier;
 
         [ConfigField("Tier 1 Honor Cost Multiplier", "", 3.5f)]
         public static float tier1HonorCostMultiplier;
 
-        [ConfigField("Tier 2 Cost Multiplier", "", 26f)]
-        public static float tier2CostMultiplier;
+        [ConfigField("Tier 1 Honor Health Multiplier", "", 2.5f)]
+        public static float tier1HonorHealthMultiplier;
 
-        [ConfigField("Tier 2 Health Multiplier", "", 6f)]
-        public static float tier2HealthMultiplier;
-
-        [ConfigField("Tier 2 Honor Health Multiplier", "", 4.5f)]
-        public static float tier2HonorHealthMultiplier;
-
-        [ConfigField("All Tier Damage Multiplier", "", 1f)]
-        public static float allTierDamageMultiplier;
-
-        [ConfigField("All Tier Honor Damage Multiplier", "", 1f)]
-        public static float allTierHonorDamageMultiplier;
+        [ConfigField("Tier 1 Honor Damage Multiplier", "", 1f)]
+        public static float tier1HonorDamageMultiplier;
 
         [ConfigField("Aspect Chance", "Decimal.", 0.001f)]
         public static float aspectChance;
 
-        [ConfigField("Enable Aspect Inheritance?", "Makes all allies without an equipment gain the most recent aspect.", true)]
+        [ConfigField("Enable Aspect Inheritance?", "Makes all minions gain the most recent aspect.", true)]
         public static bool aspectInheritance;
 
-        public List<EquipmentIndex> aspects = new();
+        public static HashSet<EquipmentIndex> aspects = [];
 
         public override void Init()
         {
@@ -50,97 +52,97 @@ namespace WellRoundedBalance.Elites.All
 
         public override void Hooks()
         {
-            On.RoR2.CombatDirector.Init += CombatDirector_Init;
             if (aspectInheritance)
                 CharacterBody.onBodyInventoryChangedGlobal += CharacterBody_onBodyInventoryChangedGlobal;
         }
 
-        private void CharacterBody_onBodyInventoryChangedGlobal(CharacterBody body)
+        private void CharacterBody_onBodyInventoryChangedGlobal(CharacterBody bpdy)
         {
-            bool anyoneHasAspect = false;
-            EquipmentIndex firstAspect = EquipmentIndex.None;
+            if (!bpdy.isPlayerControlled || !bpdy.master || !bpdy.master.inventory)
+                return;
 
-            for (int i = 0; i < CharacterMaster.readOnlyInstancesList.Count; i++)
+            var equipment = bpdy.master.inventory.currentEquipmentIndex;
+            if (aspects.Contains(equipment))
             {
-                var master = CharacterMaster.readOnlyInstancesList[i];
-                if (master.teamIndex != TeamIndex.Player) continue;
-
-                var inventory = master.inventory;
-                if (!inventory) continue;
-
-                var equipment = inventory.currentEquipmentIndex;
-
-                if (master.playerCharacterMasterController)
+                var eliteDef = EquipmentCatalog.GetEquipmentDef(equipment);
+                if (eliteDef && eliteDef.passiveBuffDef)
                 {
-                    anyoneHasAspect = aspects.Contains(equipment);
-                    if (anyoneHasAspect)
+                    foreach (var tc in TeamComponent.GetTeamMembers(TeamIndex.Player))
                     {
-                        firstAspect = equipment;
+                        var body = tc.body;
+                        if (!body)
+                            continue;
+
+                        body.AddBuff(eliteDef.passiveBuffDef);
                     }
-                }
-                if (anyoneHasAspect && equipment == EquipmentIndex.None)
-                {
-                    inventory.SetEquipmentIndex(firstAspect);
-                }
-                if (!anyoneHasAspect && equipment == firstAspect)
-                {
-                    inventory.SetEquipmentIndex(EquipmentIndex.None);
                 }
             }
         }
 
-        private void CombatDirector_Init(On.RoR2.CombatDirector.orig_Init orig)
+        [SystemInitializer([typeof(CombatDirector)])]
+        private static void CombatDirector_Init()
         {
-            // Main.WRBLogger.LogError("combat director init pre orig ran");
-            orig();
+            Main.WRBLogger.LogError("combat director init pre orig ran");
 
-            foreach (EliteTierDef eliteTierDef in eliteTiers)
+            var honorTier = EliteAPI.VanillaEliteOnlyFirstTierDef;
+            honorTier.costMultiplier = tier1HonorCostMultiplier;
+
+            foreach (var eliteDef in honorTier.eliteTypes)
             {
-                if (eliteTierDef != null && eliteTierDef.eliteTypes.Length > 0)
+                eliteDef.damageBoostCoefficient = tier1HonorDamageMultiplier;
+                eliteDef.healthBoostCoefficient = tier1HonorHealthMultiplier;
+            }
+
+            var tier1 = EliteAPI.VanillaFirstTierDef;
+            tier1.costMultiplier = tier1CostMultiplier;
+
+            foreach (var eliteDef in tier1.eliteTypes)
+            {
+                eliteDef.damageBoostCoefficient = tier1DamageMultiplier;
+                eliteDef.healthBoostCoefficient = tier1HealthMultiplier;
+            }
+
+
+            foreach (var eliteTierDef in CombatDirector.eliteTiers)
+            {
+                if (eliteTierDef?.eliteTypes.Any() == true && eliteTierDef != honorTier && eliteTierDef != tier1)
                 {
-                    List<EliteDef> eliteDefList = eliteTierDef.eliteTypes.ToList();
-
-                    if (eliteDefList.Contains(RoR2Content.Elites.Lunar))
-                    {
-                        eliteTierDef.costMultiplier = tier0CostMultiplier;
-                    }
-
-                    if (eliteDefList.Contains(RoR2Content.Elites.Fire))
-                    {
-                        eliteTierDef.costMultiplier = tier1CostMultiplier;
-                    }
-
-                    if (eliteDefList.Contains(RoR2Content.Elites.FireHonor))
-                    {
-                        eliteTierDef.costMultiplier = tier1HonorCostMultiplier;
-                    }
-
-                    if (eliteDefList.Contains(RoR2Content.Elites.Poison))
-                    {
-                        eliteTierDef.costMultiplier = tier2CostMultiplier;
-                    }
-                    // havent tested t2 or honor lol, but t1 elites were too frequent based on playtesting
-
-                    foreach (EliteDef eliteDef in eliteDefList)
+                    bool isLunar = false, isT2 = false;
+                    foreach (var eliteDef in eliteTierDef.eliteTypes)
                     {
                         if (eliteDef != null)
                         {
-                            if (eliteDef.name.IndexOf("honor", StringComparison.OrdinalIgnoreCase) >= 0)
+                            if (eliteDef == RoR2Content.Elites.Lunar)
                             {
-                                eliteDef.damageBoostCoefficient = allTierHonorDamageMultiplier;
-                                eliteDef.healthBoostCoefficient = Mathf.Min(eliteDef.healthBoostCoefficient, tier2HonorHealthMultiplier);
+                                isLunar = true;
+                                break;
                             }
-                            else
+                            else if (eliteDef == RoR2Content.Elites.Poison)
                             {
-                                eliteDef.damageBoostCoefficient = allTierDamageMultiplier;
-                                eliteDef.healthBoostCoefficient = Mathf.Min(eliteDef.healthBoostCoefficient, tier2HealthMultiplier);
+                                isT2 = true;
+                                break;
                             }
+                        }
+                    }
+
+                    if (isLunar)
+                    {
+                        eliteTierDef.costMultiplier = tier0CostMultiplier;
+                    }
+                    else if (isT2)
+                    {
+                        eliteTierDef.costMultiplier = tier2CostMultiplier;
+
+                        foreach (var eliteDef in eliteTierDef.eliteTypes)
+                        {
+                            eliteDef.damageBoostCoefficient = tier2DamageMultiplier;
+                            eliteDef.healthBoostCoefficient = tier2HealthMultiplier;
                         }
                     }
                 }
             }
 
-            for (int i = 0; i < EliteCatalog.eliteDefs.Length; i++)
+            for (var i = 0; i < EliteCatalog.eliteDefs.Length; i++)
             {
                 var index = EliteCatalog.eliteDefs[i];
                 if (index.eliteEquipmentDef)

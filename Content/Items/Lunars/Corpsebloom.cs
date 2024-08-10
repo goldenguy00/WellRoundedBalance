@@ -71,7 +71,7 @@ namespace WellRoundedBalance.Items.Lunars
                 x => x.MatchLdfld<HealthComponent>("repeatHealComponent"),
                 x => x.MatchLdcR4(0.1f)))
             {
-                for (int i = 0; i < 9; i++)
+                for (var i = 0; i < 9; i++)
                 {
                     c.Remove();
                 }

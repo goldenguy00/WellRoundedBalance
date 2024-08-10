@@ -44,7 +44,7 @@ namespace WellRoundedBalance.Items.Whites
         public override void Hooks()
         {
             IL.RoR2.HealthComponent.TakeDamage += HealthComponent_TakeDamage;
-            On.RoR2.Inventory.GiveItem_ItemIndex_int += Inventory_GiveItem_ItemIndex_int;
+            RoR2.Inventory.onServerItemGiven += Inventory_onServerItemGiven;
             On.RoR2.Stage.Start += Stage_Start;
         }
 
@@ -59,13 +59,13 @@ namespace WellRoundedBalance.Items.Whites
 
             if (stack > 0 && NetworkServer.active)
             {
-                foreach (CharacterMaster master in masters)
+                foreach (var master in masters)
                 {
                     // Logger.LogError("master is " + master);
                     if (master.playerCharacterMasterController)
                     {
                         // Logger.LogError("Iterating through " + master + " to give gold");
-                        uint ret = (uint)StackAmount(baseGoldPerStage, goldPerStagePerStack, stack, goldPerStageIsHyperbolic);
+                        var ret = (uint)StackAmount(baseGoldPerStage, goldPerStagePerStack, stack, goldPerStageIsHyperbolic);
                         if (scaleOverTime) ret = (uint)Run.instance.GetDifficultyScaledCost((int)ret);
                         ret = (uint)Mathf.CeilToInt(ret);
                         // Logger.LogError("ret for pennies is " + ret);
@@ -75,14 +75,13 @@ namespace WellRoundedBalance.Items.Whites
             }
         }
 
-        private void Inventory_GiveItem_ItemIndex_int(On.RoR2.Inventory.orig_GiveItem_ItemIndex_int orig, Inventory self, ItemIndex itemIndex, int count)
+        private void Inventory_onServerItemGiven(Inventory self, ItemIndex itemIndex, int count)
         {
-            orig(self, itemIndex, count);
             if (NetworkServer.active)
             {
                 if (itemIndex == DLC1Content.Items.GoldOnHurt.itemIndex)
                 {
-                    uint ret = (uint)StackAmount(goldOnPickup, goldOnPickupStack, count, goldOnPickupIsHyperbolic);
+                    var ret = (uint)StackAmount(goldOnPickup, goldOnPickupStack, count, goldOnPickupIsHyperbolic);
                     if (scaleOverTime) ret = (uint)Run.instance.GetDifficultyScaledCost((int)ret);
                     TeamManager.instance.GiveTeamMoney(TeamIndex.Player, ret);
                 }

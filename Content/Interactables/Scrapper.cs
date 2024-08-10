@@ -45,7 +45,7 @@ namespace WellRoundedBalance.Interactables
             hologram.disableHologramRotation = false;
             var hologram2 = scrapperGO.AddComponent<ScrapperHologram>();
 
-            uses = new();
+            uses = [];
 
             Stage.onServerStageComplete += Stage_onServerStageComplete;
             On.EntityStates.Scrapper.ScrapperBaseState.OnEnter += ScrapperBaseState_OnEnter;
@@ -58,11 +58,16 @@ namespace WellRoundedBalance.Interactables
         private void SceneDirector_Start(On.RoR2.SceneDirector.orig_Start orig, SceneDirector self)
         {
             orig(self);
-            ScrapperController[] scrappers = GameObject.FindObjectsOfType<ScrapperController>();
-            foreach (ScrapperController controller in scrappers)
+            var scrappers = GameObject.FindObjectsOfType<ScrapperController>();
+            if (scrappers?.Any() == true)
             {
-                var counter = controller.gameObject.GetComponent<ScrapperUseCounter>();
-                counter.useCount = maxUses * Run.instance.participatingPlayerCount;
+                foreach (var controller in scrappers)
+                {
+                    if (controller && controller.TryGetComponent<ScrapperUseCounter>(out var counter))
+                    {
+                        counter.useCount = maxUses * Run.instance.participatingPlayerCount;
+                    }
+                }
             }
         }
 
@@ -72,10 +77,10 @@ namespace WellRoundedBalance.Interactables
             if (NetworkServer.active)
             {
                 var categories = self.interactableCategories.categories;
-                for (int i = 0; i < categories.Length; i++)
+                for (var i = 0; i < categories.Length; i++)
                 {
                     var categoryIndex = categories[i];
-                    for (int j = 0; j < categoryIndex.cards.Length; j++)
+                    for (var j = 0; j < categoryIndex.cards.Length; j++)
                     {
                         var cardIndex = categoryIndex.cards[j];
                         if (cardIndex.spawnCard == scrapper)
@@ -86,7 +91,7 @@ namespace WellRoundedBalance.Interactables
                     }
                 }
             }
-            
+
         }
 
         private void ScrapperController_Start(On.RoR2.ScrapperController.orig_Start orig, ScrapperController self)
@@ -98,14 +103,17 @@ namespace WellRoundedBalance.Interactables
 
         private void Scrapping_OnEnter(On.EntityStates.Scrapper.Scrapping.orig_OnEnter orig, Scrapping self)
         {
-            var scrapper = self.outer.gameObject;
-            if (scrapper != null && uses.ContainsKey(scrapper))
+            if (self.outer)
             {
-                uses[scrapper]--;
-                var counter = self.outer.gameObject.GetComponent<ScrapperUseCounter>();
-                if (counter)
+                var scrapper = self.outer.gameObject;
+                if (scrapper != null && uses.ContainsKey(scrapper))
                 {
-                    counter.useCount--;
+                    uses[scrapper]--;
+                    var counter = scrapper.GetComponent<ScrapperUseCounter>();
+                    if (counter)
+                    {
+                        counter.useCount--;
+                    }
                 }
             }
             orig(self);
@@ -118,15 +126,21 @@ namespace WellRoundedBalance.Interactables
 
         private void ScrapperBaseState_OnEnter(On.EntityStates.Scrapper.ScrapperBaseState.orig_OnEnter orig, ScrapperBaseState self)
         {
-            var scrapper = self.outer.gameObject;
-            if (!uses.ContainsKey(scrapper))
+            GameObject scrapper = null;
+            if (self.outer)
             {
-                uses.Add(scrapper, maxUses * Run.instance.livingPlayerCount);
+                scrapper = self.outer.gameObject;
+                if (!uses.ContainsKey(scrapper))
+                {
+                    uses.Add(scrapper, maxUses * Run.instance.livingPlayerCount);
+                }
             }
+
             orig(self);
-            if (uses[scrapper] <= 0)
+
+            if (scrapper && uses[scrapper] <= 0 && self.outer.TryGetComponent<PickupPickerController>(out var ppc))
             {
-                self.outer.GetComponent<PickupPickerController>().SetAvailable(false);
+                ppc.SetAvailable(false);
             }
         }
     }
@@ -165,28 +179,26 @@ namespace WellRoundedBalance.Interactables
 
         private void Start()
         {
-            counter = gameObject.GetComponent<ScrapperUseCounter>();
+            counter = GetComponent<ScrapperUseCounter>();
         }
 
-        public GameObject GetHologramContentPrefab()
+        GameObject IHologramContentProvider.GetHologramContentPrefab()
         {
             return PlainHologram.hologramContentPrefab;
         }
 
-        public bool ShouldDisplayHologram(GameObject viewer)
+        bool IHologramContentProvider.ShouldDisplayHologram(GameObject viewer)
         {
+            if (!viewer)
+                return false;
+
             var distance = Vector3.Distance(viewer.transform.position, gameObject.transform.position);
-            if (distance <= 15f)
-            {
-                return true;
-            }
-            return false;
+            return distance <= 15f;
         }
 
-        public void UpdateHologramContent(GameObject self)
+        void IHologramContentProvider.UpdateHologramContent(GameObject self)
         {
-            var hologram = self.GetComponent<PlainHologram.PlainHologramContent>();
-            if (hologram)
+            if (self && counter && self.TryGetComponent<PlainHologram.PlainHologramContent>(out var hologram))
             {
                 hologram.text = counter.useCount + (counter.useCount == 1 ? " use left" : " uses left");
                 hologram.color = Color.white;

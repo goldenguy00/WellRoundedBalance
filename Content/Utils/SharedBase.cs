@@ -11,7 +11,7 @@ namespace WellRoundedBalance.Utils
         public static ManualLogSource Logger => Main.WRBLogger;
         public abstract ConfigFile Config { get; }
 
-        public static List<string> initList = new();
+        public static List<string> initList = [];
 
         public abstract void Hooks();
 
@@ -37,25 +37,40 @@ namespace WellRoundedBalance.Utils
         public static string StackDesc(float init, float stack, Func<float, string> initFn, Func<float, string> stackFn)
         {
             if (init == 0 && stack == 0) return string.Empty;
-            string ret = initFn(init);
+            var ret = initFn(init);
             if (stack != 0) ret = ret.Replace("{Stack}", " <style=cStack>(" + (stack > 0 ? "+" : string.Empty) + stackFn(stack) + " per stack)</style>");
             else ret = ret.Replace("{Stack}", "");
             return ret;
         }
 
-        public static float StackAmount(float init, float stack, float count, float isHyperbolic = 0f)
+        public static float StackAmount(float init, float stack, float count)
         {
-            if (count <= 0) return 0;
-            float ret = init + (stack * (count - 1));
-            if (isHyperbolic != 0) ret = GetHyperbolic(init, isHyperbolic, ret);
+            if (count <= 0)
+                return 0;
+
+            return init + (stack * (count - 1));
+        }
+
+        public static float StackAmount(float init, float stack, float count, float isHyperbolic)
+        {
+            if (count <= 0)
+                return 0;
+            
+            var ret = init + (stack * (count - 1));
+            if (isHyperbolic != 0) 
+                return GetHyperbolic(init, isHyperbolic, ret);
+            
             return ret;
         }
 
         public static float GetHyperbolic(float firstStack, float cap, float chance) // Util.ConvertAmplificationPercentageIntoReductionPercentage but Better :zanysoup:
         {
-            if (firstStack >= cap) return cap * (chance / firstStack); // should not happen, but failsafe
-            float count = chance / firstStack;
-            float coeff = 100 * firstStack / (cap - firstStack); // should be good
+            if (firstStack >= cap)
+                return cap * (chance / firstStack); // should not happen, but failsafe
+
+            var count = chance / firstStack;
+            var coeff = 100 * firstStack / (cap - firstStack); // should be good
+
             return cap * (1 - (100 / ((count * coeff) + 100)));
         }
     }

@@ -16,7 +16,7 @@
 
         private void Changes()
         {
-            var barnacleBody = Utils.Paths.GameObject.VoidBarnacleBody9.Load<GameObject>().GetComponent<CharacterBody>();
+            var barnacleBody = Utils.Paths.GameObject.VoidBarnacleBody9.LoadComponent<CharacterBody>();
             barnacleBody.baseRegen = 0f;
             barnacleBody.levelRegen = 0f;
         }

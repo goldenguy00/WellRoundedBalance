@@ -41,7 +41,7 @@ namespace WellRoundedBalance.Items.Whites
         private void GlobalEventManager_OnCharacterDeath(ILContext il)
         {
             ILCursor c = new(il);
-            int idx = GetItemLoc(c, nameof(RoR2Content.Items.Tooth));
+            var idx = GetItemLoc(c, nameof(RoR2Content.Items.Tooth));
             if (c.TryGotoNext(x => x.MatchStloc(idx)))
             {
                 c.Emit(OpCodes.Pop);
@@ -59,7 +59,7 @@ namespace WellRoundedBalance.Items.Whites
             var stack = inventory.GetItemCount(RoR2Content.Items.Tooth);
             if (stack <= 0) return;
             var vector = damageReport.victim.transform.position;
-            float scale = Mathf.Pow(stack, 0.45f);
+            var scale = Mathf.Pow(stack, 0.45f);
             var monsterToothPrefab = Object.Instantiate(LegacyResourcesAPI.Load<GameObject>("Prefabs/NetworkedObjects/HealPack"), vector, Random.rotation);
             var teamFilter = monsterToothPrefab.GetComponent<TeamFilter>();
             if (teamFilter) teamFilter.teamIndex = damageReport.attackerBody.teamComponent.teamIndex;

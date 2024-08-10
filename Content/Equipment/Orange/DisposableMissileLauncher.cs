@@ -49,7 +49,7 @@ namespace WellRoundedBalance.Equipment.Orange
 
             var missilePrefab = dmlMissilePrefab;
             var damage = missileDamage;
-            bool flag = Util.CheckRoll(self.characterBody.crit, self.characterBody.master);
+            var flag = Util.CheckRoll(self.characterBody.crit, self.characterBody.master);
             MissileUtils.FireMissile(self.characterBody.corePosition, self.characterBody, default, null, self.characterBody.damage * damage, flag, missilePrefab, DamageColorIndex.Item, false);
         }
 

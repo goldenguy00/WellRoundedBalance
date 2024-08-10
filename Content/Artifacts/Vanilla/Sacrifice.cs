@@ -48,14 +48,14 @@ namespace WellRoundedBalance.Artifacts.Vanilla
                 );
             c.EmitDelegate<Func<float, float>>(orig =>
             {
-                float finalDropChance = orig;
+                var finalDropChance = orig;
 
                 if (orig > 0f)
                 {
-                    bool swarmsEnabled = RunArtifactManager.instance.IsArtifactEnabled(RoR2Content.Artifacts.swarmsArtifactDef);
+                    var swarmsEnabled = RunArtifactManager.instance.IsArtifactEnabled(RoR2Content.Artifacts.swarmsArtifactDef);
 
-                    float baseChance = baseDropChance;
-                    float maxChance = maxDropChance;
+                    var baseChance = baseDropChance;
+                    var maxChance = maxDropChance;
 
                     if (swarmsEnabled)
                     {

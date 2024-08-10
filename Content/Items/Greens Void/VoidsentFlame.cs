@@ -33,7 +33,7 @@ namespace WellRoundedBalance.Items.VoidGreens
         [ConfigField("Proc Coefficient", 0.25f)]
         public static float procCoefficient;
 
-        public static Dictionary<CharacterBody, List<CharacterBody>> db = new();
+        public static Dictionary<CharacterBody, List<CharacterBody>> db = [];
 
         public override void Init()
         {
@@ -51,8 +51,8 @@ namespace WellRoundedBalance.Items.VoidGreens
         private void HealthComponent_TakeDamage(ILContext il)
         {
             ILCursor c = new(il);
-            int stack = GetItemLoc(c, nameof(DLC1Content.Items.ExplodeOnDeathVoid));
-            int m = -1; c.TryGotoPrev(x => x.MatchLdloc(out m));
+            var stack = GetItemLoc(c, nameof(DLC1Content.Items.ExplodeOnDeathVoid));
+            var m = -1; c.TryGotoPrev(x => x.MatchLdloc(out m));
             if (c.TryGotoPrev(MoveType.After, x => x.MatchCallOrCallvirt<HealthComponent>("get_" + nameof(HealthComponent.fullCombinedHealth))))
             {
                 c.Emit(OpCodes.Ldloc, m); // master
@@ -61,11 +61,11 @@ namespace WellRoundedBalance.Items.VoidGreens
                 {
                     if (firstHit)
                     {
-                        CharacterBody from = master.GetBody();
-                        CharacterBody to = self.body;
+                        var from = master.GetBody();
+                        var to = self.body;
                         if (from && to)
                         {
-                            if (!db.ContainsKey(from)) db.Add(from, new());
+                            if (!db.ContainsKey(from)) db.Add(from, []);
                             if (db[from].Contains(to)) return float.MaxValue;
                             db[from].Add(to);
                             return 0;

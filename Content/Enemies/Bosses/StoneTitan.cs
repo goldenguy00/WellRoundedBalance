@@ -166,12 +166,12 @@ namespace WellRoundedBalance.Enemies.Bosses
             tit_damageCoefficient = tit.damageCoefficient;
             tit_damageForce = tit.damageForce;
 
-            var titanBody = Utils.Paths.GameObject.TitanBody13.Load<GameObject>().GetComponent<CharacterBody>();
+            var titanBody = Utils.Paths.GameObject.TitanBody13.LoadComponent<CharacterBody>();
             titanBody_baseDamage = titanBody.baseDamage;
             titanBody_levelDamage = titanBody.levelDamage;
 
-            GameObject master = Utils.Paths.GameObject.TitanMaster.Load<GameObject>();
-            BaseAI ai = master.GetComponent<BaseAI>();
+            var master = Utils.Paths.GameObject.TitanMaster.Load<GameObject>();
+            var ai = master.GetComponent<BaseAI>();
             ai_aimVectorMaxSpeed = ai.aimVectorMaxSpeed;
             ai_aimVectorDampTime = ai.aimVectorDampTime;
         }
@@ -190,7 +190,7 @@ namespace WellRoundedBalance.Enemies.Bosses
 
         private void CharacterMaster_onStartGlobal(CharacterMaster master)
         {
-            MasterCatalog.MasterIndex idx = master.masterIndex;
+            var idx = master.masterIndex;
             if (idx == titanMasterIndex || idx == aurellioniteMasterIndex)
             {
                 var ai = master.GetComponent<BaseAI>();
@@ -201,7 +201,7 @@ namespace WellRoundedBalance.Enemies.Bosses
 
         private void CharacterBody_onBodyStartGlobal(CharacterBody body)
         {
-            BodyIndex idx = body.bodyIndex;
+            var idx = body.bodyIndex;
             if (idx == titanIndex || idx == aurellioniteIndex)
             {
                 body.baseDamage = Check(idx, NEW_titanBody_baseDamage, titanBody_baseDamage);
@@ -213,7 +213,7 @@ namespace WellRoundedBalance.Enemies.Bosses
 
         private void TitanRockController_Start(On.RoR2.TitanRockController.orig_Start orig, TitanRockController self)
         {
-            BodyIndex idx = self.Networkowner.GetComponent<CharacterBody>().bodyIndex;
+            var idx = self.Networkowner.GetComponent<CharacterBody>().bodyIndex;
             if (idx == titanIndex || idx == aurellioniteIndex)
             {
                 self.GetComponent<DestroyOnTimer>().duration = Check(idx, NEW_destroyOnTimer_duration, destroyOnTimer_duration);
@@ -256,9 +256,9 @@ namespace WellRoundedBalance.Enemies.Bosses
                 EntityStates.TitanMonster.FireFist.fistDamageCoefficient = Check(self, NEW_FireFist_fistDamageCoefficient, FireFist_fistDamageCoefficient);
                 if (self.isAuthority && Check(self, true, false))
                 {
-                    for (int i = 1; i <= fistring_v; i++)
+                    for (var i = 1; i <= fistring_v; i++)
                     {
-                        for (int j = 0; j < fistring_h; j++)
+                        for (var j = 0; j < fistring_h; j++)
                         {
                             var fpi = new FireProjectileInfo
                             {
@@ -317,7 +317,7 @@ namespace WellRoundedBalance.Enemies.Bosses
         {
             base.OnEnter();
 
-            Transform muzzle = FindModelChild("MuzzleLaser");
+            var muzzle = FindModelChild("MuzzleLaser");
             laserInstance = Object.Instantiate(effect, muzzle.position, muzzle.rotation);
             laserInstance.transform.parent = muzzle;
             lr = laserInstance.GetComponent<LineRenderer>();
@@ -350,8 +350,8 @@ namespace WellRoundedBalance.Enemies.Bosses
 
             stopwatch += Time.fixedDeltaTime;
 
-            Ray aimRay = new Ray(base.inputBank.aimOrigin, targetDir);
-            float width = 1f - (stopwatch / (count > 0 ? delay : startDelay));
+            var aimRay = new Ray(base.inputBank.aimOrigin, targetDir);
+            var width = 1f - (stopwatch / (count > 0 ? delay : startDelay));
             width = Mathf.Max(width, 0.2f);
 
             lr.startWidth = width;

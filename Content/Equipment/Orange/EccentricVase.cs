@@ -42,7 +42,7 @@ namespace WellRoundedBalance.Equipment.Orange
         private void HoldoutZoneController_Awake(On.RoR2.HoldoutZoneController.orig_Awake orig, HoldoutZoneController self)
         {
             orig(self);
-            for (int i = 0; i < CharacterBody.readOnlyInstancesList.Count; i++)
+            for (var i = 0; i < CharacterBody.readOnlyInstancesList.Count; i++)
             {
                 var index = CharacterBody.readOnlyInstancesList[i];
                 if (index.teamComponent.teamIndex == TeamIndex.Player)

@@ -63,22 +63,22 @@ namespace WellRoundedBalance.Interactables
             stealthedChest.maxSpawnsPerStage = 2;
             stealthedChest.directorCreditCost = 1;
 
-            var smallDamage = Utils.Paths.GameObject.CategoryChestDamage.Load<GameObject>().GetComponent<PurchaseInteraction>();
+            var smallDamage = Utils.Paths.GameObject.CategoryChestDamage.LoadComponent<PurchaseInteraction>();
             smallDamage.cost = smallCategoryChestCost;
 
-            var smallHealing = Utils.Paths.GameObject.CategoryChestHealing.Load<GameObject>().GetComponent<PurchaseInteraction>();
+            var smallHealing = Utils.Paths.GameObject.CategoryChestHealing.LoadComponent<PurchaseInteraction>();
             smallHealing.cost = smallCategoryChestCost;
 
-            var smallUtility = Utils.Paths.GameObject.CategoryChestUtility.Load<GameObject>().GetComponent<PurchaseInteraction>();
+            var smallUtility = Utils.Paths.GameObject.CategoryChestUtility.LoadComponent<PurchaseInteraction>();
             smallUtility.cost = smallCategoryChestCost;
 
-            var largeDamage = Utils.Paths.GameObject.CategoryChest2DamageVariant.Load<GameObject>().GetComponent<PurchaseInteraction>();
+            var largeDamage = Utils.Paths.GameObject.CategoryChest2DamageVariant.LoadComponent<PurchaseInteraction>();
             largeDamage.cost = largeCategoryChestCost;
 
-            var largeHealing = Utils.Paths.GameObject.CategoryChest2HealingVariant.Load<GameObject>().GetComponent<PurchaseInteraction>();
+            var largeHealing = Utils.Paths.GameObject.CategoryChest2HealingVariant.LoadComponent<PurchaseInteraction>();
             largeHealing.cost = largeCategoryChestCost;
 
-            var largeUtility = Utils.Paths.GameObject.CategoryChest2UtilityVariant.Load<GameObject>().GetComponent<PurchaseInteraction>();
+            var largeUtility = Utils.Paths.GameObject.CategoryChest2UtilityVariant.LoadComponent<PurchaseInteraction>();
             largeUtility.cost = largeCategoryChestCost;
 
             var equipTrishop = Utils.Paths.InteractableSpawnCard.iscTripleShopEquipment.Load<InteractableSpawnCard>();

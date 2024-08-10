@@ -38,7 +38,7 @@ namespace WellRoundedBalance.Mechanics.VoidFields
         {
             orig(self);
             self.totalRoundsMax = 5;
-            for (int i = 0; i < 5 && i < self.playerRewardOrder.Length; i++)
+            for (var i = 0; i < 5 && i < self.playerRewardOrder.Length; i++)
             {
                 switch (i)
                 {

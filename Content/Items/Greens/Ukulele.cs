@@ -65,7 +65,7 @@ namespace WellRoundedBalance.Items.Greens
             c.Index = 0;
 
             if (c.TryGotoNext(MoveType.Before,
-                x => x.MatchCallOrCallvirt(typeof(Util).GetMethod("CheckRoll", new Type[] { typeof(float), typeof(CharacterMaster) })),
+                x => x.MatchCallOrCallvirt(typeof(Util).GetMethod("CheckRoll", [typeof(float), typeof(CharacterMaster)])),
                 x => x.MatchBrfalse(out _),
                 x => x.MatchLdcR4(0.8f)))
             {

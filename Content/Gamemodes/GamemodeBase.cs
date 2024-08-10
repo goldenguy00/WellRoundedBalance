@@ -5,7 +5,7 @@ namespace WellRoundedBalance.Gamemodes
     public abstract class GamemodeBase : SharedBase
     {
         public override ConfigFile Config => Main.WRBGamemodeConfig;
-        public static List<string> gamemodeList = new();
+        public static List<string> gamemodeList = [];
 
         public override void Init()
         {

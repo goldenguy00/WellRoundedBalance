@@ -47,12 +47,14 @@ namespace WellRoundedBalance.Items.Lunars
             ILCursor c = new(il);
             VariableDefinition definition = new(Main.WRBAssembly.MainModule.Import(typeof(GestureDelayTracker)));
             c.Body.Variables.Add(definition);
-            
+
             c.Index = 0;
             c.Emit(OpCodes.Ldarg_0);
-            c.EmitDelegate<Func<EquipmentIcon, GestureDelayTracker>>((slot) => {
-                if (slot.targetEquipmentSlot) {
-                    GestureDelayTracker tracker = slot.targetEquipmentSlot.GetComponent<GestureDelayTracker>();
+            c.EmitDelegate<Func<EquipmentIcon, GestureDelayTracker>>((slot) =>
+            {
+                if (slot.targetEquipmentSlot)
+                {
+                    var tracker = slot.targetEquipmentSlot.GetComponent<GestureDelayTracker>();
                     return tracker;
                 }
 
@@ -67,8 +69,10 @@ namespace WellRoundedBalance.Items.Lunars
             );
             c.Index--;
             c.Emit(OpCodes.Ldloc, definition.Index);
-            c.EmitDelegate<Func<int, GestureDelayTracker, int>>((input, tracker) => {
-                if (tracker) {
+            c.EmitDelegate<Func<int, GestureDelayTracker, int>>((input, tracker) =>
+            {
+                if (tracker)
+                {
                     return tracker.isEquipmentAllowed ? 1 : 0;
                 }
 
@@ -80,8 +84,10 @@ namespace WellRoundedBalance.Items.Lunars
             );
 
             c.Emit(OpCodes.Ldloc, definition.Index);
-            c.EmitDelegate<Func<bool, GestureDelayTracker, bool>>((input, tracker) => {
-                if (tracker) {
+            c.EmitDelegate<Func<bool, GestureDelayTracker, bool>>((input, tracker) =>
+            {
+                if (tracker)
+                {
                     return !tracker.isEquipmentAllowed;
                 }
 
@@ -94,23 +100,25 @@ namespace WellRoundedBalance.Items.Lunars
                 x => x.MatchLdarg(0)
             );
 
-            int index = c.Index;
+            var index = c.Index;
             c.GotoNext(MoveType.After, x => x.MatchBeq(out _));
-            ILLabel label = c.MarkLabel();
+            var label = c.MarkLabel();
 
             c.Index = index;
 
             c.Emit(OpCodes.Ldloc, definition.Index);
-            c.EmitDelegate<Func<GestureDelayTracker, bool>>((tracker) => {
-                if (tracker) {
+            c.EmitDelegate<Func<GestureDelayTracker, bool>>((tracker) =>
+            {
+                if (tracker)
+                {
                     return tracker.isEquipmentAllowed;
                 }
-                
+
                 return true;
             });
             c.Emit(OpCodes.Brfalse_S, label);
 
-            c.GotoNext(MoveType.Before, 
+            c.GotoNext(MoveType.Before,
                 x => x.MatchLdfld(typeof(EquipmentIcon.DisplayData), nameof(EquipmentIcon.DisplayData.cooldownValue)),
                 x => x.MatchLdcI4(1),
                 x => x.MatchLdcI4(out _)
@@ -118,8 +126,10 @@ namespace WellRoundedBalance.Items.Lunars
 
             c.Index++;
             c.Emit(OpCodes.Ldloc, definition.Index);
-            c.EmitDelegate<Func<int, GestureDelayTracker, int>>((input, tracker) => {
-                if (tracker) {
+            c.EmitDelegate<Func<int, GestureDelayTracker, int>>((input, tracker) =>
+            {
+                if (tracker)
+                {
                     return (int)tracker.stopwatch;
                 }
 
@@ -136,10 +146,12 @@ namespace WellRoundedBalance.Items.Lunars
             c.TryGotoNext(MoveType.Before, x => x.MatchStloc(1));
 
             c.Emit(OpCodes.Ldarg_0);
-            c.EmitDelegate<Func<byte, Inventory, byte>>((input, inv) => {
-                int c = inv.GetItemCount(RoR2Content.Items.AutoCastEquipment);
+            c.EmitDelegate<Func<byte, Inventory, byte>>((input, inv) =>
+            {
+                var c = inv.GetItemCount(RoR2Content.Items.AutoCastEquipment);
 
-                if (c > 0) {
+                if (c > 0)
+                {
                     input += (byte)(baseCharges + ((c - 1) * stackCharges));
                 }
 
@@ -152,10 +164,12 @@ namespace WellRoundedBalance.Items.Lunars
             );
 
             c.Emit(OpCodes.Ldarg_0);
-            c.EmitDelegate<Func<int, Inventory, int>>((input, inv) => {
-                int c = inv.GetItemCount(RoR2Content.Items.AutoCastEquipment);
+            c.EmitDelegate<Func<int, Inventory, int>>((input, inv) =>
+            {
+                var c = inv.GetItemCount(RoR2Content.Items.AutoCastEquipment);
 
-                if (c > 0) {
+                if (c > 0)
+                {
                     return 0;
                 }
 
@@ -172,8 +186,9 @@ namespace WellRoundedBalance.Items.Lunars
         {
             orig(self, newEquipmentIndex);
 
-            if (self.GetItemCount(RoR2Content.Items.AutoCastEquipment) > 0) {
-                int added = baseCharges + ((self.GetItemCount(RoR2Content.Items.AutoCastEquipment) - 1) * stackCharges);
+            if (self.GetItemCount(RoR2Content.Items.AutoCastEquipment) > 0)
+            {
+                var added = baseCharges + ((self.GetItemCount(RoR2Content.Items.AutoCastEquipment) - 1) * stackCharges);
                 self.RestockEquipmentCharges(self.activeEquipmentSlot, 1 + added);
             }
         }
@@ -182,7 +197,8 @@ namespace WellRoundedBalance.Items.Lunars
         {
             orig(self);
 
-            if (self.GetComponent<GestureDelayTracker>()) {
+            if (self.GetComponent<GestureDelayTracker>())
+            {
                 self.GetComponent<GestureDelayTracker>().didWeFire = true;
             }
         }
@@ -193,14 +209,17 @@ namespace WellRoundedBalance.Items.Lunars
 
             c.TryGotoNext(MoveType.After, x => x.MatchLdsfld(typeof(RoR2Content.Items), nameof(RoR2Content.Items.AutoCastEquipment)));
             c.Index++;
-            c.EmitDelegate<Func<int, int>>((inp) => {
+            c.EmitDelegate<Func<int, int>>((inp) =>
+            {
                 return 0;
             });
 
             c.TryGotoNext(MoveType.Before, x => x.MatchStloc(0));
             c.Emit(OpCodes.Ldarg_0);
-            c.EmitDelegate<Func<bool, EquipmentSlot, bool>>((input, self) => {
-                if (self.GetComponent<GestureDelayTracker>()) {
+            c.EmitDelegate<Func<bool, EquipmentSlot, bool>>((input, self) =>
+            {
+                if (self.GetComponent<GestureDelayTracker>())
+                {
                     return self.GetComponent<GestureDelayTracker>().isEquipmentAllowed && input;
                 }
 
@@ -212,10 +231,13 @@ namespace WellRoundedBalance.Items.Lunars
         {
             orig(self);
 
-            if (self.GetItemCount(RoR2Content.Items.AutoCastEquipment) > 0) {
-                if (self.GetEquipment(self.activeEquipmentSlot).equipmentDef && self.GetEquipment(self.activeEquipmentSlot).charges <= 0) {
+            if (self.GetItemCount(RoR2Content.Items.AutoCastEquipment) > 0)
+            {
+                if (self.GetEquipment(self.activeEquipmentSlot).equipmentDef && self.GetEquipment(self.activeEquipmentSlot).charges <= 0)
+                {
                     self.SetEquipmentIndex(EquipmentIndex.None);
-                    if (!self.GetComponent<CharacterMaster>().bodyInstanceObject) {
+                    if (!self.GetComponent<CharacterMaster>().bodyInstanceObject)
+                    {
                         return;
                     }
                     AkSoundEngine.PostEvent(Events.Play_env_vase_shatter, self.GetComponent<CharacterMaster>().bodyInstanceObject);
@@ -226,10 +248,11 @@ namespace WellRoundedBalance.Items.Lunars
 
         private int AddCharges(On.RoR2.Inventory.orig_GetEquipmentSlotMaxCharges orig, Inventory self, byte slot)
         {
-            int c = orig(self, slot);
+            var c = orig(self, slot);
 
-            if (self.GetItemCount(RoR2Content.Items.AutoCastEquipment) > 0) {
-                int added = baseCharges + ((self.GetItemCount(RoR2Content.Items.AutoCastEquipment) - 1) * stackCharges);
+            if (self.GetItemCount(RoR2Content.Items.AutoCastEquipment) > 0)
+            {
+                var added = baseCharges + ((self.GetItemCount(RoR2Content.Items.AutoCastEquipment) - 1) * stackCharges);
 
                 return c + added;
             }
@@ -239,7 +262,8 @@ namespace WellRoundedBalance.Items.Lunars
 
         private float Inventory_CalculateEquipmentCooldownScale(On.RoR2.Inventory.orig_CalculateEquipmentCooldownScale orig, Inventory self)
         {
-            if (self.GetItemCount(RoR2Content.Items.AutoCastEquipment) > 0) {
+            if (self.GetItemCount(RoR2Content.Items.AutoCastEquipment) > 0)
+            {
                 return 0f;
             }
 
@@ -250,52 +274,61 @@ namespace WellRoundedBalance.Items.Lunars
         {
             orig(self);
 
-            if (!self.inventory) {
+            if (!self.inventory)
+            {
                 return;
             }
 
-            int gestures = self.inventory.GetItemCount(RoR2Content.Items.AutoCastEquipment);
-            
-            GestureDelayTracker gestureDelayTracker = self.GetComponent<GestureDelayTracker>();
+            var gestures = self.inventory.GetItemCount(RoR2Content.Items.AutoCastEquipment);
 
-            if (gestures > 0 && !gestureDelayTracker) {
+            var gestureDelayTracker = self.GetComponent<GestureDelayTracker>();
+
+            if (gestures > 0 && !gestureDelayTracker)
+            {
                 gestureDelayTracker = self.gameObject.AddComponent<GestureDelayTracker>();
-                int added = baseCharges + ((self.inventory.GetItemCount(RoR2Content.Items.AutoCastEquipment) - 1) * stackCharges);
+                var added = baseCharges + ((self.inventory.GetItemCount(RoR2Content.Items.AutoCastEquipment) - 1) * stackCharges);
                 self.inventory.RestockEquipmentCharges(self.inventory.activeEquipmentSlot, 1 + added);
             }
 
-            if (gestures <= 0 && gestureDelayTracker) {
+            if (gestures <= 0 && gestureDelayTracker)
+            {
                 GameObject.Destroy(gestureDelayTracker);
                 return;
             }
 
             if (!gestureDelayTracker) return;
 
-            EquipmentDef def = EquipmentCatalog.GetEquipmentDef(self.inventory.GetEquipmentIndex());
+            var def = EquipmentCatalog.GetEquipmentDef(self.inventory.GetEquipmentIndex());
 
-            if (!def) {
+            if (!def)
+            {
                 gestureDelayTracker.stopwatch = 0f;
                 return;
             }
 
-            float scale = 1f * (baseCd * Mathf.Pow(stackCd, gestures - 1));
+            var scale = 1f * (baseCd * Mathf.Pow(stackCd, gestures - 1));
             gestureDelayTracker.delay = def.cooldown * scale;
         }
 
-        private class GestureDelayTracker : MonoBehaviour {
+        private class GestureDelayTracker : MonoBehaviour
+        {
             public float stopwatch;
             public float delay;
             public bool isEquipmentAllowed => stopwatch <= 0f;
             public bool didWeFire = false;
-            public void FixedUpdate() {
-                if (stopwatch < 0f) {
+            public void FixedUpdate()
+            {
+                if (stopwatch < 0f)
+                {
                     stopwatch = 0f;
                 }
-                else {
+                else
+                {
                     stopwatch -= Time.fixedDeltaTime;
                 }
 
-                if (didWeFire) {
+                if (didWeFire)
+                {
                     stopwatch = delay;
                     didWeFire = false;
                 }

@@ -50,7 +50,7 @@ namespace WellRoundedBalance.Items.Whites
         public static void GlobalEventManager_OnInteractionBegin(ILContext il)
         {
             ILCursor c = new(il);
-            int idx = GetItemLoc(c, nameof(RoR2Content.Items.Firework));
+            var idx = GetItemLoc(c, nameof(RoR2Content.Items.Firework));
             if (idx != -1 && c.TryGotoNext(x => x.MatchStfld<FireworkLauncher>(nameof(FireworkLauncher.remaining))))
             {
                 c.Emit(OpCodes.Pop);

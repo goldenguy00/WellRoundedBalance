@@ -1,7 +1,6 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using HarmonyLib;
-using RiftTitansMod.SkillStates.Blue;
-using RiftTitansMod.SkillStates.Chicken;
 using WellRoundedBalance.Gamemodes.Eclipse;
 using SYS = System.Reflection.Emit;
 
@@ -13,29 +12,46 @@ namespace WellRoundedBalance.Misc
         public static void Init()
         {
             harm = new Harmony(Main.PluginGUID);
-
             if (Main.LeagueOfLiteralGaysLoadeded)
             {
-                harm.CreateClassProcessor(typeof(RiftPatches)).Patch();
-                harm.CreateClassProcessor(typeof(RiftFlinch)).Patch();
+                PatchLoLEnemies();
             }
+        }
 
-            //if (Main.PieceOfShitLoadedElectricBoogaloo)
-                //harm.CreateClassProcessor(typeof(MSUFix)).Patch();
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        private static void PatchLoLEnemies()
+        {
+            harm.CreateClassProcessor(typeof(RiftPatches)).Patch();
+            harm.CreateClassProcessor(typeof(RiftFlinch)).Patch();
+
+            var reksaiCard = RiftTitansMod.RiftTitansPlugin.ReksaiCard.Card;
+            reksaiCard.spawnCard.directorCreditCost = 600;
+            var master = reksaiCard.spawnCard.prefab.GetComponent<CharacterMaster>();
+            var aiList = master.GetComponents<AISkillDriver>();
+            foreach (var ai in aiList)
+            {
+                switch (ai.customName)
+                {
+                    case "Special":
+                        break;
+                    case "Seeker":
+                        break;
+                    case "ChaseHard":
+                        ai.shouldSprint = false;
+                        break;
+                    case "Attack":
+                        ai.driverUpdateTimerOverride = 0.5f;
+                        ai.nextHighPriorityOverride = aiList.Last();
+                        break;
+                    case "Chase":
+                        break;
+                }
+            }
+            master.bodyPrefab.GetComponent<CharacterBody>().baseMoveSpeed = 10;
         }
     }
 
-    // on principle i will not put a pr out to fix this. nah.
-    // also on principle i will add this hook to every mod i touch from now on
-    // i dont fucking care. not even gonna import this.
-    [HarmonyPatch("Moonstorm.BuffModuleBase", "OnBuffsChanged")]
-    public class MSUFix
-    {
-        [HarmonyFinalizer]
-        private static Exception Finalizer() => null;
-    }
-
-    [HarmonyPatch(typeof(Shoot), nameof(Shoot.Fire))]
+    [HarmonyPatch(typeof(RiftTitansMod.SkillStates.Chicken.Shoot), nameof(RiftTitansMod.SkillStates.Chicken.Shoot.Fire))]
     public class RiftPatches
     {
         [HarmonyTranspiler]
@@ -56,7 +72,7 @@ namespace WellRoundedBalance.Misc
         }
     }
 
-    [HarmonyPatch(typeof(Slam), nameof(Slam.GetMinimumInterruptPriority))]
+    [HarmonyPatch(typeof(RiftTitansMod.SkillStates.Blue.Slam), nameof(RiftTitansMod.SkillStates.Blue.Slam.GetMinimumInterruptPriority))]
     public class RiftFlinch
     {
         [HarmonyPostfix]

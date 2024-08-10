@@ -34,14 +34,14 @@ namespace WellRoundedBalance.Items.Greens
         private void StrengthenBurnUtils_CheckDotForUpgrade1(On.RoR2.StrengthenBurnUtils.orig_CheckDotForUpgrade orig, Inventory inventory, ref InflictDotInfo dotInfo)
         {
             // sorry but WHY IS THERE AN INT AAAA
-            if (dotInfo.dotIndex == DotController.DotIndex.Burn || dotInfo.dotIndex == DotController.DotIndex.Helfire)
+            if (dotInfo.dotIndex is DotController.DotIndex.Burn or DotController.DotIndex.Helfire)
             {
-                int itemCount = inventory.GetItemCount(DLC1Content.Items.StrengthenBurn);
+                var itemCount = inventory.GetItemCount(DLC1Content.Items.StrengthenBurn);
                 if (itemCount > 0)
                 {
                     dotInfo.preUpgradeDotIndex = new DotController.DotIndex?(dotInfo.dotIndex);
                     dotInfo.dotIndex = DotController.DotIndex.StrongerBurn;
-                    float increase = 1f + igniteDamageIncrease * itemCount;
+                    var increase = 1f + igniteDamageIncrease * itemCount;
                     dotInfo.damageMultiplier *= increase;
                     dotInfo.totalDamage *= increase;
                 }

@@ -106,8 +106,8 @@ namespace WellRoundedBalance.Items.VoidGreens
                             radialForce.radius = baseRadius + radiusPerStack * (stack - 1);
                             projectileExplosion.blastRadius = baseRadius + radiusPerStack * (stack - 1);
 
-                            float damage = baseTotalDamage + totalDamagePerStack * (stack - 1);
-                            float totalDamage = Util.OnHitProcDamage(damageReport.damageInfo.damage, body.damage, damage);
+                            var damage = baseTotalDamage + totalDamagePerStack * (stack - 1);
+                            var totalDamage = Util.OnHitProcDamage(damageReport.damageInfo.damage, body.damage, damage);
 
                             ProjectileManager.instance.FireProjectile(new FireProjectileInfo
                             {
