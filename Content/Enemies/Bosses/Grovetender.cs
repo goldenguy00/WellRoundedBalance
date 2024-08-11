@@ -19,11 +19,8 @@
             Changes();
         }
 
-        public static GameObject hookPrefab = Utils.Paths.GameObject.GravekeeperHookProjectile.Load<GameObject>();
-
         private void FireHook_OnEnter(On.EntityStates.GravekeeperBoss.FireHook.orig_OnEnter orig, EntityStates.GravekeeperBoss.FireHook self)
         {
-            EntityStates.GravekeeperBoss.FireHook.projectilePrefab = hookPrefab;
             EntityStates.GravekeeperBoss.FireHook.projectileForce = -500f;
             EntityStates.GravekeeperBoss.FireHook.projectileDamageCoefficient = 0.35f;
             orig(self);
@@ -50,6 +47,7 @@
             wisp.baseMaxHealth = 35f;
             wisp.levelMaxHealth = 10.5f;
 
+            var hookPrefab = Utils.Paths.GameObject.GravekeeperHookProjectile.Load<GameObject>();
             var hookProjectileImpact = hookPrefab.GetComponent<HookProjectileImpact>();
             hookProjectileImpact.pullMinimumDistance = 20f;
             hookProjectileImpact.liveTimer = 0.3f;

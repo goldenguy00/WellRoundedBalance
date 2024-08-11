@@ -16,12 +16,14 @@ namespace WellRoundedBalance.Items.ConsistentCategories
 
         // also changes AI blacklist to accomodate for item changes
 
-        public static ConfigEntry<bool> enable { get; set; }
         public static ItemTag defenseTag = (ItemTag)(-1);
 
         [SystemInitializer(typeof(ItemCatalog))]
         private static void BetterAIBlacklist()
         {
+            if (!Main.enableItemCategories.Value)
+                return;
+
             Main.WRBLogger.LogDebug("Calling BetterAIBlacklist init");
             foreach (var itemDef in ItemCatalog.itemDefs)
             {
@@ -44,6 +46,9 @@ namespace WellRoundedBalance.Items.ConsistentCategories
 
         public static void Init()
         {
+            if (!Main.enableItemCategories.Value)
+                return;
+
             defenseTag = ItemAPI.AddItemTag("Defense");
 
             // general changes

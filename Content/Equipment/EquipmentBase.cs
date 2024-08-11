@@ -3,6 +3,20 @@ using System;
 
 namespace WellRoundedBalance.Equipment
 {
+    public abstract class EquipmentBase<T> : EquipmentBase where T : EquipmentBase<T>
+    {
+        public static T instance { get; set; }
+
+        public EquipmentBase()
+        {
+            if (instance != null)
+            {
+                throw new InvalidOperationException("Singleton class " + typeof(T).Name + " was instantiated twice");
+            }
+            instance = this as T;
+        }
+    }
+
     public abstract class EquipmentBase : SharedBase
     {
         public virtual EquipmentDef InternalPickup { get; }
@@ -12,18 +26,15 @@ namespace WellRoundedBalance.Equipment
 
         public static event Action onTokenRegister;
 
-        public static List<string> equipmentList = [];
 
         public override void Init()
         {
             base.Init();
             onTokenRegister += SetToken;
-            equipmentList.Add(Name);
         }
 
         [SystemInitializer(typeof(EquipmentCatalog))]
-        public static void OnEquipmentInitialized()
-        { if (onTokenRegister != null) onTokenRegister(); }
+        public static void OnEquipmentInitialized() => onTokenRegister?.Invoke();
 
         public void SetToken()
         {

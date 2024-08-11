@@ -8,6 +8,7 @@ using MonoMod.RuntimeDetour;
 using HarmonyLib;
 using WellRoundedBalance.Items.ConsistentCategories;
 using Mono.Cecil;
+using System.Collections;
 
 [assembly: HG.Reflection.SearchableAttribute.OptIn]
 
@@ -64,6 +65,7 @@ namespace WellRoundedBalance
         public static ConfigEntry<bool> enableItems { get; set; }
         public static ConfigEntry<bool> enableMechanics { get; set; }
         public static ConfigEntry<bool> enableSurvivors { get; set; }
+        public static ConfigEntry<bool> enableItemCategories { get; set; }
 
         public static AssetBundle wellroundedbalance;
 
@@ -106,14 +108,15 @@ namespace WellRoundedBalance
             WRBModuleConfig = new ConfigFile(Paths.ConfigPath + "\\BALLS.WellRoundedBalance.Modules.cfg", true);
             WRBSurvivorConfig = new ConfigFile(Paths.ConfigPath + "\\BALLS.WellRoundedBalance.Survivors.cfg", true);
 
-            BetterItemCategories.enable = WRBItemConfig.Bind(":: Items : Changes :: Better Item Categories", "Enable item category changes?", true);
+            enableItemCategories = WRBItemConfig.Bind(":: Items : Changes :: Better Item Categories", "Enable item category changes?", true);
 
             enableAchievements = WRBModuleConfig.Bind(":: Module Toggles ::", "Enable Achievement changes?", true, "Disabling this could cause achievements to get locked again, if the unlockable method changed or got more difficult.");
             enableAllies = WRBModuleConfig.Bind(":: Module Toggles ::", "Enable Ally changes?", true);
             enableArtifactAdds = WRBModuleConfig.Bind(":: Module Toggles ::", "Enable New Artifacts?", true);
             enableArtifactEdits = WRBModuleConfig.Bind(":: Module Toggles ::", "Enable Artifact changes?", true);
             enableDifficulties = WRBModuleConfig.Bind(":: Module Toggles ::", "Enable Difficulty changes?", true);
-            enableElites = WRBModuleConfig.Bind(":: Module Toggles ::", "Enable Elite changes?", true, "Disabling this will cause the Eclipse 3 modifier to not function, as it's impossible not to hardcode it, and I'm not hardcoding even more effects for vanilla elites which I dislike. The same goes for disabling individual elites - their particular \"stronger in unique ways\" modifier will not work on Eclipse 3 or above.");
+            enableElites = WRBModuleConfig.Bind(":: Module Toggles ::", "Enable Elite changes?", true, "Disabling this will cause the Eclipse 3 modifier to not function, as it's impossible not to hardcode it, " +
+                "and I'm not hardcoding even more effects for vanilla elites which I dislike. The same goes for disabling individual elites - their particular \"stronger in unique ways\" modifier will not work on Eclipse 3 or above.");
 
             enableEnemies = WRBModuleConfig.Bind(":: Module Toggles ::", "Enable Enemy changes?", true);
             enableEquipment = WRBModuleConfig.Bind(":: Module Toggles ::", "Enable Equipment changes?", true);
@@ -151,6 +154,10 @@ namespace WellRoundedBalance
             WildbookMultitudesLoaded = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("dev.wildbook.multitudes");
             LeagueOfLiteralGaysLoadeded = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("com.phreel.TitansOfTheRiftSOTV");
 
+            if (InfernoLoaded)
+                InfernoIndex = GetInfernoDef();
+            Misc.HarmonyHooks.Init();
+
             Initialize.Init();
 
             //var balls = WRBMiscConfig.Bind("Annoying Pop Up", "Set to Fuck Off to disable", "", "Disables the mf config changed message").Value;
@@ -175,9 +182,6 @@ namespace WellRoundedBalance
                 On.RoR2.PickupPickerController.OnDisplayBegin += (orig, self, net, user, cam) => orig(self, net, user, cam);
             }*/
 
-            if (InfernoLoaded)
-                InfernoIndex = GetInfernoDef();
-            Misc.HarmonyHooks.Init();
         }
 /*
         private void BaseMainMenuScreen_OnEnter(On.RoR2.UI.MainMenu.BaseMainMenuScreen.orig_OnEnter orig, RoR2.UI.MainMenu.BaseMainMenuScreen self, RoR2.UI.MainMenu.MainMenuController mainMenuController)
@@ -211,7 +215,7 @@ namespace WellRoundedBalance
             return Inferno.Main.InfernoDiffIndex;
         }
 
-        //[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         public static bool IsInfernoDef() => InfernoLoaded && Run.instance?.selectedDifficulty == InfernoIndex;
             /*
         {

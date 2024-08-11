@@ -17,6 +17,8 @@ namespace WellRoundedBalance.Difficulties
         [ConfigField("Total Difficulty Scaling", "", 133f)]
         public static float totalDifficultyScaling;
 
+        public override float scaling => totalDifficultyScaling;
+
         public override void Init()
         {
             base.Init();
@@ -25,7 +27,6 @@ namespace WellRoundedBalance.Difficulties
         public override void Hooks()
         {
             IL.RoR2.CharacterBody.RecalculateStats += CharacterBody_RecalculateStats;
-            Changes();
         }
 
         private void CharacterBody_RecalculateStats(ILContext il)
@@ -43,13 +44,6 @@ namespace WellRoundedBalance.Difficulties
             {
                 Logger.LogError("Failed to apply Drizzle Regen hook");
             }
-        }
-
-        private void Changes()
-        {
-            var def = DifficultyCatalog.GetDifficultyDef(InternalDiff);
-            if (def != null)
-                def.scalingValue = totalDifficultyScaling / 50f;
         }
     }
 }

@@ -11,10 +11,6 @@ namespace WellRoundedBalance.Artifacts.Vanilla
         [ConfigField("Item Count", "", 2)]
         public static int itemCount;
 
-        public static BasicPickupDropTable tier1 = Utils.Paths.BasicPickupDropTable.dtMonsterTeamTier1Item.Load<BasicPickupDropTable>();
-        public static BasicPickupDropTable tier2 = Utils.Paths.BasicPickupDropTable.dtMonsterTeamTier2Item.Load<BasicPickupDropTable>();
-        public static BasicPickupDropTable tier3 = Utils.Paths.BasicPickupDropTable.dtMonsterTeamTier3Item.Load<BasicPickupDropTable>();
-
         public override void Init()
         {
             base.Init();

@@ -11,21 +11,13 @@
         [ConfigField("Total Difficulty Scaling", "", 100f)]
         public static float totalDifficultyScaling;
 
+        public override float scaling => totalDifficultyScaling;
+
         public override void Init()
         {
             base.Init();
         }
 
-        public override void Hooks()
-        {
-            Changes();
-        }
-
-        private void Changes()
-        {
-            var def = DifficultyCatalog.GetDifficultyDef(InternalDiff);
-            if (def != null)
-                def.scalingValue = totalDifficultyScaling / 50f;
-        }
+        public override void Hooks() { }
     }
 }

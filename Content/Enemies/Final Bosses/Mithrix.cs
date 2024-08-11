@@ -98,12 +98,12 @@ namespace WellRoundedBalance.Enemies.FinalBosses
 
         public static BuffDef speedBuff;
 
-        public static SpawnCard mithrixGlass = LegacyResourcesAPI.Load<SpawnCard>("SpawnCards/CharacterSpawnCards/cscBrotherGlass");
+        public static SpawnCard mithrixGlass;
 
-        public static CharacterBody stationaryBody = Utils.Paths.GameObject.EngiTurretBody.LoadComponent<CharacterBody>();
-        public static CharacterBody walkerBody = Utils.Paths.GameObject.EngiWalkerTurretBody.LoadComponent<CharacterBody>();
-        public static CharacterMaster stationaryMaster = Utils.Paths.GameObject.EngiTurretMaster.LoadComponent<CharacterMaster>();
-        public static CharacterMaster walkerMaster = Utils.Paths.GameObject.EngiWalkerTurretMaster.LoadComponent<CharacterMaster>();
+        public static CharacterBody stationaryBody;
+        public static CharacterBody walkerBody;
+        public static CharacterMaster stationaryMaster;
+        public static CharacterMaster walkerMaster;
 
         public override string Name => ":::: Final Bosses :: Mithrix";
 
@@ -117,7 +117,14 @@ namespace WellRoundedBalance.Enemies.FinalBosses
             speedBuff.canStack = false;
 
             ContentAddition.AddBuffDef(speedBuff);
-        }
+            mithrixGlass = LegacyResourcesAPI.Load<SpawnCard>("SpawnCards/CharacterSpawnCards/cscBrotherGlass");
+
+
+        stationaryBody = Utils.Paths.GameObject.EngiTurretBody.LoadComponent<CharacterBody>();
+        walkerBody = Utils.Paths.GameObject.EngiWalkerTurretBody.LoadComponent<CharacterBody>();
+        stationaryMaster = Utils.Paths.GameObject.EngiTurretMaster.LoadComponent<CharacterMaster>();
+        walkerMaster = Utils.Paths.GameObject.EngiWalkerTurretMaster.LoadComponent<CharacterMaster>();
+    }
 
         public override void Hooks()
         {

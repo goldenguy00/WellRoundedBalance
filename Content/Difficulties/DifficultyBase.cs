@@ -3,33 +3,52 @@ using System;
 
 namespace WellRoundedBalance.Difficulties
 {
+    public abstract class DifficultyBase<T> : DifficultyBase where T : DifficultyBase<T>
+    {
+        public static T instance { get; private set; }
+
+        public DifficultyBase()
+        {
+            if (instance != null)
+            {
+                throw new InvalidOperationException("Singleton class " + typeof(T).Name + " was instantiated twice");
+            }
+            instance = this as T;
+        }
+    }
+
     public abstract class DifficultyBase : SharedBase
     {
         public override ConfigFile Config => Main.WRBDifficultyConfig;
-        public abstract DifficultyIndex InternalDiff { get; }
+        public virtual DifficultyIndex InternalDiff => DifficultyIndex.Invalid;
+        public abstract float scaling { get; }
         public abstract string DescText { get; }
 
-        public static event Action onTokenRegister;
+        public static event Action OnInit;
 
         public static List<string> difficultyList = [];
 
         public override void Init()
         {
             base.Init();
-            SetToken();
+            OnInit += HandleInit;
             difficultyList.Add(Name);
         }
 
         [SystemInitializer(typeof(DifficultyCatalog))]
-        public static void OnDifficultyInitialized()
-        { if (onTokenRegister != null) onTokenRegister(); }
+        public static void OnDifficultyInitialized() => OnInit?.Invoke();
 
-        public void SetToken()
+        public void HandleInit()
         {
-            if (InternalDiff == DifficultyIndex.Invalid) return;
+            if (InternalDiff == DifficultyIndex.Invalid)
+                return;
+
             var def = DifficultyCatalog.GetDifficultyDef(InternalDiff);
-            def.descriptionToken += "_WRB";
-            if (def != null) LanguageAPI.Add(def.descriptionToken, DescText);
+            if (def != null)
+            {
+                def.scalingValue = scaling / 50f;
+                LanguageAPI.Add(def.descriptionToken + "_WRB", DescText);
+            }
         }
     }
 }

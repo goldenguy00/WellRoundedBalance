@@ -1,11 +1,22 @@
 ﻿using BepInEx.Configuration;
-using RiskOfOptions;
-using RiskOfOptions.Options;
 using System;
-using MonoMod.Cil;
 
 namespace WellRoundedBalance.Items
 {
+    public abstract class ItemBase<T> : ItemBase where T : ItemBase<T>
+    {
+        public static T instance { get; set; }
+
+        public ItemBase()
+        {
+            if (instance != null)
+            {
+                throw new InvalidOperationException("Singleton class " + typeof(T).Name + " was instantiated twice");
+            }
+            instance = this as T;
+        }
+    }
+
     public abstract class ItemBase : SharedBase
     {
         public virtual ItemDef InternalPickup { get; }
@@ -15,10 +26,6 @@ namespace WellRoundedBalance.Items
 
         public static event Action onTokenRegister;
 
-        public static List<string> itemList = [];
-
-
-
         public static int GetItemLoc(ILCursor c, string item) // modify this on compat update
         {
             var ret = -1;
@@ -27,26 +34,14 @@ namespace WellRoundedBalance.Items
             return ret;
         }
 
-        public T ConfigOption<T>(T value, string name, string desc)
-        {
-            var entry = Main.WRBConfig.Bind(Name, name, value, desc);
-            if (typeof(T) == typeof(int)) ModSettingsManager.AddOption(new IntSliderOption(entry as ConfigEntry<int>));
-            else if (typeof(T) == typeof(float)) ModSettingsManager.AddOption(new SliderOption(entry as ConfigEntry<float>));
-            else if (typeof(T) == typeof(string)) ModSettingsManager.AddOption(new StringInputFieldOption(entry as ConfigEntry<string>));
-            else if (typeof(T) == typeof(Enum)) ModSettingsManager.AddOption(new ChoiceOption(entry));
-            return entry.Value;
-        }
-
         public override void Init()
         {
             base.Init();
             onTokenRegister += SetToken;
-            itemList.Add(Name);
         }
 
         [SystemInitializer(typeof(ItemCatalog))]
-        public static void OnItemInitialized()
-        { if (onTokenRegister != null) onTokenRegister(); }
+        public static void OnItemInitialized() => onTokenRegister?.Invoke();
 
         public void SetToken()
         {

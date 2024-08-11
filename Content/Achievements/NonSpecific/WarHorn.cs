@@ -12,10 +12,11 @@ namespace WellRoundedBalance.Achievements.NonSpecific
 
         public override void Hooks()
         {
-            RoR2.AchievementManager.availability.CallWhenAvailable(MultiCombatShrineServerAchievement_Check);
+            
         }
 
-        private void MultiCombatShrineServerAchievement_Check()
+        [SystemInitializer(typeof(AchievementManager))]
+        private static void MultiCombatShrineServerAchievement_Check()
         {
             MultiCombatShrineAchievement.MultiCombatShrineServerAchievement.requirement = 2;
         }

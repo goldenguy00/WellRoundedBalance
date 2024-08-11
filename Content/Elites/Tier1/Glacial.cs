@@ -1,10 +1,5 @@
-﻿using System.ComponentModel;
-using System;
-using RoR2.Navigation;
+﻿using System;
 using WellRoundedBalance.Buffs;
-using System.Collections;
-using WellRoundedBalance.Gamemodes.Eclipse;
-using EntityStates;
 
 namespace WellRoundedBalance.Elites.Tier1
 {
@@ -15,11 +10,12 @@ namespace WellRoundedBalance.Elites.Tier1
         public override string Name => ":: Elites : Glacial";
         public static GameObject IcePillarPrefab;
         public static GameObject IcePillarWalkerPrefab;
-        public static GameObject DeathVFX = Utils.Paths.GameObject.OmniImpactVFXFrozen.Load<GameObject>();
+        public static GameObject DeathVFX;
 
         public override void Init()
         {
             iceExplosionPrefab = Utils.Paths.GameObject.AffixWhiteExplosion.Load<GameObject>();
+            DeathVFX = Utils.Paths.GameObject.OmniImpactVFXFrozen.Load<GameObject>();
 
             var slow80 = Utils.Paths.Texture2D.texBuffSlow50Icon.Load<Texture2D>();
 

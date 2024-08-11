@@ -21,7 +21,7 @@ namespace WellRoundedBalance.Interactables
 
         public static Dictionary<GameObject, int> uses;
 
-        public static InteractableSpawnCard scrapper = Utils.Paths.InteractableSpawnCard.iscScrapper.Load<InteractableSpawnCard>();
+        public static InteractableSpawnCard scrapper;
 
         public override void Init()
         {
@@ -30,6 +30,7 @@ namespace WellRoundedBalance.Interactables
 
         public override void Hooks()
         {
+            Scrapper.scrapper = Utils.Paths.InteractableSpawnCard.iscScrapper.Load<InteractableSpawnCard>();
             var scrapper = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/Scrapper/iscScrapper.asset").WaitForCompletion();
             scrapper.maxSpawnsPerStage = maxSpawnsPerStage;
             scrapper.directorCreditCost = 0;

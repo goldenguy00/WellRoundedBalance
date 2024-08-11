@@ -7,7 +7,7 @@ namespace WellRoundedBalance.Utils
     public abstract class SharedBase
     {
         public abstract string Name { get; }
-        public virtual bool isEnabled { get; } = true;
+        public virtual bool isEnabled { get; set; } = true;
         public static ManualLogSource Logger => Main.WRBLogger;
         public abstract ConfigFile Config { get; }
 
@@ -17,9 +17,9 @@ namespace WellRoundedBalance.Utils
 
         public virtual void Init()
         {
-            ConfigManager.HandleConfigAttributes(GetType(), Name, Config);
+            //ConfigManager.HandleConfigAttributes(GetType(), Name, Config);
             Hooks();
-            // Main.WRBLogger.LogDebug("Initialized " + Name);
+            //Main.WRBLogger.LogWarning("Initialized " + Name);
             initList.Add(Name);
         }
 

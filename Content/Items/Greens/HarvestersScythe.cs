@@ -40,12 +40,13 @@ namespace WellRoundedBalance.Items.Greens
         public static BuffDef scytheCooldown;
         public static BuffDef scytheCrit;
 
-        public static NetworkSoundEventDef scytheSound = Addressables.LoadAssetAsync<NetworkSoundEventDef>("RoR2/Base/Bandit2/nseBandit2ShivHit.asset").WaitForCompletion();
+        public static NetworkSoundEventDef scytheSound;
 
         public static GameObject effect;
 
         public override void Init()
         {
+            scytheSound = Addressables.LoadAssetAsync<NetworkSoundEventDef>("RoR2/Base/Bandit2/nseBandit2ShivHit.asset").WaitForCompletion();
             scytheCooldown = ScriptableObject.CreateInstance<BuffDef>();
             scytheCooldown.isCooldown = true;
             scytheCooldown.isDebuff = false;

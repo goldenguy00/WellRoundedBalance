@@ -31,8 +31,6 @@ namespace WellRoundedBalance.Mechanics.VoidFields
             }
         }
 
-        public static SpawnCard tp = Utils.Paths.InteractableSpawnCard.iscLunarTeleporter.Load<InteractableSpawnCard>();
-
         private void SceneDirector_onPrePopulateSceneServer(SceneDirector sd)
         {
             /*
@@ -49,7 +47,7 @@ namespace WellRoundedBalance.Mechanics.VoidFields
             */
             if (Run.instance & Run.instance.loopClearCount > 0 & sd.teleporterSpawnCard)
             {
-                sd.teleporterSpawnCard = tp;
+                sd.teleporterSpawnCard = Utils.Paths.InteractableSpawnCard.iscLunarTeleporter.Load<InteractableSpawnCard>();
             }
         }
 

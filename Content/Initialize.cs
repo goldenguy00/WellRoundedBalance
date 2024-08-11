@@ -2,14 +2,20 @@
 using Mono.Cecil.Cil;
 using Newtonsoft.Json.Utilities;
 using R2API.MiscHelpers;
+using R2API.Utils;
 using RoR2;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Unity.Collections;
 using Unity.Jobs;
+using UnityEngine.Networking.Match;
+using UnityEngine.ResourceManagement.AsyncOperations;
 using WellRoundedBalance.Achievements;
 using WellRoundedBalance.Allies;
 using WellRoundedBalance.Artifacts.New;
@@ -34,43 +40,53 @@ namespace WellRoundedBalance
 {
     public static class Initialize
     {
-        /*
-        public static JobHandle handle;
-        public static NativeArray<AchievementBase> result;
+        // bruh what the fuck is this shit I hate jobs I hate unity what the
 
-        public struct AchievementJob : IJobParallelFor
+        private static List<SharedBase> Taska(object obj)
         {
-            [ReadOnly]
-            public NativeArray<AchievementBase> result = new(1, Allocator.TempJob);
-
-            public void Execute()
+            List<SharedBase> result = [];
+            foreach (var type in obj as IEnumerable<Type>)
             {
-                Type type = result[0];
-
-                AchievementBase based = (AchievementBase)Activator.CreateInstance(type);
+                var based = Activator.CreateInstance(type) as SharedBase;
                 if (Validate(based))
                 {
-                    try
-                    {
-                        based.Init();
-                    }
-                    catch (Exception ex)
-                    {
-                        Main.WRBLogger.LogError($"Failed to initialize {type.Name}: {ex}");
-                    }
+                    ConfigManager.HandleConfigAttributes(based.GetType(), based.Name, based.Config);
+                    result.Add(based);
                 }
             }
+            Main.WRBLogger.LogWarning("--------- FINISHED ------------");
+            return result;
         }
-        */
 
-        // bruh what the fuck is this shit I hate jobs I hate unity what the
+        public static Task<Task<T>>[] Interleaved<T>(IEnumerable<Task<T>> tasks)
+        {
+            var inputTasks = tasks.ToList();
+
+            var buckets = new TaskCompletionSource<Task<T>>[inputTasks.Count];
+            var results = new Task<Task<T>>[buckets.Length];
+            for (int i = 0; i < buckets.Length; i++)
+            {
+                buckets[i] = new TaskCompletionSource<Task<T>>();
+                results[i] = buckets[i].Task;
+            }
+
+            int nextTaskIndex = -1;
+            Action<Task<T>> continuation = completed =>
+            {
+                var bucket = buckets[Interlocked.Increment(ref nextTaskIndex)];
+                bucket.TrySetResult(completed);
+            };
+
+            foreach (var inputTask in inputTasks)
+                inputTask.ContinueWith(continuation, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+
+            return results;
+        }
 
         public static void Init()
         {
             var stopwatch = Stopwatch.StartNew();
-            // Main.WRBLogger.LogError("init called");
-
-            var types = typeof(Initialize).Assembly.GetTypes();
+            var types = Assembly.GetExecutingAssembly().GetTypes().Where(t => !t.IsAbstract);
 
             FunnyLabel.Init();
             // Useless.Create();
@@ -83,321 +99,84 @@ namespace WellRoundedBalance
             TitanFist.Init();
             EarthQuakeWave.Init();
             GupSpike.Init();
-
             BetterItemCategories.Init();
 
-            /*
-            object achievementLock = new();
-            object allyLock = new();
-            object artifactAddLock = new();
-            object artifactEditLock = new();
-            object difficultyLock = new();
-            object eliteLock = new();
-            object enemyLock = new();
-            object equipmentLock = new();
-            object gamemodeLock = new();
-            object interactableLock = new();
-            object itemLock = new();
-            object mechanicLock = new();
-            object survivorLock = new();
-            */
+            List<Task<List<SharedBase>>> t = [];
+            Main.WRBLogger.LogWarning("Begin Tasks --------------------");
 
             if (Main.enableAchievements.Value)
             {
-                var achievement = types
-                                                .Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(AchievementBase)));
-
-                Main.WRBLogger.LogInfo("==+----------------==ACHIEVEMENTS==----------------+==");
-
-                foreach (var type in achievement)
-                {
-                    var based = (AchievementBase)Activator.CreateInstance(type);
-                    if (Validate(based))
-                    {
-                        // try { based.Init(); } catch (Exception ex) { Main.WRBLogger.LogError($"Failed to initialize {type.Name}: {ex}"); }
-                        based.Init();
-                    }
-                }
-
-                /*
-                result = new NativeArray<AchievementBase>(1, Allocator.TempJob);
-
-                AchievementJob achievementJob = new()
-                {
-                    result = result
-                };
-
-                handle = achievementJob.Schedule();
-
-                // Sometime later in the frame, wait for the job to complete before accessing the results. bruh can I not do it outside a monobehaviour or something
-                handle.Complete();
-
-                result.Dispose();
-                */
-                // bruh
+                t.Add(Task.Factory.StartNew(Taska, types.Where(t => t.IsSubclassOf(typeof(AchievementBase)))));
             }
-
             if (Main.enableAllies.Value)
             {
-                var ally = types
-                                                .Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(AllyBase)));
-
-                Main.WRBLogger.LogInfo("==+----------------==ALLIES==----------------+==");
-
-                foreach (var type in ally)
-                {
-                    var based = (AllyBase)Activator.CreateInstance(type);
-                    if (Validate(based))
-                    {
-                        // try { based.Init(); } catch (Exception ex) { Main.WRBLogger.LogError($"Failed to initialize {type.Name}: {ex}"); }
-                        based.Init();
-                    }
-                }
+                t.Add(Task.Factory.StartNew(Taska, types.Where(t => t.IsSubclassOf(typeof(AllyBase)))));
             }
-
-            if (Main.enableArtifactAdds.Value)
-            {
-                /*
-                IEnumerable<Type> artifactAdd = Assembly.GetExecutingAssembly().GetTypes()
-                                                .Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(ArtifactAddBase)));
-
-                Main.WRBLogger.LogInfo("==+----------------==ARTIFACT ADDS==----------------+==");
-
-                foreach (Type type in artifactAdd)
-                {
-                    ArtifactAddBase based = (ArtifactAddBase)Activator.CreateInstance(type);
-                    if (ValidateArtifactAdd(based))
-                    {
-                        based.Init();
-                        // disabled until icon is done
-                    }
-                }
-                */
-            }
-
             if (Main.enableArtifactEdits.Value)
             {
-                var artifactEdit = types
-                                                .Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(ArtifactEditBase)));
-
-                Main.WRBLogger.LogInfo("==+----------------==ARTIFACT EDITS==----------------+==");
-
-                foreach (var type in artifactEdit)
-                {
-                    var based = (ArtifactEditBase)Activator.CreateInstance(type);
-                    if (Validate(based))
-                    {
-                        // try { based.Init(); } catch (Exception ex) { Main.WRBLogger.LogError($"Failed to initialize {type.Name}: {ex}"); }
-                        based.Init();
-                    }
-                }
+                t.Add(Task.Factory.StartNew(Taska, types.Where(t => t.IsSubclassOf(typeof(ArtifactEditBase)))));
             }
-
             if (Main.enableDifficulties.Value)
             {
-                var difficulty = types
-                                                .Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(DifficultyBase)));
-
-                Main.WRBLogger.LogInfo("==+----------------==DIFFICULTIES==----------------+==");
-
-                foreach (var type in difficulty)
-                {
-                    var based = (DifficultyBase)Activator.CreateInstance(type);
-                    if (Validate(based))
-                    {
-                        // try { based.Init(); } catch (Exception ex) { Main.WRBLogger.LogError($"Failed to initialize {type.Name}: {ex}"); }
-                        based.Init();
-                    }
-                }
+                t.Add(Task.Factory.StartNew(Taska, types.Where(t => t.IsSubclassOf(typeof(DifficultyBase)))));
             }
-
             if (Main.enableElites.Value)
             {
-                var elite = types
-                                                .Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(EliteBase)));
-
-                Main.WRBLogger.LogInfo("==+----------------==ELITES==----------------+==");
-
-                foreach (var type in elite)
-                {
-                    var based = (EliteBase)Activator.CreateInstance(type);
-                    if (Validate(based))
-                    {
-                        // try { based.Init(); } catch (Exception ex) { Main.WRBLogger.LogError($"Failed to initialize {type.Name}: {ex}"); }
-                        based.Init();
-                    }
-                }
+                t.Add(Task.Factory.StartNew(Taska, types.Where(t => t.IsSubclassOf(typeof(EliteBase)))));
             }
-
             if (Main.enableEnemies.Value)
             {
-                var enemy = types
-                                                .Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(EnemyBase)));
-
-                Main.WRBLogger.LogInfo("==+----------------==ENEMIES==----------------+==");
-
-                foreach (var type in enemy)
-                {
-                    var based = (EnemyBase)Activator.CreateInstance(type);
-                    if (Validate(based))
-                    {
-                        // try { based.Init(); } catch (Exception ex) { Main.WRBLogger.LogError($"Failed to initialize {type.Name}: {ex}"); }
-                        based.Init();
-                    }
-                }
+                t.Add(Task.Factory.StartNew(Taska, types.Where(t => t.IsSubclassOf(typeof(EnemyBase)))));
             }
-
             if (Main.enableEquipment.Value)
             {
-                var equipment = types
-                                                .Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(EquipmentBase)));
-
-                Main.WRBLogger.LogInfo("==+----------------==EQUIPMENT==----------------+==");
-
-                foreach (var type in equipment)
-                {
-                    var based = (EquipmentBase)Activator.CreateInstance(type);
-                    if (Validate(based))
-                    {
-                        // try { based.Init(); } catch (Exception ex) { Main.WRBLogger.LogError($"Failed to initialize {type.Name}: {ex}"); }
-                        based.Init();
-                    }
-                }
+                t.Add(Task.Factory.StartNew(Taska, types.Where(t => t.IsSubclassOf(typeof(EquipmentBase)))));
             }
-
             if (Main.enableGamemodes.Value)
             {
-                var gamemode = types
-                                                .Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(GamemodeBase)));
-
-                Main.WRBLogger.LogInfo("==+----------------==GAMEMODES==----------------+==");
-
-                foreach (var type in gamemode)
-                {
-                    var based = (GamemodeBase)Activator.CreateInstance(type);
-                    if (Validate(based))
-                    {
-                        // try { based.Init(); } catch (Exception ex) { Main.WRBLogger.LogError($"Failed to initialize {type.Name}: {ex}"); }
-                        based.Init();
-                    }
-                }
+                t.Add(Task.Factory.StartNew(Taska, types.Where(t => t.IsSubclassOf(typeof(GamemodeBase)))));
             }
-
             if (Main.enableInteractables.Value)
             {
-                var interactable = types
-                                                .Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(InteractableBase)));
-
-                Main.WRBLogger.LogInfo("==+----------------==INTERACTABLES==----------------+==");
-
-                foreach (var type in interactable)
-                {
-                    var based = (InteractableBase)Activator.CreateInstance(type);
-                    if (Validate(based))
-                    {
-                        // try { based.Init(); } catch (Exception ex) { Main.WRBLogger.LogError($"Failed to initialize {type.Name}: {ex}"); }
-                        based.Init();
-                    }
-                }
+                t.Add(Task.Factory.StartNew(Taska, types.Where(t => t.IsSubclassOf(typeof(InteractableBase)))));
             }
-
             if (Main.enableItems.Value)
             {
-                var item = types
-                                                .Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(ItemBase)));
-
-                Main.WRBLogger.LogInfo("==+----------------==ITEMS==----------------+==");
-
-                foreach (var type in item)
-                {
-                    var based = (ItemBase)Activator.CreateInstance(type);
-                    if (Validate(based))
-                    {
-                        // try { based.Init(); } catch (Exception ex) { Main.WRBLogger.LogError($"Failed to initialize {type.Name}: {ex}"); }
-                        based.Init();
-                    }
-                }
-
-                if (Items.Whites.PowerElixir.instance != null)
-                    EmptyBottle.Init();
+                t.Add(Task.Factory.StartNew(Taska, types.Where(t => t.IsSubclassOf(typeof(ItemBase)))));
             }
-
             if (Main.enableMechanics.Value)
             {
-                var mechanic = types
-                                                .Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(MechanicBase)));
-
-                Main.WRBLogger.LogInfo("==+----------------==MECHANICS==----------------+==");
-
-                foreach (var type in mechanic)
-                {
-                    var based = (MechanicBase)Activator.CreateInstance(type);
-                    if (Validate(based))
-                    {
-                        // try { based.Init(); } catch (Exception ex) { Main.WRBLogger.LogError($"Failed to initialize {type.Name}: {ex}"); }
-                        based.Init();
-                    }
-                }
+                t.Add(Task.Factory.StartNew(Taska, types.Where(t => t.IsSubclassOf(typeof(MechanicBase)))));
             }
-
             if (Main.enableSurvivors.Value)
             {
-                var survivor = types
-                                                    .Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(SurvivorBase)));
+                t.Add(Task.Factory.StartNew(Taska, types.Where(t => t.IsSubclassOf(typeof(SurvivorBase)))));
+            }
+            foreach (var bucket in Interleaved(t))
+            {
+                var r = bucket.GetAwaiter().GetResult();
 
-                Main.WRBLogger.LogInfo("==+----------------==SURVIVORS==----------------+==");
-
-                foreach (var type in survivor)
+                foreach (var o in r.GetAwaiter().GetResult())
                 {
-                    var based = (SurvivorBase)Activator.CreateInstance(type);
-                    if (Validate(based))
-                    {
-                        // try { based.Init(); } catch (Exception ex) { Main.WRBLogger.LogError($"Failed to initialize {type.Name}: {ex}"); }
-                        based.Init();
-                    }
+                    o.Init();
                 }
             }
+            stopwatch.Stop();
 
-            // FamilyEvents.Init();
             BleedCapInit.Init();
 
             Main.WRBLogger.LogDebug("==+----------------==INFO==----------------+==");
             Main.WRBLogger.LogDebug("Initialized " + SharedBase.initList.Count + " abstract classes");
-            Main.WRBLogger.LogDebug("Initialized mod in " + stopwatch.ElapsedMilliseconds + "ms");
+            Main.WRBLogger.LogDebug("Initialized mod in " + stopwatch.Elapsed.Seconds + "m");
             Main.WRBLogger.LogDebug("Lotussy");
         }
 
         public static bool Validate<T>(T obj) where T : SharedBase
         {
-            if (obj.isEnabled)
-            {
-                // Main.WRBLogger.LogError("validating T: " + obj);
-                var enabledfr = GetConfigForType<T>().Bind(obj.Name, "Enable Changes?", true, "Vanilla is false").Value;
-                if (enabledfr) return true;
-                else ConfigManager.ConfigChanged = true;
-            }
-            return false;
-        }
-
-        private static ConfigFile GetConfigForType<T>() where T : SharedBase
-        {
-            return typeof(T).Name switch
-            {
-                nameof(AchievementBase) => Main.WRBAchievementConfig,
-                nameof(AllyBase) => Main.WRBAllyConfig,
-                nameof(ArtifactAddBase) => Main.WRBArtifactAddConfig,
-                nameof(ArtifactEditBase) => Main.WRBArtifactEditConfig,
-                nameof(DifficultyBase) => Main.WRBDifficultyConfig,
-                nameof(EliteBase) => Main.WRBEliteConfig,
-                nameof(EnemyBase) => Main.WRBEnemyConfig,
-                nameof(EquipmentBase) => Main.WRBEquipmentConfig,
-                nameof(GamemodeBase) => Main.WRBGamemodeConfig,
-                nameof(InteractableBase) => Main.WRBInteractableConfig,
-                nameof(ItemBase) => Main.WRBItemConfig,
-                nameof(MechanicBase) => Main.WRBMechanicConfig,
-                nameof(SurvivorBase) => Main.WRBSurvivorConfig,
-                _ => throw new NotSupportedException($"Config not supported for type {typeof(T).Name}"),
-            };
+            var cfg = obj.Config.Bind(obj.Name, "Enable Changes?", true, "Vanilla is false");
+            cfg.SettingChanged += (sender, args) => obj.isEnabled = (bool)(args as SettingChangedEventArgs).ChangedSetting.BoxedValue;
+            obj.isEnabled = cfg.Value;
+            return obj.isEnabled;
         }
     }
 }

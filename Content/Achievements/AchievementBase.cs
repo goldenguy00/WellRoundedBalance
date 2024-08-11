@@ -3,6 +3,20 @@ using System;
 
 namespace WellRoundedBalance.Achievements
 {
+    public abstract class AchievementBase<T> : AchievementBase where T : AchievementBase<T>
+    {
+        public static T instance { get; set; }
+
+        public AchievementBase()
+        {
+            if (instance != null)
+            {
+                throw new InvalidOperationException("Singleton class " + typeof(T).Name + " was instantiated twice");
+            }
+            instance = this as T;
+        }
+    }
+
     public abstract class AchievementBase : SharedBase
     {
         public abstract string Token { get; }
@@ -11,18 +25,17 @@ namespace WellRoundedBalance.Achievements
 
         public static event Action onTokenRegister;
 
-        public static List<string> achievementList = [];
+        //public static List<string> achievementList = [];
 
         public override void Init()
         {
             base.Init();
             onTokenRegister += SetToken;
-            achievementList.Add(Name);
+            //achievementList.Add(Name);
         }
 
         [SystemInitializer(typeof(UnlockableCatalog))]
-        public static void OnUnlockableInitialized()
-        { if (onTokenRegister != null) onTokenRegister(); }
+        public static void OnUnlockableInitialized() => onTokenRegister?.Invoke();
 
         public void SetToken()
         {

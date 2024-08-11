@@ -11,10 +11,10 @@ namespace WellRoundedBalance.Mechanics.Bosses
 
         public override void Hooks()
         {
-            RoR2.BodyCatalog.availability.CallWhenAvailable(PopulateAcceptableBodies);
         }
 
-        private void PopulateAcceptableBodies()
+        [SystemInitializer(typeof(BodyCatalog))]
+        private static void PopulateAcceptableBodies()
         {
             Utils.Paths.GameObject.BrotherBody.Load<GameObject>().AddComponent<OnKillThresholdManager>();
             Utils.Paths.GameObject.BrotherHauntBody.Load<GameObject>().AddComponent<OnKillThresholdManager>();

@@ -19,21 +19,23 @@ namespace WellRoundedBalance.Items.Reds
 
         public override void Init()
         {
-            SkillCatalog.skillsDefined.CallWhenAvailable(() =>
-            {
-                foreach (var skill in SkillCatalog.allSkillDefs)
-                {
-                    if (skill.beginSkillCooldownOnSkillEnd)
-                    {
-                        forbidden.Add(skill);
-                    }
-                    else if (!skill.mustKeyPress)
-                    {
-                        allowed.Add(skill);
-                    }
-                }
-            });
             base.Init();
+        }
+
+        [SystemInitializer(typeof(SkillCatalog))]
+        private static void Avail()
+        {
+            foreach (var skill in SkillCatalog.allSkillDefs)
+            {
+                if (skill.beginSkillCooldownOnSkillEnd)
+                {
+                    forbidden.Add(skill);
+                }
+                else if (!skill.mustKeyPress)
+                {
+                    allowed.Add(skill);
+                }
+            }
         }
 
         public override void Hooks()

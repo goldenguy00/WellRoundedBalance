@@ -1,11 +1,6 @@
-﻿using HG;
-using Inferno;
-using RoR2.Navigation;
-using System.Collections;
-using UnityEngine;
+﻿using System.Collections;
 using WellRoundedBalance.Buffs;
 using WellRoundedBalance.Gamemodes.Eclipse;
-using static WellRoundedBalance.Elites.Tier1.Glacial;
 
 namespace WellRoundedBalance.Elites.Tier1
 {

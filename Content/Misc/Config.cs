@@ -28,20 +28,16 @@ namespace WellRoundedBalance.Attributes
         internal static bool VersionChanged = false;
         public static void HandleConfigAttributes(Type type, string section, ConfigFile config)
         {
-            var info = type.GetTypeInfo();
+            var backupPath = Regex.Replace(config.ConfigFilePath, "\\W", "") + " : " + section;
 
-            foreach (var field in info.GetFields())
+            foreach (var field in type.GetFields(BindingFlags.Static))
             {
-                if (!field.IsStatic) continue;
-
-                var t = field.FieldType;
                 var configattr = field.GetCustomAttribute<ConfigFieldAttribute>();
-                if (configattr == null) continue;
+                if (configattr == null)
+                    continue;
 
-                var method = typeof(ConfigFile).GetMethods().Where(x => x.Name == nameof(ConfigFile.Bind)).First();
-                method = method.MakeGenericMethod(t);
-                var val = (ConfigEntryBase)method.Invoke(config, [new ConfigDefinition(section, configattr.name), configattr.defaultValue, new ConfigDescription(configattr.desc)]);
-                var backupVal = (ConfigEntryBase)method.Invoke(Main.WRBBackupConfig, [new ConfigDefinition(Regex.Replace(config.ConfigFilePath, "\\W", "") + " : " + section, configattr.name), val.DefaultValue, new ConfigDescription(configattr.desc)]);
+                var val = config.Bind(new ConfigDefinition(section, configattr.name), configattr.defaultValue, new ConfigDescription(configattr.desc));
+                var backupVal = Main.WRBBackupConfig.Bind(new ConfigDefinition(backupPath, configattr.name), val.DefaultValue, new ConfigDescription(configattr.desc));
                 // Main.WRBLogger.LogDebug(section + " : " + configattr.name + " " + val.DefaultValue + " / " + val.BoxedValue + " ... " + backupVal.DefaultValue + " / " + backupVal.BoxedValue + " >> " + VersionChanged);
 
                 if (!ConfigEqual(backupVal.DefaultValue, backupVal.BoxedValue))
@@ -54,17 +50,23 @@ namespace WellRoundedBalance.Attributes
                         backupVal.BoxedValue = backupVal.DefaultValue;
                     }
                 }
-                if (!ConfigEqual(val.DefaultValue, val.BoxedValue)) ConfigChanged = true;
+
+                if (!ConfigEqual(val.DefaultValue, val.BoxedValue))
+                    ConfigChanged = true;
+
+                val.SettingChanged += (sender, args) => field.SetValue(null, (args as SettingChangedEventArgs).ChangedSetting.BoxedValue);
                 field.SetValue(null, val.BoxedValue);
             }
         }
 
         private static bool ConfigEqual(object a, object b)
         {
-            if (a.Equals(b)) return true;
-            float fa, fb;
-            if (float.TryParse(a.ToString(), out fa) && float.TryParse(b.ToString(), out fb) && Mathf.Abs(fa - fb) < 0.0001) return true;
-            return false;
+            if (a.Equals(b)) 
+                return true;
+
+            return float.TryParse(a.ToString(), out var fa) &&
+                float.TryParse(b.ToString(), out var fb) &&
+                Mathf.Abs(fa - fb) < 0.0001;
         }
     }
 }

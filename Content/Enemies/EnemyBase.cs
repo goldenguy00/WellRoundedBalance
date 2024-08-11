@@ -1,18 +1,31 @@
-﻿using BepInEx.Configuration;
+﻿using System;
+using BepInEx.Configuration;
 using EntityStates;
 using RoR2.Skills;
 
 namespace WellRoundedBalance.Enemies
 {
+    public abstract class EnemyBase<T> : EnemyBase where T : EnemyBase<T>
+    {
+        public static T instance { get; set; }
+
+        public EnemyBase()
+        {
+            if (instance != null)
+            {
+                throw new InvalidOperationException("Singleton class " + typeof(T).Name + " was instantiated twice");
+            }
+            instance = this as T;
+        }
+    }
+
     public abstract class EnemyBase : SharedBase
     {
         public override ConfigFile Config => Main.WRBEnemyConfig;
-        public static List<string> enemyList = [];
 
         public override void Init()
         {
             base.Init();
-            enemyList.Add(Name);
         }
 
         public SkillDef CreateSkillDef<T>(float cooldown, string esm) where T : EntityState

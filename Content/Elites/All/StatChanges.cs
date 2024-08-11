@@ -82,8 +82,6 @@ namespace WellRoundedBalance.Elites.All
         [SystemInitializer([typeof(CombatDirector)])]
         private static void CombatDirector_Init()
         {
-            Main.WRBLogger.LogError("combat director init pre orig ran");
-
             var honorTier = EliteAPI.VanillaEliteOnlyFirstTierDef;
             honorTier.costMultiplier = tier1HonorCostMultiplier;
 

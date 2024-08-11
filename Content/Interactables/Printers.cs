@@ -1,7 +1,4 @@
-﻿using RoR2.Hologram;
-using static Rewired.Utils.Classes.Utility.ObjectInstanceTracker;
-
-namespace WellRoundedBalance.Interactables
+﻿namespace WellRoundedBalance.Interactables
 {
     public class AllPrinters : InteractableBase<AllPrinters>
     {
@@ -46,8 +43,8 @@ namespace WellRoundedBalance.Interactables
         [ConfigField("Boss Printer is Loop Only", true)]
         public static bool bossPrinterLoopOnly;
 
-        public static InteractableSpawnCard yellowPrinter = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/DuplicatorWild/iscDuplicatorWild.asset").WaitForCompletion();
-        public static InteractableSpawnCard whitePrinter = null;
+        public static InteractableSpawnCard yellowPrinter;
+        public static InteractableSpawnCard whitePrinter;
 
         public static Dictionary<GameObject, int> uses;
 
@@ -59,6 +56,7 @@ namespace WellRoundedBalance.Interactables
         public override void Hooks()
         {
             whitePrinter = Utils.Paths.InteractableSpawnCard.iscDuplicator.Load<InteractableSpawnCard>();
+            yellowPrinter = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/DuplicatorWild/iscDuplicatorWild.asset").WaitForCompletion();
 
             var cPrinter = Utils.Paths.GameObject.Duplicator.Load<GameObject>();
             cPrinter.AddComponent<PrinterUseCounter>();

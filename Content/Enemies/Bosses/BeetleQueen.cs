@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace WellRoundedBalance.Enemies.Bosses
+﻿namespace WellRoundedBalance.Enemies.Bosses
 {
     internal class BeetleQueen : EnemyBase<BeetleQueen>
     {
@@ -19,7 +17,7 @@ namespace WellRoundedBalance.Enemies.Bosses
             On.EntityStates.BeetleQueenMonster.SummonEggs.OnEnter += SummonEggs_OnEnter;
             On.EntityStates.BeetleQueenMonster.FireSpit.OnEnter += FireSpit_OnEnter;
             On.EntityStates.BeetleQueenMonster.SpawnWards.OnEnter += SpawnWards_OnEnter;
-            Changes();
+            //Changes();
         }
 
         private void SpawnWards_OnEnter(On.EntityStates.BeetleQueenMonster.SpawnWards.orig_OnEnter orig, EntityStates.BeetleQueenMonster.SpawnWards self)
@@ -63,17 +61,20 @@ namespace WellRoundedBalance.Enemies.Bosses
         private void Changes()
         {
             var beetleQueen = Utils.Paths.GameObject.BeetleQueen2Body9.Load<GameObject>();
-            
+            ContentAddition.AddEntityState<Earthquake>(out _);
+
             var esm = beetleQueen.AddComponent<EntityStateMachine>();
             esm.customName = "Earthquake";
             esm.initialStateType = new(typeof(EntityStates.BeetleQueenMonster.SpawnState));
             esm.mainStateType = new(typeof(GenericCharacterMain));
 
             var nsm = beetleQueen.GetComponent<NetworkStateMachine>();
-            nsm.stateMachines = [.. nsm.stateMachines, esm];
+            var m = nsm.stateMachines.ToList();
+            m.Add(esm);
+            nsm.stateMachines = [.. m];
 
             var utilitySD = ScriptableObject.CreateInstance<SkillDef>();
-            utilitySD.activationState = ContentAddition.AddEntityState<Earthquake>(out _);
+            utilitySD.activationState = new(typeof(Earthquake));
             utilitySD.activationStateMachineName = "Earthquake";
             utilitySD.interruptPriority = InterruptPriority.Skill;
             utilitySD.baseRechargeInterval = 9f;

@@ -15,7 +15,7 @@
             Changes();
         }
 
-        private void Changes()
+        private static void Changes()
         {
             var wind = Utils.Paths.GameObject.WindbladeProjectile.Load<GameObject>();
             var projectileSimple = wind.GetComponent<ProjectileSimple>();
